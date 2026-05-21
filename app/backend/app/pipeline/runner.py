@@ -19,25 +19,27 @@ ProgressCallback = Callable[[str, str, int], None]
 def classify_all_pages(pdf_path: str) -> list[dict]:
     """Classify all pages in the PDF. Returns list of page classification dicts."""
     doc = pdfium.PdfDocument(pdf_path)
-    total = len(doc)
     pages = []
-    for i in range(total):
-        page = doc[i]
-        textpage = page.get_textpage()
-        raw_text = textpage.get_text_range()
-        textpage.close()
-        page.close()
-        category = classify_page(raw_text)
-        sheet_no, _ = extract_sheet_info(raw_text)
-        use_text = is_text_heavy(raw_text, category) and category not in ("skip", "unknown")
-        pages.append({
-            "page": i + 1,
-            "category": category,
-            "sheet_no": sheet_no,
-            "text": raw_text,
-            "use_text": use_text,
-        })
-    doc.close()
+    try:
+        total = len(doc)
+        for i in range(total):
+            page = doc[i]
+            textpage = page.get_textpage()
+            raw_text = textpage.get_text_range()
+            textpage.close()
+            page.close()
+            category = classify_page(raw_text)
+            sheet_no, _ = extract_sheet_info(raw_text)
+            use_text = is_text_heavy(raw_text, category) and category not in ("skip", "unknown")
+            pages.append({
+                "page": i + 1,
+                "category": category,
+                "sheet_no": sheet_no,
+                "text": raw_text,
+                "use_text": use_text,
+            })
+    finally:
+        doc.close()
     return pages
 
 
@@ -182,7 +184,13 @@ def pipeline_worker(
         update_status("done", set_completed=True)
 
     except Exception as e:
-        write_event("error", f"Pipeline failed: {e}", 0)
-        update_status("failed", set_completed=True)
+        try:
+            write_event("error", f"Pipeline failed: {e}", 0)
+        except Exception:
+            pass
+        try:
+            update_status("failed")
+        except Exception:
+            pass
     finally:
         engine.dispose()

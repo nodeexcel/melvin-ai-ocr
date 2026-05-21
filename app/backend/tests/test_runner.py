@@ -13,11 +13,13 @@ def test_run_pipeline_sync_calls_progress(tmp_path):
     def fake_progress(step, message, pct):
         progress_events.append({"step": step, "message": message, "pct": pct})
 
-    with patch("app.pipeline.runner.classify_all_pages") as mock_classify, \
+    with patch("app.pipeline.runner.OpenAI") as mock_openai, \
+         patch("app.pipeline.runner.classify_all_pages") as mock_classify, \
          patch("app.pipeline.runner.render_vision_pages") as mock_render, \
          patch("app.pipeline.runner.extract_all_pages") as mock_extract, \
          patch("app.pipeline.runner.aggregate_results") as mock_aggregate:
 
+        mock_openai.return_value = MagicMock()
         mock_classify.return_value = []
         mock_render.return_value = {}
         mock_extract.return_value = []

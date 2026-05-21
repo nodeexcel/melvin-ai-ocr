@@ -1,3 +1,6 @@
+import asyncio
+import os
+import re
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -35,15 +38,16 @@ async def download_report(
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis results not found")
 
-    if not analysis.report_pdf_path:
+    if not analysis.report_pdf_path or not os.path.exists(analysis.report_pdf_path):
         pdf_path = f"{project.file_path}_report.pdf"
-        generate_report(analysis.raw_json, pdf_path)
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, generate_report, analysis.raw_json, pdf_path)
         analysis.report_pdf_path = pdf_path
         await db.commit()
     else:
         pdf_path = analysis.report_pdf_path
 
-    safe_name = f"{project.name.replace(' ', '_')}_estimate.pdf"
+    safe_name = re.sub(r"[^\w\-.]", "_", project.name) + "_estimate.pdf"
     return FileResponse(
         pdf_path,
         media_type="application/pdf",

@@ -1,3 +1,5 @@
+import os
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
@@ -100,6 +102,7 @@ def _hardware_table(hardware: list) -> Table | None:
 
 def generate_report(data: dict, output_path: str) -> None:
     """Generate a branded PDF report from the analysis result dict."""
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     doc = SimpleDocTemplate(
         output_path,
         pagesize=letter,

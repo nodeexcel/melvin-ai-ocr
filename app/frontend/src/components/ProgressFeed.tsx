@@ -20,6 +20,7 @@ export default function ProgressFeed({ projectId }: ProgressFeedProps) {
   const [error, setError] = useState<string | null>(null)
   const esRef = useRef<EventSource | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
+  const finalStatusRef = useRef<'done' | 'failed' | null>(null)
 
   useEffect(() => {
     const token = getToken()
@@ -28,7 +29,8 @@ export default function ProgressFeed({ projectId }: ProgressFeedProps) {
       return
     }
 
-    const url = `http://localhost:8000/api/projects/${projectId}/stream?token=${token}`
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const url = `${API_URL}/api/projects/${projectId}/stream?token=${token}`
     const es = new EventSource(url)
     esRef.current = es
 
@@ -36,7 +38,9 @@ export default function ProgressFeed({ projectId }: ProgressFeedProps) {
       try {
         const data: SSEEvent = JSON.parse(e.data)
         if (data.step === 'complete') {
-          setFinalStatus(data.status === 'done' ? 'done' : 'failed')
+          const status = data.status === 'done' ? 'done' : 'failed'
+          finalStatusRef.current = status
+          setFinalStatus(status)
           es.close()
         } else {
           setEvents((prev) => [...prev, data])
@@ -47,6 +51,7 @@ export default function ProgressFeed({ projectId }: ProgressFeedProps) {
     }
 
     es.onerror = () => {
+      if (finalStatusRef.current !== null) return
       setError('Connection lost. Please refresh the page.')
       es.close()
     }

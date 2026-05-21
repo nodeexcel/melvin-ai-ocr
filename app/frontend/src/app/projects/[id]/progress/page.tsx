@@ -15,6 +15,11 @@ export default function ProgressPage() {
     }
   }, [router])
 
+  const token = typeof window !== 'undefined' ? getToken() : null
+  if (!token) {
+    return null
+  }
+
   if (!id) return null
 
   return (

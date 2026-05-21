@@ -24,27 +24,3 @@ export interface ProgressEvent {
   timestamp?: string
   status?: string
 }
-
-export interface AnalysisResult {
-  project: {
-    name: string
-    address: string
-    architect: string
-    structural_engineer: string
-    total_sqft: number
-    sheet_list: { sheet_no: string; title: string }[]
-  }
-  foundation: {
-    footing_types: { type: string; width_in: number; depth_in: number; linear_feet: number }[]
-    concrete_cubic_yards: number
-    rebar: { size: string; spacing_in: number; linear_feet: number; qty_pieces: number }[]
-    hold_downs: { model: string; qty: number }[]
-  }
-  simpson_hardware: { model: string; qty: number; description?: string }[]
-  framing_details: { description: string; hardware: string; lumber_sizes: string[] }[]
-  wall_framing: { exterior_walls: Record<string, unknown>; headers: unknown[] }
-  floor_framing: { joists: unknown[]; beams: unknown[] }
-  roof_framing: { rafters: unknown[] }
-  waste_factors: Record<string, unknown>
-  notes: string[]
-}

@@ -24,8 +24,8 @@ export default function ResultsPage() {
 
   // Data fetch effect
   useEffect(() => {
-    if (!getToken()) return // don't fetch if not authenticated
-    if (!id) return
+    if (!getToken()) { setLoading(false); return }
+    if (!id) { setLoading(false); return }
 
     getProject(id)
       .then((p) => {

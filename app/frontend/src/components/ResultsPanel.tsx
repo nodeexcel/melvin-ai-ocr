@@ -94,12 +94,21 @@ export default function ResultsPanel({
   rawJson,
   reportPdfUrl,
 }: ResultsPanelProps) {
-  const token = getToken()
-
-  function handleDownload() {
+  async function handleDownload() {
     if (!reportPdfUrl) return
-    const url = `${API}${reportPdfUrl}?token=${token ?? ''}`
-    window.open(url, '_blank', 'noopener,noreferrer')
+    const token = getToken()
+    if (!token) return
+    const response = await fetch(`${API}${reportPdfUrl}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) return
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'estimate.pdf'
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -112,7 +121,7 @@ export default function ResultsPanel({
         </div>
         {reportPdfUrl && (
           <button
-            onClick={handleDownload}
+            onClick={() => { void handleDownload() }}
             className="bg-brand-yellow text-brand-black font-semibold px-5 py-2.5 rounded-lg hover:bg-yellow-400 transition text-sm shrink-0"
           >
             Download PDF Report

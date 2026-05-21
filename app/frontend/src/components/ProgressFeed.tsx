@@ -28,7 +28,7 @@ export default function ProgressFeed({ projectId }: ProgressFeedProps) {
       return
     }
 
-    const url = `http://localhost:8000/api/projects/${projectId}/stream?token=${encodeURIComponent(token)}`
+    const url = `http://localhost:8000/api/projects/${projectId}/stream?token=${token}`
     const es = new EventSource(url)
     esRef.current = es
 

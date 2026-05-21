@@ -8,25 +8,23 @@ import ResultsPanel from '@/components/ResultsPanel'
 import type { ProjectDetail } from '@/types'
 
 export default function ResultsPage() {
-  const { id } = useParams<{ id: string }>()
+  const params = useParams()
+  const id = params.id as string
   const router = useRouter()
   const [project, setProject] = useState<ProjectDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Sync auth guard — prevents flash
-  const token = typeof window !== 'undefined' ? getToken() : null
-  if (!token) {
-    // Side-effect redirect handled in useEffect; return null immediately
-    return null
-  }
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // Auth redirect effect — must come before data fetch but after all hook declarations
   useEffect(() => {
     if (!getToken()) {
       router.replace('/login')
-      return
     }
+  }, [router])
+
+  // Data fetch effect
+  useEffect(() => {
+    if (!getToken()) return // don't fetch if not authenticated
     if (!id) return
 
     getProject(id)
@@ -38,7 +36,12 @@ export default function ResultsPage() {
         setError(err.message)
         setLoading(false)
       })
-  }, [id, router])
+  }, [id])
+
+  // Sync null render — AFTER all hooks
+  if (typeof window !== 'undefined' && !getToken()) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-brand-black">

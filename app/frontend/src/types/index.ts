@@ -13,7 +13,7 @@ export interface ProjectOut {
 }
 
 export interface ProjectDetail extends ProjectOut {
-  raw_json: AnalysisResult | null
+  raw_json: Record<string, unknown> | null
   report_pdf_url: string | null
 }
 

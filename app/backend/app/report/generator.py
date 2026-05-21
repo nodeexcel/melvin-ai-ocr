@@ -164,6 +164,70 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(rt)
         elements.append(Spacer(1, 0.1 * inch))
 
+    lumber_specs = data.get("lumber_specs", [])
+    if lumber_specs:
+        elements.extend(_section_title("Lumber Specifications", styles))
+        for ls in lumber_specs:
+            lumber_type = ls.get("type", ls.get("species_grade", ls.get("species", "")))
+            if lumber_type:
+                elements.append(Paragraph(lumber_type, styles["label"]))
+            props = ls.get("properties", [])
+            if props:
+                for prop in props:
+                    elements.append(Paragraph(f"  • {prop}", styles["body"]))
+            else:
+                # flat schema fallback: size / use / notes
+                parts = [ls.get("size", ""), ls.get("use", ""), ls.get("notes", "")]
+                line = "  —  ".join(p for p in parts if p)
+                if line:
+                    elements.append(Paragraph(f"  {line}", styles["body"]))
+            elements.append(Spacer(1, 0.05 * inch))
+        elements.append(Spacer(1, 0.05 * inch))
+
+    concrete_specs = data.get("concrete_specs", [])
+    if concrete_specs:
+        elements.extend(_section_title("Concrete Specifications", styles))
+        for cs in concrete_specs:
+            concrete_type = cs.get("type", cs.get("location", cs.get("use", "")))
+            if concrete_type:
+                elements.append(Paragraph(concrete_type, styles["label"]))
+            # Nested specs list: [{f'c: ..., bar_sizes: [...]}]
+            nested = cs.get("specs", [])
+            if nested:
+                for spec in nested:
+                    fc = spec.get("f'c", spec.get("fc", spec.get("strength", "")))
+                    if fc:
+                        elements.append(Paragraph(f"  f'c = {fc}", styles["body"]))
+            else:
+                # flat schema fallback
+                psi = cs.get("psi", cs.get("strength_psi", ""))
+                notes = cs.get("notes", "")
+                line = "  —  ".join(str(p) for p in [psi, notes] if p)
+                if line:
+                    elements.append(Paragraph(f"  {line}", styles["body"]))
+            elements.append(Spacer(1, 0.05 * inch))
+        elements.append(Spacer(1, 0.05 * inch))
+
+    nailing = data.get("nailing_schedule", [])
+    if nailing:
+        elements.extend(_section_title("Nailing Schedule", styles))
+        for n in nailing:
+            desc = n.get("description", "")
+            connection = n.get("connection", n.get("connection_type", ""))
+            nail_size = n.get("nail_size", n.get("size", ""))
+            spacing = n.get("spacing", n.get("pattern", ""))
+            if desc and not connection:
+                elements.append(Paragraph(desc, styles["body"]))
+            elif connection:
+                line = connection
+                if nail_size:
+                    line += f"  |  {nail_size}"
+                if spacing:
+                    line += f"  |  {spacing}"
+                elements.append(Paragraph(line, styles["body"]))
+            elements.append(Spacer(1, 0.03 * inch))
+        elements.append(Spacer(1, 0.05 * inch))
+
     hardware = data.get("simpson_hardware", [])
     if hardware:
         elements.extend(_section_title("Simpson Hardware Schedule", styles))
@@ -176,7 +240,7 @@ def generate_report(data: dict, output_path: str) -> None:
     if connections:
         elements.extend(_section_title("Framing Connection Details", styles))
         conn_rows = [["Connection Description", "Hardware", "Lumber Sizes"]]
-        for c in connections[:50]:
+        for c in connections:
             conn_rows.append([
                 c.get("description", ""),
                 c.get("hardware", ""),
@@ -196,5 +260,29 @@ def generate_report(data: dict, output_path: str) -> None:
             ("WORDWRAP", (0, 0), (-1, -1), True),
         ]))
         elements.append(ct)
+        elements.append(Spacer(1, 0.1 * inch))
+
+    sheet_list = data.get("project", {}).get("sheet_list", [])
+    if sheet_list:
+        elements.extend(_section_title("Sheet List", styles))
+        sheet_rows = [["Sheet No.", "Title"]]
+        for s in sheet_list:
+            if isinstance(s, dict):
+                sheet_rows.append([s.get("sheet_no", s.get("number", "")), s.get("title", "")])
+            else:
+                sheet_rows.append([str(s), ""])
+        st = Table(sheet_rows, colWidths=[1.5 * inch, 6 * inch])
+        st.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
+            ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(st)
 
     doc.build(elements)

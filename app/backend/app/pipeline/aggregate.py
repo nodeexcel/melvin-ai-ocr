@@ -13,6 +13,9 @@ def aggregate_results(extractions: list[dict]) -> dict:
         "roof_framing":    {"rafters": [], "ridge_beam": {}, "hip_valley": [], "sheathing": {}, "hardware": []},
         "framing_details": [],
         "simpson_hardware": [],
+        "lumber_specs":    [],
+        "concrete_specs":  [],
+        "nailing_schedule": [],
         "waste_factors":   {},
         "notes":           [],
         "_pages":          extractions,
@@ -41,6 +44,9 @@ def aggregate_results(extractions: list[dict]) -> dict:
                 proj["sheet_list"] = new_sheets
             if data.get("waste_factors"):
                 result["waste_factors"] = data["waste_factors"]
+            result["lumber_specs"].extend(data.get("lumber_specs") or [])
+            result["concrete_specs"].extend(data.get("concrete_specs") or [])
+            result["nailing_schedule"].extend(data.get("nailing_schedule") or [])
 
         elif cat == "foundation":
             result["foundation"]["footing_types"].extend(data.get("footing_types") or [])

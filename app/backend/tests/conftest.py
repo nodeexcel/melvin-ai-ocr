@@ -10,6 +10,8 @@ os.environ.setdefault("DATABASE_SYNC_URL", "sqlite:///test.db")
 os.environ.setdefault("SECRET_KEY", "testsecretkey")
 os.environ.setdefault("OPENAI_API_KEY", "test")
 
+import app.database as _app_database  # noqa: E402
+import app.routers.stream as _stream_router  # noqa: E402
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
 
@@ -41,11 +43,27 @@ async def db_session(engine):
 
 
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession):
+async def client(engine, db_session: AsyncSession):
     async def override_get_db():
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
+
+    # Patch AsyncSessionLocal so _event_generator (which opens its own session via
+    # _app_database.AsyncSessionLocal()) uses the SAME db_session — same connection,
+    # same savepoint — instead of opening a separate connection that would invalidate
+    # the fixture's savepoint on teardown.
+    from contextlib import asynccontextmanager
+
+    @asynccontextmanager
+    async def _test_session_factory():
+        yield db_session
+
+    original_session_local = _app_database.AsyncSessionLocal
+    _app_database.AsyncSessionLocal = _test_session_factory
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
+
+    _app_database.AsyncSessionLocal = original_session_local
     app.dependency_overrides.clear()

@@ -27,7 +27,7 @@ class Project(Base):
     original_filename: Mapped[str] = mapped_column(String, nullable=False)
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("pending", "processing", "done", "failed", name="project_status"),
+        Enum("pending", "processing", "done", "failed", name="project_status", native_enum=False),
         default="pending",
         nullable=False,
     )

@@ -1,0 +1,319 @@
+{
+  "project": {
+    "name": "WLV 1 DEVELOPMENT RESIDENCE",
+    "address": "4248 WOODLANE COURT, WESTLAKE VILLAGE, CA 91362",
+    "architect": "R E S I D E N T I A L DESIGN GROUP arc A R T I S T I C C R E A T I O N S INC.",
+    "structural_engineer": "JT Engineering Associates, Inc.",
+    "total_sqft": 0,
+    "sheet_list": [
+      {
+        "sheet_no": "A1.3",
+        "title": "NO SCALE"
+      }
+    ]
+  },
+  "foundation": {
+    "footing_types": [],
+    "concrete_cubic_yards": 0,
+    "rebar": [],
+    "anchor_bolts": {},
+    "hold_downs": []
+  },
+  "floor_framing": {
+    "joists": [],
+    "beams": [],
+    "posts": [],
+    "blocking": {},
+    "hardware": []
+  },
+  "wall_framing": {
+    "exterior_walls": {
+      "linear_feet": 0,
+      "stud_size": "",
+      "stud_spacing_in": 0,
+      "height_ft": 0
+    },
+    "interior_walls": {},
+    "headers": [
+      {
+        "size": "",
+        "span_ft": 0,
+        "qty": 0
+      },
+      {
+        "size": "",
+        "span_ft": 0,
+        "qty": 0
+      }
+    ],
+    "sheathing": {},
+    "hardware": [
+      {
+        "model": "",
+        "qty": 0
+      },
+      {
+        "model": "",
+        "qty": 0
+      }
+    ]
+  },
+  "roof_framing": {
+    "rafters": [],
+    "ridge_beam": {},
+    "hip_valley": [],
+    "sheathing": {},
+    "hardware": []
+  },
+  "framing_details": [
+    {
+      "description": "Backing Bar Beam Flange Column Flange AWS Prequalified CJP Groove Welded Joint Detail",
+      "hardware": "",
+      "lumber_sizes": []
+    },
+    {
+      "description": "Sample Steel Moment Frame Web Doubler Plate Detail",
+      "hardware": "",
+      "lumber_sizes": []
+    },
+    {
+      "description": "Weld Access Hole Detail",
+      "hardware": "",
+      "lumber_sizes": []
+    },
+    {
+      "description": "Plug Welding of Doubler Plate to Column",
+      "hardware": "",
+      "lumber_sizes": []
+    }
+  ],
+  "simpson_hardware": [
+    {
+      "model": "",
+      "qty": 0
+    },
+    {
+      "model": "",
+      "qty": 0
+    },
+    {
+      "description": "Backing Bar Beam Flange Column Flange AWS Prequalified CJP Groove Welded Joint Detail",
+      "hardware": "",
+      "lumber_sizes": []
+    },
+    {
+      "description": "Sample Steel Moment Frame Web Doubler Plate Detail",
+      "hardware": "",
+      "lumber_sizes": []
+    },
+    {
+      "description": "Weld Access Hole Detail",
+      "hardware": "",
+      "lumber_sizes": []
+    },
+    {
+      "description": "Plug Welding of Doubler Plate to Column",
+      "hardware": "",
+      "lumber_sizes": []
+    }
+  ],
+  "waste_factors": {},
+  "notes": [],
+  "_pages": [
+    {
+      "page": 9,
+      "category": "schedules",
+      "data": {
+        "project_name": "WLV 1 DEVELOPMENT RESIDENCE",
+        "project_address": "4248 WOODLANE COURT, WESTLAKE VILLAGE, CA 91362",
+        "architect": "R E S I D E N T I A L DESIGN GROUP arc A R T I S T I C C R E A T I O N S INC.",
+        "structural_engineer": "JT Engineering Associates, Inc.",
+        "total_sqft": 0,
+        "sheet_list": [],
+        "waste_factors": {},
+        "lumber_specs": [],
+        "concrete_specs": [],
+        "nailing_schedule": [],
+        "notes": []
+      },
+      "method": "text"
+    },
+    {
+      "page": 10,
+      "category": "schedules",
+      "data": {
+        "project_name": "WLV 1 DEVELOPMENT RESIDENCE",
+        "project_address": "4248 WOODLANE COURT, WESTLAKE VILLAGE, CA 91362",
+        "architect": "R E S I D E N T I A L DESIGN GROUP arc A R T I S T I C C R E A T I O N S INC.",
+        "structural_engineer": "JT Engineering Associates, Inc.",
+        "total_sqft": 0,
+        "sheet_list": [
+          {
+            "sheet_no": "A1.3",
+            "title": "NO SCALE"
+          }
+        ],
+        "waste_factors": {},
+        "lumber_specs": [],
+        "concrete_specs": [],
+        "nailing_schedule": [],
+        "notes": [
+          "FIRE RESISTIVE CONSTRUCTION REQUIREMENTS",
+          "BUILDING DEPARTMENT NOTES",
+          "DOOR & WINDOW GENERAL NOTES"
+        ]
+      },
+      "method": "text"
+    },
+    {
+      "page": 11,
+      "category": "wall_framing",
+      "data": {
+        "exterior_walls": {
+          "linear_feet": 0,
+          "stud_size": "",
+          "stud_spacing_in": 0,
+          "height_ft": 0
+        },
+        "interior_walls": {
+          "linear_feet": 0,
+          "stud_size": "",
+          "stud_spacing_in": 0,
+          "height_ft": 0
+        },
+        "headers": [
+          {
+            "size": "",
+            "span_ft": 0,
+            "qty": 0
+          }
+        ],
+        "sheathing": {
+          "type": "",
+          "thickness": "",
+          "sheets_4x8": 0
+        },
+        "hardware": [
+          {
+            "model": "",
+            "qty": 0
+          }
+        ],
+        "notes": []
+      },
+      "method": "vision"
+    },
+    {
+      "page": 12,
+      "category": "wall_framing",
+      "data": {
+        "exterior_walls": {
+          "linear_feet": 0,
+          "stud_size": "",
+          "stud_spacing_in": 0,
+          "height_ft": 0
+        },
+        "interior_walls": {
+          "linear_feet": 0,
+          "stud_size": "",
+          "stud_spacing_in": 0,
+          "height_ft": 0
+        },
+        "headers": [
+          {
+            "size": "",
+            "span_ft": 0,
+            "qty": 0
+          }
+        ],
+        "sheathing": {
+          "type": "",
+          "thickness": "",
+          "sheets_4x8": 0
+        },
+        "hardware": [
+          {
+            "model": "",
+            "qty": 0
+          }
+        ],
+        "notes": []
+      },
+      "method": "vision"
+    },
+    {
+      "page": 39,
+      "category": "framing_details",
+      "data": {
+        "connections": [
+          {
+            "description": "Backing Bar Beam Flange Column Flange AWS Prequalified CJP Groove Welded Joint Detail",
+            "hardware": "",
+            "lumber_sizes": []
+          },
+          {
+            "description": "Sample Steel Moment Frame Web Doubler Plate Detail",
+            "hardware": "",
+            "lumber_sizes": []
+          },
+          {
+            "description": "Weld Access Hole Detail",
+            "hardware": "",
+            "lumber_sizes": []
+          },
+          {
+            "description": "Plug Welding of Doubler Plate to Column",
+            "hardware": "",
+            "lumber_sizes": []
+          }
+        ],
+        "hardware": [],
+        "special_conditions": [
+          "Groove welds in corner and T-joints of cyclically loaded structures shall be reinforced with fillet welds equal to T /4, but need not exceed 3/8 inch.",
+          "For corner joints, the outside groove preparation may be in either or both members, provided the basic groove configuration is not changed and adequate edge distance is maintained to support the welding operations without excessive edge melting.",
+          "A square-edge plate and square groove weld between doubler plate and column is not permitted.",
+          "Double plate Fy shall have the same as the column Fy.",
+          "The plate shall be chamfered to miss the radius of the column.",
+          "The fillet weld, in both throat and leg size shall be equal to or larger than the chamfer dimensions used for the plate.",
+          "Continuity plate shall have a thickness greater than or equal to the beam flange or beam flange connection plate.",
+          "Warning Sign shall be provided as required by Part IV Item 6 on Sheet 1.",
+          "Length of the plastic hinging zone shall be a min. of 2 x beam depth, unless noted otherwise on the structural plans.",
+          "Weld access hole shall be ground smooth to a surface roughness value not to exceed 500 micro inch; and shall be free of notches and gouges.",
+          "For maximum fill pass thickness, see Table 5 on Sheet 2.",
+          "For moment connection at bottom beam flange to column flange, the maximum root pass thickness shall not exceed 1/4\" per Part V, Item 1.",
+          "For welded connection at all other locations, see Table 5 on Sheet 2 for maximum root pass thickness.",
+          "Root Opening, R, and Groove Angle, a, shall be per selected AWS prequalified CJP groove welded joint detail.",
+          "Welding pass numbers are shown diagrammatically to indicate sequence. Quantity of passes may vary due to depth and/or position of weld.",
+          "This figure is intended to illustrate recommended welding sequence for FCAW and SMAW welding process only.",
+          "Text may be printed on either light gage plate or adhesive material and shall be affixed to both side of the beam within the plastic hinging zone.",
+          "It is PROHIBITED to attach and to cause penetration or damage to the plastic hinging zones of steel moment-frames. These PROHIBITED conditions include bolts, holes, screws, shot pins, welds and tack welds (permanent or temporary). Failure to comply with these requirements may cause the replacement of steel.",
+          "This detail is for illustrative purpose only. Refer to the structural plans for actual frame connections and details.",
+          "The size of columns or beams, continuity or doubler plate thickness, size and length of fillet welds, beam to column moment connections, steel column frame to foundation connections, and length of plastic hinging zone shall be determined by the Engineer or Architect of Record.",
+          "The Engineer or Architect of Record shall appropriately dimension and specify the minimum detailing information illustrated on this Sheet to the structural plans.",
+          "The details illustrated herein shall not be used to substitute for actual structural details.",
+          "The details provided herein are intended to illustrate the minimum fabrication and welding details that shall be reflected on the structural plans and details."
+        ],
+        "notes": [
+          "Adapted with permission from the AWS D1.1 Committee on Structural Welding, Structural Welding Code - Steel, AWS D1.1/D1.1M: 2002, Miami: American Welding Society, Figure 3.4 pg. 92 (top left).",
+          "Plug welding if required by AISC Seismic Provisions, Section 9.3, 10.3, or 11.3.",
+          "This detail is intended to illustrate doubler plate connection to column web.",
+          "Doubler plate extend beyond continuity plate a distance not less than Continuity Plate Doubler Plate min. k + 1 1/2\" col min. 2.5 kcol.",
+          "This detail is intended to illustrate doubler plate connection to column.",
+          "Top and bottom of doubler plate terminates at the continuity plates.",
+          "Continuity Plate Doubler Plate Plug welding if required by AISC Seismic Provisions, Section 9.3, 10.3, or 11.3.",
+          "Detail as illustrate in Detail 16.",
+          "Continuity Plate min. 1/2\" radius C Beam L fillet weld, if used, shall terminate a min 1/4\" from end of joint on both side.",
+          "Align continuity plate with beam flange or min. k + 1 1/2\" col min. k1 col CL.",
+          "This detail is intended to illustrate the location of the \"Warning Sign\" at the plastic hinging zone.",
+          "WARNING SIGN DO NOT MOVE OR REMOVE THIS SIGN paint with yellow or ink stripes Column CL where fireproofing occurs Plastic Hinging Zone hanger wire Column CL 1\" x 16 gage strapPlastic Hinging Zone BEFORE AFTER C Column Web L C Doubler Plate L C Column Web L C Column Web L eq. min. k + 1 1/2\" col C Doubler Plate L 8a 9a 10b C Column Web L eq. C Doubler Plate L 8b Continuity Plate C Column Web L Continuity Plate 9c C Doubler Plate L C Doubler Plate L C Column Web L9b C Doubler Plate L 10\u00b0 C Column Web L C Doubler Plate L min. 2.5 kcol 10a Continuity Plate Detail 9 Scale: Not to Scale Doubler Plate Welds to Continuity Plate Doubler Plate Welds to Continuity Plate or or or or",
+          "This detail is intended to illustrate plug welding of doubler plate to column web, when required.",
+          "The specifications and illustrative details presented in this Standard Quality Assurance Plan have been prepared in accordance with recognized engineering principles and are for general information only.",
+          "This Standard Quality Assurance Plan should not be used or relied upon for any specific application without competent professional examination and verification of its accuracy, suitability, and applicability by the Engineer or Architect of Record.",
+          "By signing and sealing this Standard Quality Assurance Plan, the Engineer or Architect of Record assumes full responsibility for the application of all of the specifications and illustrative details associated with the subject property.",
+          "Furthermore, by signing and sealing this Standard Quality Assurance Plan, the Engineer or Architect of Record acknowledge that the City of Los Angeles assumes no responsibility for the application of any of the specifications and illustrative details contained in this Standard Quality Assurance Plans and all liability arising from such use."
+        ]
+      },
+      "method": "text"
+    }
+  ]
+}

@@ -1,0 +1,1863 @@
+{
+  "project": {
+    "name": "Lhert-Song",
+    "address": "3333 Cabrillo Boulevard, Los Angeles, CA 90066",
+    "architect": "Letter Four, Inc.",
+    "structural_engineer": "Ashley & Vance Engineering Inc.",
+    "total_sqft": 0,
+    "sheet_list": [
+      {
+        "sheet_no": "S-1.1",
+        "title": "Structural Title Sheet"
+      },
+      {
+        "sheet_no": "S-1.2",
+        "title": "Structural Specifications"
+      },
+      {
+        "sheet_no": "S-1.3",
+        "title": "Structural Specifications & Special Inspections"
+      },
+      {
+        "sheet_no": "S-2.1",
+        "title": "Foundation and Basement Plans"
+      },
+      {
+        "sheet_no": "S-2.2",
+        "title": "2nd Floor Framing Plan"
+      },
+      {
+        "sheet_no": "S-2.3",
+        "title": "Roof Framing Plans"
+      },
+      {
+        "sheet_no": "S-3.1",
+        "title": "Structural Details"
+      },
+      {
+        "sheet_no": "S-3.2",
+        "title": "Structural Details"
+      },
+      {
+        "sheet_no": "S-3.3",
+        "title": "Structural Details"
+      },
+      {
+        "sheet_no": "S-3.4",
+        "title": "Structural Details"
+      },
+      {
+        "sheet_no": "WSWH1",
+        "title": "Anchorage Details"
+      },
+      {
+        "sheet_no": "WSWH2",
+        "title": "Framing Details"
+      },
+      {
+        "sheet_no": "WSWH4",
+        "title": "Portal System Framing Details"
+      }
+    ]
+  },
+  "foundation": {
+    "footing_types": [
+      {
+        "type": "Continuous",
+        "width_in": 24,
+        "depth_in": 12,
+        "linear_feet": 150
+      },
+      {
+        "type": "Isolated",
+        "width_in": 36,
+        "depth_in": 18,
+        "linear_feet": 30
+      }
+    ],
+    "concrete_cubic_yards": 20,
+    "rebar": [
+      {
+        "size": "#4",
+        "spacing_in": 12,
+        "linear_feet": 300,
+        "qty_pieces": 50
+      }
+    ],
+    "anchor_bolts": {
+      "size": "5/8\"",
+      "spacing_in": 48,
+      "qty": 40
+    },
+    "hold_downs": [
+      {
+        "model": "HDU5",
+        "qty": 10
+      },
+      {
+        "model": "HDU8",
+        "qty": 5
+      }
+    ]
+  },
+  "floor_framing": {
+    "joists": [
+      {
+        "size": "2x10",
+        "spacing_in": 16,
+        "span_ft": 12,
+        "linear_feet": 120,
+        "qty_pieces": 10
+      }
+    ],
+    "beams": [
+      {
+        "size": "LVL 1.75x11.875",
+        "span_ft": 20,
+        "linear_feet": 40,
+        "qty_pieces": 2
+      }
+    ],
+    "posts": [],
+    "blocking": {},
+    "hardware": [
+      {
+        "model": "H1",
+        "qty": 20
+      }
+    ]
+  },
+  "wall_framing": {
+    "exterior_walls": {},
+    "interior_walls": {},
+    "headers": [],
+    "sheathing": {},
+    "hardware": []
+  },
+  "roof_framing": {
+    "rafters": [],
+    "ridge_beam": {},
+    "hip_valley": [],
+    "sheathing": {},
+    "hardware": []
+  },
+  "framing_details": [
+    {
+      "description": "STRINGER TO CONCRETE",
+      "hardware": "4x3x\u00bc\" Angle Clip, (4) 5/8\" Headed Anchor Bolts",
+      "lumber_sizes": [
+        "Stringer per Plan"
+      ]
+    },
+    {
+      "description": "FLOOR FRAMING TO RET. WALL",
+      "hardware": "3/4\" AB @ 18\" o.c., LUS Hanger",
+      "lumber_sizes": [
+        "2x10 PT Ledger"
+      ]
+    },
+    {
+      "description": "LSL STAIR CONSTRUCTION",
+      "hardware": "A35 Stringer to Plate, 0.145\"\u00d8 x 3\" Shot Pins, Simpson HU Hanger",
+      "lumber_sizes": [
+        "2x14 or 1-3/4x14 LSL Stringers"
+      ]
+    },
+    {
+      "description": "WOOD POST TO EXTERIOR PAD FOOTING",
+      "hardware": "Simpson CBSQ",
+      "lumber_sizes": [
+        "Post per Plan"
+      ]
+    },
+    {
+      "description": "HOLDOWN TO INTERIOR FOUNDATION w/ CURB",
+      "hardware": "Simpson AB, Bolt Coupler",
+      "lumber_sizes": [
+        "HD Post per Plan"
+      ]
+    },
+    {
+      "description": "HOLDOWN AT EXTERIOR FOOTING",
+      "hardware": "Anchor Rod, Plate Washer, Dbl. Nut",
+      "lumber_sizes": []
+    },
+    {
+      "model": "HDU2",
+      "description": "Holdown",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "HDU4",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HDU5",
+      "description": "Holdown",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "HDU8",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HDU11",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HDU14",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HD19",
+      "description": "Holdown",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SSTB16",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SSTB20",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SSTB24",
+      "description": "Anchor Rod",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "SSTB28",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SB1x30",
+      "description": "Anchor Rod",
+      "qty_mentioned": 3
+    },
+    {
+      "model": "SSTB28L",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "description": "TYP TRANSFER AT ROOF FRAMING",
+      "hardware": "A35 (or LTP4 Other Side)",
+      "lumber_sizes": [
+        "2x4",
+        "2x6"
+      ]
+    },
+    {
+      "description": "SHEAR TRANSFER AT GABLE END",
+      "hardware": "A35 (or LTP4 Other Side)",
+      "lumber_sizes": [
+        "2x4",
+        "4x6"
+      ]
+    },
+    {
+      "description": "SHEAR TRANSFER: LOW ROOF TO WALL",
+      "hardware": "16d to 2x Blkg to Match Roof BN Spacing",
+      "lumber_sizes": [
+        "2x"
+      ]
+    },
+    {
+      "description": "SHEAR TRANSFER TO RAFTERS",
+      "hardware": "LTP4, A35",
+      "lumber_sizes": [
+        "2x"
+      ]
+    },
+    {
+      "description": "SHEAR TRANSFER TO WSWH",
+      "hardware": "WSWH-TP & SDS Screws",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER: ROOF FRAMING",
+      "hardware": "LTP4 @ 48\" o.c.",
+      "lumber_sizes": [
+        "2x6"
+      ]
+    },
+    {
+      "description": "SHEAR TRANSFER AT CEILING",
+      "hardware": "SDS per Upper SW Sched.",
+      "lumber_sizes": [
+        "2x"
+      ]
+    },
+    {
+      "description": "CEILING FRAMING TO WALL",
+      "hardware": "A35 or LTP4 on Other Side",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER: FLOOR AT EXT. WALL",
+      "hardware": "LTP5, SDS",
+      "lumber_sizes": []
+    },
+    {
+      "description": "DECK JOISTS CANTILEVER",
+      "hardware": "A35 per SW Schedule",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER: FLUSH BEAM AT WALL",
+      "hardware": "SDS, A35",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER TO WSWH",
+      "hardware": "WSWH-TP & SDS Screws",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER: FLOOR AT WALL BLW.",
+      "hardware": "LTP4, A35",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER: FLOOR FRAMING STEP",
+      "hardware": "LTP4 (or A35 Other Side)",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER AT CEILING",
+      "hardware": "16d or SDS Screws",
+      "lumber_sizes": [
+        "2x"
+      ]
+    },
+    {
+      "description": "SHEAR TRANSFER TO WSWH",
+      "hardware": "A35 (or LTP4 Other Side)",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER: DECK PARAPET",
+      "hardware": "A35 per SW Schedule",
+      "lumber_sizes": [
+        "2x10",
+        "6x6"
+      ]
+    },
+    {
+      "model": "A35",
+      "description": "Framing angle",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "LTP4",
+      "description": "Framing angle",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "SDS",
+      "description": "Screw",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "WSWH-TP",
+      "description": "Wall stud to wall header tie plate",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "MSTA24",
+      "description": "Strap tie",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "MSTA30",
+      "description": "Strap tie",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "H8",
+      "description": "Clip",
+      "qty_mentioned": 0
+    },
+    {
+      "description": "BEAM AT CEILING",
+      "hardware": "(2)-SDS\u00bcx4\", A35 @ 48\" o.c.",
+      "lumber_sizes": [
+        "2x",
+        "2x6"
+      ]
+    },
+    {
+      "description": "DECK AT EXT. WALL",
+      "hardware": "16d, (4) 10d",
+      "lumber_sizes": [
+        "2x"
+      ]
+    },
+    {
+      "description": "STEEL BEAM TO WOOD BEAM",
+      "hardware": "(2) \u215d\"\u00d8 Thru Bolts",
+      "lumber_sizes": []
+    },
+    {
+      "description": "STAIR STRINGER AT LANDING BEAM",
+      "hardware": "1/2\" MB",
+      "lumber_sizes": []
+    },
+    {
+      "description": "UPPER STRINGER TO FRAMING",
+      "hardware": "5/8\" Thru Bolt w/ Washers",
+      "lumber_sizes": []
+    },
+    {
+      "description": "LOWER STRINGER TO FRAMING",
+      "hardware": "5/8\" Thru Bolt w/ Washers",
+      "lumber_sizes": []
+    },
+    {
+      "description": "DRAG STRAP TO WALL",
+      "hardware": "Strap 'N' 10d",
+      "lumber_sizes": [
+        "2x",
+        "(2)2x",
+        "(2)2x / 4x"
+      ]
+    },
+    {
+      "description": "DRAG AT STEP IN ROOF",
+      "hardware": "HDU2 w/ 2x2x\u00bc\" Plate Washer",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEAR TRANSFER: DECK PARAPET",
+      "hardware": "2x Ledger w/ (4) \u00bc\" x 3\u00bd\" SDS Screws",
+      "lumber_sizes": [
+        "2x10 D.F. #2"
+      ]
+    },
+    {
+      "description": "SHEAR TRANSFER: ROOF DECK",
+      "hardware": "A35 or LTP4",
+      "lumber_sizes": []
+    },
+    {
+      "description": "SHEARWALL HOLDOWN TO HDR.",
+      "hardware": "Holdown and Post per Plan",
+      "lumber_sizes": []
+    },
+    {
+      "description": "STRAP HOLDOWN TO BELOW",
+      "hardware": "Simpson Strap Holdown",
+      "lumber_sizes": []
+    },
+    {
+      "description": "HOLDOWN AT WOOD BEAM",
+      "hardware": "Holdown Hardware per Plan/Schedule",
+      "lumber_sizes": []
+    },
+    {
+      "description": "DRAG AT ROOF STEP",
+      "hardware": "Strap 'N' 10d",
+      "lumber_sizes": []
+    },
+    {
+      "description": "INTERMEDIATE STRAP TO SHEARWALL",
+      "hardware": "Strap 'N' 10d/16d",
+      "lumber_sizes": [
+        "4x"
+      ]
+    },
+    {
+      "description": "STEP IN TOP PLATES",
+      "hardware": "Strap 'N' 10d",
+      "lumber_sizes": [
+        "Dbl 2x or 3x"
+      ]
+    },
+    {
+      "description": "DRAG STRAP TO BEAM",
+      "hardware": "Strap 'N' 10d/16d",
+      "lumber_sizes": []
+    },
+    {
+      "description": "STEEL GUARDRAIL CONNECTION",
+      "hardware": "\u215c\"\u00d8 x 6\" Lag Screws, Simpson A35",
+      "lumber_sizes": [
+        "3x",
+        "6x8"
+      ]
+    },
+    {
+      "model": "SDS\u00bcx4\"",
+      "description": "Screw",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "A35",
+      "description": "Angle",
+      "qty_mentioned": 4
+    },
+    {
+      "model": "16d",
+      "description": "Nail",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "10d",
+      "description": "Nail",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "HDU2",
+      "description": "Holdown",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CS14",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CMSTC16",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CMST14",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CMST12",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "HSS2x2x3/16",
+      "description": "Guardrail",
+      "qty_mentioned": 0
+    },
+    {
+      "description": "P.T. 2x10 Ledger to Wall w/ 1/2\" x 4\" Lags @ 24\" o.c. Staggered",
+      "hardware": "1/2\" x 4\" Lags",
+      "lumber_sizes": [
+        "P.T. 2x10"
+      ]
+    },
+    {
+      "description": "Inverted Simpson \"PCZ\" to Fit King Post per Plan",
+      "hardware": "Simpson \"PCZ\"",
+      "lumber_sizes": []
+    },
+    {
+      "description": "DTT2Z @ 48\" o.c. Install in 2nd Bay Where Frmg. Parallel.",
+      "hardware": "DTT2Z",
+      "lumber_sizes": []
+    },
+    {
+      "description": "HDU8 w/ \u215d\" Dia. Threaded Rod to \u215c\"x4\" Pl. Washer",
+      "hardware": "HDU8, \u215d\" Dia. Threaded Rod, \u215c\"x4\" Pl. Washer",
+      "lumber_sizes": []
+    },
+    {
+      "model": "CS14",
+      "description": "Strap",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "CMSTC16",
+      "description": "Strap",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "A35",
+      "description": "Shear Transfer Hardware",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "LTP4",
+      "description": "Shear Transfer Hardware",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "HDU8",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "MSTA18",
+      "description": "Strap",
+      "qty_mentioned": 1
+    }
+  ],
+  "simpson_hardware": [
+    {
+      "model": "HDU5",
+      "qty": 10
+    },
+    {
+      "model": "HDU8",
+      "qty": 5
+    },
+    {
+      "model": "H1",
+      "qty": 20
+    },
+    {
+      "model": "HDU2",
+      "description": "Holdown",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "HDU4",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HDU5",
+      "description": "Holdown",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "HDU8",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HDU11",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HDU14",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "HD19",
+      "description": "Holdown",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SSTB16",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SSTB20",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SSTB24",
+      "description": "Anchor Rod",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "SSTB28",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "SB1x30",
+      "description": "Anchor Rod",
+      "qty_mentioned": 3
+    },
+    {
+      "model": "SSTB28L",
+      "description": "Anchor Rod",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "A35",
+      "description": "Framing angle",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "LTP4",
+      "description": "Framing angle",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "SDS",
+      "description": "Screw",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "WSWH-TP",
+      "description": "Wall stud to wall header tie plate",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "MSTA24",
+      "description": "Strap tie",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "MSTA30",
+      "description": "Strap tie",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "H8",
+      "description": "Clip",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "SDS\u00bcx4\"",
+      "description": "Screw",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "A35",
+      "description": "Angle",
+      "qty_mentioned": 4
+    },
+    {
+      "model": "16d",
+      "description": "Nail",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "10d",
+      "description": "Nail",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "HDU2",
+      "description": "Holdown",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CS14",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CMSTC16",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CMST14",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CMST12",
+      "description": "Strap",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "HSS2x2x3/16",
+      "description": "Guardrail",
+      "qty_mentioned": 0
+    },
+    {
+      "model": "CS14",
+      "description": "Strap",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "CMSTC16",
+      "description": "Strap",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "A35",
+      "description": "Shear Transfer Hardware",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "LTP4",
+      "description": "Shear Transfer Hardware",
+      "qty_mentioned": 1
+    },
+    {
+      "model": "HDU8",
+      "description": "Holdown",
+      "qty_mentioned": 2
+    },
+    {
+      "model": "MSTA18",
+      "description": "Strap",
+      "qty_mentioned": 1
+    }
+  ],
+  "waste_factors": {},
+  "notes": [],
+  "_pages": [
+    {
+      "page": 55,
+      "category": "schedules",
+      "data": {
+        "project_name": "Lhert-Song",
+        "project_address": "3333 Cabrillo Boulevard, Los Angeles, CA 90066",
+        "architect": "Letter Four, Inc.",
+        "structural_engineer": "Ashley & Vance Engineering Inc.",
+        "total_sqft": 0,
+        "sheet_list": [
+          {
+            "sheet_no": "S-1.1",
+            "title": "Structural Title Sheet"
+          },
+          {
+            "sheet_no": "S-1.2",
+            "title": "Structural Specifications"
+          },
+          {
+            "sheet_no": "S-1.3",
+            "title": "Structural Specifications & Special Inspections"
+          },
+          {
+            "sheet_no": "S-2.1",
+            "title": "Foundation and Basement Plans"
+          },
+          {
+            "sheet_no": "S-2.2",
+            "title": "2nd Floor Framing Plan"
+          },
+          {
+            "sheet_no": "S-2.3",
+            "title": "Roof Framing Plans"
+          },
+          {
+            "sheet_no": "S-3.1",
+            "title": "Structural Details"
+          },
+          {
+            "sheet_no": "S-3.2",
+            "title": "Structural Details"
+          },
+          {
+            "sheet_no": "S-3.3",
+            "title": "Structural Details"
+          },
+          {
+            "sheet_no": "S-3.4",
+            "title": "Structural Details"
+          },
+          {
+            "sheet_no": "WSWH1",
+            "title": "Anchorage Details"
+          },
+          {
+            "sheet_no": "WSWH2",
+            "title": "Framing Details"
+          },
+          {
+            "sheet_no": "WSWH4",
+            "title": "Portal System Framing Details"
+          }
+        ],
+        "waste_factors": {},
+        "lumber_specs": [],
+        "concrete_specs": [
+          {
+            "type": "Concrete Walls & Columns",
+            "specs": [
+              {
+                "f'c": "2500 psi",
+                "bar_sizes": [
+                  {
+                    "size": "#3",
+                    "class_a": "15 ''",
+                    "class_b": "19 ''"
+                  },
+                  {
+                    "size": "#4",
+                    "class_a": "19 ''",
+                    "class_b": "25 ''"
+                  },
+                  {
+                    "size": "#5",
+                    "class_a": "24 ''",
+                    "class_b": "31 ''"
+                  },
+                  {
+                    "size": "#6",
+                    "class_a": "29 ''",
+                    "class_b": "37 ''"
+                  },
+                  {
+                    "size": "#7",
+                    "class_a": "41 ''",
+                    "class_b": "54 ''"
+                  },
+                  {
+                    "size": "#8",
+                    "class_a": "47 ''",
+                    "class_b": "61 ''"
+                  }
+                ]
+              },
+              {
+                "f'c": "3000 psi",
+                "bar_sizes": [
+                  {
+                    "size": "#3",
+                    "class_a": "13 ''",
+                    "class_b": "17 ''"
+                  },
+                  {
+                    "size": "#4",
+                    "class_a": "18 ''",
+                    "class_b": "23 ''"
+                  },
+                  {
+                    "size": "#5",
+                    "class_a": "22 ''",
+                    "class_b": "28 ''"
+                  },
+                  {
+                    "size": "#6",
+                    "class_a": "26 ''",
+                    "class_b": "34 ''"
+                  },
+                  {
+                    "size": "#7",
+                    "class_a": "38 ''",
+                    "class_b": "49 ''"
+                  },
+                  {
+                    "size": "#8",
+                    "class_a": "43 ''",
+                    "class_b": "56 ''"
+                  }
+                ]
+              },
+              {
+                "f'c": "4000 psi",
+                "bar_sizes": [
+                  {
+                    "size": "#3",
+                    "class_a": "12 ''",
+                    "class_b": "16 ''"
+                  },
+                  {
+                    "size": "#4",
+                    "class_a": "15 ''",
+                    "class_b": "20 ''"
+                  },
+                  {
+                    "size": "#5",
+                    "class_a": "19 ''",
+                    "class_b": "25 ''"
+                  },
+                  {
+                    "size": "#6",
+                    "class_a": "23 ''",
+                    "class_b": "29 ''"
+                  },
+                  {
+                    "size": "#7",
+                    "class_a": "33 ''",
+                    "class_b": "43 ''"
+                  },
+                  {
+                    "size": "#8",
+                    "class_a": "37 ''",
+                    "class_b": "49 ''"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Podium Deck",
+            "specs": [
+              {
+                "f'c": "5000 psi",
+                "bar_sizes": [
+                  {
+                    "size": "#3",
+                    "class_a": "12 ''",
+                    "class_b": "16 ''"
+                  },
+                  {
+                    "size": "#4",
+                    "class_a": "14 ''",
+                    "class_b": "18 ''"
+                  },
+                  {
+                    "size": "#5",
+                    "class_a": "17 ''",
+                    "class_b": "22 ''"
+                  },
+                  {
+                    "size": "#6",
+                    "class_a": "20 ''",
+                    "class_b": "26 ''"
+                  },
+                  {
+                    "size": "#7",
+                    "class_a": "29 ''",
+                    "class_b": "38 ''"
+                  },
+                  {
+                    "size": "#8",
+                    "class_a": "34 ''",
+                    "class_b": "44 ''"
+                  }
+                ]
+              },
+              {
+                "f'c": "6000 psi",
+                "bar_sizes": [
+                  {
+                    "size": "#3",
+                    "class_a": "12 ''",
+                    "class_b": "16 ''"
+                  },
+                  {
+                    "size": "#4",
+                    "class_a": "13 ''",
+                    "class_b": "16 ''"
+                  },
+                  {
+                    "size": "#5",
+                    "class_a": "16 ''",
+                    "class_b": "20 ''"
+                  },
+                  {
+                    "size": "#6",
+                    "class_a": "19 ''",
+                    "class_b": "24 ''"
+                  },
+                  {
+                    "size": "#7",
+                    "class_a": "27 ''",
+                    "class_b": "35 ''"
+                  },
+                  {
+                    "size": "#8",
+                    "class_a": "31 ''",
+                    "class_b": "40 ''"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Masonry",
+            "specs": [
+              {
+                "f'm": "2000 psi",
+                "bar_sizes": [
+                  {
+                    "size": "#3",
+                    "length_of_lap": "13 ''",
+                    "hook_embed": "5 ''"
+                  },
+                  {
+                    "size": "#4",
+                    "length_of_lap": "22 ''",
+                    "hook_embed": "7 ''"
+                  },
+                  {
+                    "size": "#5",
+                    "length_of_lap": "35 ''",
+                    "hook_embed": "9 ''"
+                  },
+                  {
+                    "size": "#6",
+                    "length_of_lap": "64 ''",
+                    "hook_embed": "10 ''"
+                  },
+                  {
+                    "size": "#7",
+                    "length_of_lap": "87 ''",
+                    "hook_embed": "12 ''"
+                  },
+                  {
+                    "size": "#8",
+                    "length_of_lap": "131 ''",
+                    "hook_embed": "13 ''"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "nailing_schedule": [],
+        "notes": [
+          "Do not scale these drawings. Refer to architectural plans for all dimensions.",
+          "The 2023 Los Angeles Building Code (LABC) based on the 2021 International Building Code (IBC), is the governing code in the City of Los Angeles."
+        ]
+      },
+      "method": "text"
+    },
+    {
+      "page": 56,
+      "category": "schedules",
+      "data": {
+        "project_name": "Lhert-Song",
+        "project_address": "3333 Cabrillo Boulevard, Los Angeles, CA 90066",
+        "architect": "",
+        "structural_engineer": "Ashley & Vance Engineering Inc.",
+        "total_sqft": 0,
+        "sheet_list": [
+          {
+            "sheet_no": "S-1.2",
+            "title": "STRUCTURAL SPECIFICATIONS"
+          }
+        ],
+        "waste_factors": {},
+        "lumber_specs": [
+          {
+            "type": "Glu-laminated Beams (GLB)",
+            "properties": [
+              "shall have exterior glue and weather-treatment prior to installation",
+              "shall be fabricated by an approved manufacturer & in accordance with ANSI A 190.1",
+              "shall have factory standard camber of 3,500-5,000 ft on beams UNO per Plan"
+            ]
+          },
+          {
+            "type": "Laminated Veneer Lumber (LVL)",
+            "properties": [
+              "E = 2000 ksi",
+              "Fb = 2600 psi",
+              "Fv = 285 psi",
+              "Fc (parallel) = 2500 psi",
+              "Fc (perp.) = 750 psi",
+              "Ft (parallel) = 1500 psi",
+              "Specific Gravity = 0.50"
+            ]
+          },
+          {
+            "type": "Laminated Strand Lumber (LSL)",
+            "properties": [
+              "E = 1550 ksi",
+              "Fb = 2325 psi",
+              "Fv = 310 psi",
+              "Fc (parallel) = 2170 psi",
+              "Fc (perp.) = 900 psi",
+              "Ft (parallel) = 1070 psi",
+              "Specific Gravity = 0.50"
+            ]
+          },
+          {
+            "type": "Parallel Strand Lumber (PSL)",
+            "properties": [
+              "E = 2200 ksi",
+              "Fb = 2900 psi",
+              "Fv = 290 psi",
+              "Fc (parallel) = 2900 psi",
+              "Fc (perp.) = 625 psi",
+              "Ft (parallel) = 2300 psi",
+              "Specific Gravity = 0.50"
+            ]
+          },
+          {
+            "type": "Plywood I Joists",
+            "properties": [
+              "type and manufacturer shall be clearly noted on the plans",
+              "shall be installed in accordance with applicable code approvals and mfg's spec's",
+              "shall bear a minimum of 1-3/4\" at all end supports, and 3-1/2\" at intermediate supports"
+            ]
+          }
+        ],
+        "concrete_specs": [
+          {
+            "compressive_strength": "3,000 psi at 28 days",
+            "slump": "5\" at point of placement",
+            "W/C_ratio": "0.55 or less for all slabs, walls, and columns, and 0.60 or less for all foundations",
+            "density": "normal dry-weight density",
+            "air_entrainment": "5% in regions with freeze/thaw cycles"
+          }
+        ],
+        "nailing_schedule": [],
+        "notes": [
+          "The following notes, details, schedules & specifications shall apply to all phases of this project unless specifically noted otherwise.",
+          "All drawings are considered to be part of the contract documents.",
+          "All information on existing conditions shown on the structural plans are based on best present knowledge available, but without guarantee of accuracy.",
+          "Refer to the Architectural plans for dimensions, size and location of all interior and exterior wall locations.",
+          "Refer to the mechanical, electrical and plumbing plans for size and location of all equipment.",
+          "DO NOT scale structural plans.",
+          "Construction materials shall be uniformly spread out if placed on floor or roof so as to not overload the framing.",
+          "Specifications and detailing of all waterproofing and drainage items are solely the design responsibility of others.",
+          "The Engineer will not be responsible for and will not have control or charge of construction means, methods, techniques, sequences or procedures.",
+          "Modifications of the plans, notes, details and specifications shall not be permitted without prior approval from the Engineer.",
+          "All workmanship shall conform to the best practice prevailing in the various trades performing the work.",
+          "It is the Contractor's responsibility to ensure that only approved structural plans are used during the course of construction.",
+          "These plans and specifications represent the structural design only."
+        ]
+      },
+      "method": "text"
+    },
+    {
+      "page": 57,
+      "category": "schedules",
+      "data": {
+        "project_name": "Lhert-Song",
+        "project_address": "3333 Cabrillo Boulevard, Los Angeles, CA 90066",
+        "architect": "",
+        "structural_engineer": "Sean Galbreath, S.E. S5653",
+        "total_sqft": 0,
+        "sheet_list": [
+          {
+            "sheet_no": "S-1.3",
+            "title": "STRUCTURAL SPECIFICATIONS & SPECIAL INSPECTIONS"
+          }
+        ],
+        "waste_factors": {},
+        "lumber_specs": [],
+        "concrete_specs": [],
+        "nailing_schedule": [],
+        "notes": [
+          "These plans and specifications are the property of Ashley & Vance Engineering Inc. and are restricted for use on the original site for which they were prepared. Reproduction or publication in any form, whole or in part, is prohibited. Visual contact with these documents constitutes acceptance of these restrictions.",
+          "Do not scale these drawings. Refer to architectural plans for all dimensions.",
+          "The Owner shall employ the Engineer or Architect registered/licensed in the State of California who is responsible for the structural design to perform structural observation.",
+          "The Engineer or Architect responsible for Structural Observation, the Contractor, and appropriate Subcontractors shall hold a pre-construction meeting to review the details of the structural system to be observed.",
+          "At the conclusion of the work included in the permit, the structural observer shall submit a written statement to the Building Official, verifying that the site visits have been made and identify any reported deficiencies that, to the best of the structural observer's knowledge, have not been resolved.",
+          "Contractor shall contact Ashley & Vance Engineering at reception@ashleyvance.com or at 323.744.0010 x0 to request each observation a minimum of 3 business days in advance."
+        ]
+      },
+      "method": "text"
+    },
+    {
+      "page": 58,
+      "category": "foundation",
+      "data": {
+        "footing_types": [
+          {
+            "type": "Continuous",
+            "width_in": 24,
+            "depth_in": 12,
+            "linear_feet": 150
+          },
+          {
+            "type": "Isolated",
+            "width_in": 36,
+            "depth_in": 18,
+            "linear_feet": 30
+          }
+        ],
+        "concrete_cubic_yards": 20,
+        "rebar": [
+          {
+            "size": "#4",
+            "spacing_in": 12,
+            "linear_feet": 300,
+            "qty_pieces": 50
+          }
+        ],
+        "anchor_bolts": {
+          "size": "5/8\"",
+          "spacing_in": 48,
+          "qty": 40
+        },
+        "hold_downs": [
+          {
+            "model": "HDU5",
+            "qty": 10
+          },
+          {
+            "model": "HDU8",
+            "qty": 5
+          }
+        ],
+        "notes": [
+          "All concrete to be 3000 psi.",
+          "Rebar to be grade 60.",
+          "Verify all dimensions on site."
+        ]
+      },
+      "method": "vision"
+    },
+    {
+      "page": 59,
+      "category": "floor_framing",
+      "data": {
+        "joists": [
+          {
+            "size": "2x10",
+            "spacing_in": 16,
+            "span_ft": 12,
+            "linear_feet": 120,
+            "qty_pieces": 10
+          }
+        ],
+        "beams": [
+          {
+            "size": "LVL 1.75x11.875",
+            "span_ft": 20,
+            "linear_feet": 40,
+            "qty_pieces": 2
+          }
+        ],
+        "posts": [
+          {
+            "size": "4x4",
+            "height_ft": 8,
+            "qty": 4
+          }
+        ],
+        "blocking": {
+          "size": "2x10",
+          "linear_feet": 50
+        },
+        "hardware": [
+          {
+            "model": "H1",
+            "qty": 20
+          }
+        ],
+        "notes": [
+          "All lumber shall be Douglas Fir-Larch No. 2 or better.",
+          "Joists to be spaced at 16 inches on center."
+        ]
+      },
+      "method": "vision"
+    },
+    {
+      "page": 60,
+      "category": "roof_framing",
+      "data": {
+        "raw_response": "I'm unable to extract text or data from the image provided. Please provide the text or details from the document, and I can help format it into JSON.",
+        "parse_error": true
+      },
+      "method": "vision"
+    },
+    {
+      "page": 61,
+      "category": "framing_details",
+      "data": {
+        "connections": [
+          {
+            "description": "STRINGER TO CONCRETE",
+            "hardware": "4x3x\u00bc\" Angle Clip, (4) 5/8\" Headed Anchor Bolts",
+            "lumber_sizes": [
+              "Stringer per Plan"
+            ]
+          },
+          {
+            "description": "FLOOR FRAMING TO RET. WALL",
+            "hardware": "3/4\" AB @ 18\" o.c., LUS Hanger",
+            "lumber_sizes": [
+              "2x10 PT Ledger"
+            ]
+          },
+          {
+            "description": "LSL STAIR CONSTRUCTION",
+            "hardware": "A35 Stringer to Plate, 0.145\"\u00d8 x 3\" Shot Pins, Simpson HU Hanger",
+            "lumber_sizes": [
+              "2x14 or 1-3/4x14 LSL Stringers"
+            ]
+          },
+          {
+            "description": "WOOD POST TO EXTERIOR PAD FOOTING",
+            "hardware": "Simpson CBSQ",
+            "lumber_sizes": [
+              "Post per Plan"
+            ]
+          },
+          {
+            "description": "HOLDOWN TO INTERIOR FOUNDATION w/ CURB",
+            "hardware": "Simpson AB, Bolt Coupler",
+            "lumber_sizes": [
+              "HD Post per Plan"
+            ]
+          },
+          {
+            "description": "HOLDOWN AT EXTERIOR FOOTING",
+            "hardware": "Anchor Rod, Plate Washer, Dbl. Nut",
+            "lumber_sizes": []
+          }
+        ],
+        "hardware": [
+          {
+            "model": "HDU2",
+            "description": "Holdown",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "HDU4",
+            "description": "Holdown",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "HDU5",
+            "description": "Holdown",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "HDU8",
+            "description": "Holdown",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "HDU11",
+            "description": "Holdown",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "HDU14",
+            "description": "Holdown",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "HD19",
+            "description": "Holdown",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "SSTB16",
+            "description": "Anchor Rod",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "SSTB20",
+            "description": "Anchor Rod",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "SSTB24",
+            "description": "Anchor Rod",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "SSTB28",
+            "description": "Anchor Rod",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "SB1x30",
+            "description": "Anchor Rod",
+            "qty_mentioned": 3
+          },
+          {
+            "model": "SSTB28L",
+            "description": "Anchor Rod",
+            "qty_mentioned": 1
+          }
+        ],
+        "special_conditions": [
+          "Not Req'd if Poured Monolithically",
+          "Refer to Soils Report for Adnl. Reqs. & Recs.",
+          "Slab Must be in Place 7 days prior to Backfill",
+          "Where Slab / Foundation Construction is to be Two-Pour. Anchors Rods Below are For Monolithic Pour."
+        ],
+        "notes": [
+          "Do not scale these drawings. Refer to architectural plans for all dimensions.",
+          "Reinforcing Shown is In Addition to That Required By Foundation Details.",
+          "Contact EOR if retained heights exceed those on this schedule."
+        ]
+      },
+      "method": "text"
+    },
+    {
+      "page": 62,
+      "category": "framing_details",
+      "data": {
+        "connections": [
+          {
+            "description": "TYP TRANSFER AT ROOF FRAMING",
+            "hardware": "A35 (or LTP4 Other Side)",
+            "lumber_sizes": [
+              "2x4",
+              "2x6"
+            ]
+          },
+          {
+            "description": "SHEAR TRANSFER AT GABLE END",
+            "hardware": "A35 (or LTP4 Other Side)",
+            "lumber_sizes": [
+              "2x4",
+              "4x6"
+            ]
+          },
+          {
+            "description": "SHEAR TRANSFER: LOW ROOF TO WALL",
+            "hardware": "16d to 2x Blkg to Match Roof BN Spacing",
+            "lumber_sizes": [
+              "2x"
+            ]
+          },
+          {
+            "description": "SHEAR TRANSFER TO RAFTERS",
+            "hardware": "LTP4, A35",
+            "lumber_sizes": [
+              "2x"
+            ]
+          },
+          {
+            "description": "SHEAR TRANSFER TO WSWH",
+            "hardware": "WSWH-TP & SDS Screws",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER: ROOF FRAMING",
+            "hardware": "LTP4 @ 48\" o.c.",
+            "lumber_sizes": [
+              "2x6"
+            ]
+          },
+          {
+            "description": "SHEAR TRANSFER AT CEILING",
+            "hardware": "SDS per Upper SW Sched.",
+            "lumber_sizes": [
+              "2x"
+            ]
+          },
+          {
+            "description": "CEILING FRAMING TO WALL",
+            "hardware": "A35 or LTP4 on Other Side",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER: FLOOR AT EXT. WALL",
+            "hardware": "LTP5, SDS",
+            "lumber_sizes": []
+          },
+          {
+            "description": "DECK JOISTS CANTILEVER",
+            "hardware": "A35 per SW Schedule",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER: FLUSH BEAM AT WALL",
+            "hardware": "SDS, A35",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER TO WSWH",
+            "hardware": "WSWH-TP & SDS Screws",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER: FLOOR AT WALL BLW.",
+            "hardware": "LTP4, A35",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER: FLOOR FRAMING STEP",
+            "hardware": "LTP4 (or A35 Other Side)",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER AT CEILING",
+            "hardware": "16d or SDS Screws",
+            "lumber_sizes": [
+              "2x"
+            ]
+          },
+          {
+            "description": "SHEAR TRANSFER TO WSWH",
+            "hardware": "A35 (or LTP4 Other Side)",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER: DECK PARAPET",
+            "hardware": "A35 per SW Schedule",
+            "lumber_sizes": [
+              "2x10",
+              "6x6"
+            ]
+          }
+        ],
+        "hardware": [
+          {
+            "model": "A35",
+            "description": "Framing angle",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "LTP4",
+            "description": "Framing angle",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "SDS",
+            "description": "Screw",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "WSWH-TP",
+            "description": "Wall stud to wall header tie plate",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "MSTA24",
+            "description": "Strap tie",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "MSTA30",
+            "description": "Strap tie",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "H8",
+            "description": "Clip",
+            "qty_mentioned": 0
+          }
+        ],
+        "special_conditions": [
+          "A35/LTP4 May Be Omitted Where SW Sheathing is Extended to Rim",
+          "OK to Omit SW Transfer Hdw. Where Sheathing Cont. Over & BN to Rim",
+          "Replace Cripple Wall w/ Solid Blocking When < 14\" in Height"
+        ],
+        "notes": [
+          "Do not scale these drawings. Refer to architectural plans for all dimensions.",
+          "Sheathing may be placed on either side of wall."
+        ]
+      },
+      "method": "text"
+    },
+    {
+      "page": 63,
+      "category": "framing_details",
+      "data": {
+        "connections": [
+          {
+            "description": "BEAM AT CEILING",
+            "hardware": "(2)-SDS\u00bcx4\", A35 @ 48\" o.c.",
+            "lumber_sizes": [
+              "2x",
+              "2x6"
+            ]
+          },
+          {
+            "description": "DECK AT EXT. WALL",
+            "hardware": "16d, (4) 10d",
+            "lumber_sizes": [
+              "2x"
+            ]
+          },
+          {
+            "description": "STEEL BEAM TO WOOD BEAM",
+            "hardware": "(2) \u215d\"\u00d8 Thru Bolts",
+            "lumber_sizes": []
+          },
+          {
+            "description": "STAIR STRINGER AT LANDING BEAM",
+            "hardware": "1/2\" MB",
+            "lumber_sizes": []
+          },
+          {
+            "description": "UPPER STRINGER TO FRAMING",
+            "hardware": "5/8\" Thru Bolt w/ Washers",
+            "lumber_sizes": []
+          },
+          {
+            "description": "LOWER STRINGER TO FRAMING",
+            "hardware": "5/8\" Thru Bolt w/ Washers",
+            "lumber_sizes": []
+          },
+          {
+            "description": "DRAG STRAP TO WALL",
+            "hardware": "Strap 'N' 10d",
+            "lumber_sizes": [
+              "2x",
+              "(2)2x",
+              "(2)2x / 4x"
+            ]
+          },
+          {
+            "description": "DRAG AT STEP IN ROOF",
+            "hardware": "HDU2 w/ 2x2x\u00bc\" Plate Washer",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEAR TRANSFER: DECK PARAPET",
+            "hardware": "2x Ledger w/ (4) \u00bc\" x 3\u00bd\" SDS Screws",
+            "lumber_sizes": [
+              "2x10 D.F. #2"
+            ]
+          },
+          {
+            "description": "SHEAR TRANSFER: ROOF DECK",
+            "hardware": "A35 or LTP4",
+            "lumber_sizes": []
+          },
+          {
+            "description": "SHEARWALL HOLDOWN TO HDR.",
+            "hardware": "Holdown and Post per Plan",
+            "lumber_sizes": []
+          },
+          {
+            "description": "STRAP HOLDOWN TO BELOW",
+            "hardware": "Simpson Strap Holdown",
+            "lumber_sizes": []
+          },
+          {
+            "description": "HOLDOWN AT WOOD BEAM",
+            "hardware": "Holdown Hardware per Plan/Schedule",
+            "lumber_sizes": []
+          },
+          {
+            "description": "DRAG AT ROOF STEP",
+            "hardware": "Strap 'N' 10d",
+            "lumber_sizes": []
+          },
+          {
+            "description": "INTERMEDIATE STRAP TO SHEARWALL",
+            "hardware": "Strap 'N' 10d/16d",
+            "lumber_sizes": [
+              "4x"
+            ]
+          },
+          {
+            "description": "STEP IN TOP PLATES",
+            "hardware": "Strap 'N' 10d",
+            "lumber_sizes": [
+              "Dbl 2x or 3x"
+            ]
+          },
+          {
+            "description": "DRAG STRAP TO BEAM",
+            "hardware": "Strap 'N' 10d/16d",
+            "lumber_sizes": []
+          },
+          {
+            "description": "STEEL GUARDRAIL CONNECTION",
+            "hardware": "\u215c\"\u00d8 x 6\" Lag Screws, Simpson A35",
+            "lumber_sizes": [
+              "3x",
+              "6x8"
+            ]
+          }
+        ],
+        "hardware": [
+          {
+            "model": "SDS\u00bcx4\"",
+            "description": "Screw",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "A35",
+            "description": "Angle",
+            "qty_mentioned": 4
+          },
+          {
+            "model": "16d",
+            "description": "Nail",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "10d",
+            "description": "Nail",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "HDU2",
+            "description": "Holdown",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "CS14",
+            "description": "Strap",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "CMSTC16",
+            "description": "Strap",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "CMST14",
+            "description": "Strap",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "CMST12",
+            "description": "Strap",
+            "qty_mentioned": 0
+          },
+          {
+            "model": "HSS2x2x3/16",
+            "description": "Guardrail",
+            "qty_mentioned": 0
+          }
+        ],
+        "special_conditions": [],
+        "notes": [
+          "All Straps by Simpson, See Catalogue for Additional Detail.",
+          "Use Minimum End Length Per Table Below UNO per Plan.",
+          "All Straps Fully Nailed into Post."
+        ]
+      },
+      "method": "text"
+    },
+    {
+      "page": 64,
+      "category": "framing_details",
+      "data": {
+        "connections": [
+          {
+            "description": "P.T. 2x10 Ledger to Wall w/ 1/2\" x 4\" Lags @ 24\" o.c. Staggered",
+            "hardware": "1/2\" x 4\" Lags",
+            "lumber_sizes": [
+              "P.T. 2x10"
+            ]
+          },
+          {
+            "description": "Inverted Simpson \"PCZ\" to Fit King Post per Plan",
+            "hardware": "Simpson \"PCZ\"",
+            "lumber_sizes": []
+          },
+          {
+            "description": "DTT2Z @ 48\" o.c. Install in 2nd Bay Where Frmg. Parallel.",
+            "hardware": "DTT2Z",
+            "lumber_sizes": []
+          },
+          {
+            "description": "HDU8 w/ \u215d\" Dia. Threaded Rod to \u215c\"x4\" Pl. Washer",
+            "hardware": "HDU8, \u215d\" Dia. Threaded Rod, \u215c\"x4\" Pl. Washer",
+            "lumber_sizes": []
+          }
+        ],
+        "hardware": [
+          {
+            "model": "CS14",
+            "description": "Strap",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "CMSTC16",
+            "description": "Strap",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "A35",
+            "description": "Shear Transfer Hardware",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "LTP4",
+            "description": "Shear Transfer Hardware",
+            "qty_mentioned": 1
+          },
+          {
+            "model": "HDU8",
+            "description": "Holdown",
+            "qty_mentioned": 2
+          },
+          {
+            "model": "MSTA18",
+            "description": "Strap",
+            "qty_mentioned": 1
+          }
+        ],
+        "special_conditions": [
+          "Condition Sim. @ Walls w/ Sloping TP",
+          "Window & Shear Wall Pier Quantity & Configuration May Vary from that Shown",
+          "Notify EOR of any Revision to Opening Size and/or Location"
+        ],
+        "notes": [
+          "Do not scale these drawings. Refer to architectural plans for all dimensions.",
+          "All Steps, Waterproofing, Flashing, and Finishes Per Architecturals"
+        ]
+      },
+      "method": "text"
+    }
+  ]
+}

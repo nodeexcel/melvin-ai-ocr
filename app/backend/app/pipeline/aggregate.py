@@ -44,7 +44,9 @@ def aggregate_results(extractions: list[dict]) -> dict:
 
         elif cat == "foundation":
             result["foundation"]["footing_types"].extend(data.get("footing_types") or [])
-            result["foundation"]["concrete_cubic_yards"] += data.get("concrete_cubic_yards") or 0
+            _cy = data.get("concrete_cubic_yards") or 0
+            if isinstance(_cy, (int, float)):
+                result["foundation"]["concrete_cubic_yards"] += _cy
             result["foundation"]["rebar"].extend(data.get("rebar") or [])
             result["foundation"]["hold_downs"].extend(data.get("hold_downs") or [])
             if data.get("anchor_bolts"):

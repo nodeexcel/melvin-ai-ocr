@@ -87,7 +87,7 @@ def classify_page(text: str) -> str:
     if any(sheet_no.startswith(p) for p in SKIP_PREFIXES):
         return "skip"
 
-    if sheet_no.startswith("S1") or sheet_no.startswith("S-2"):
+    if sheet_no in ("S1", "S-2") or sheet_no.startswith("S1.") or sheet_no.startswith("S-2."):
         for kw, cat in S1_TITLE_MAP.items():
             if kw in sheet_title:
                 return cat

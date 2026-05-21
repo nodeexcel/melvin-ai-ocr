@@ -30,12 +30,15 @@ def extract_text(client: OpenAI, text: str, category: str) -> dict:
         model="gpt-4o",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"{prompt}\n\nDocument text:\n{text}"},
+            {"role": "user", "content": f"{prompt}\n\n<document_text>\n{text}\n</document_text>"},
         ],
         max_tokens=8000,
         temperature=0,
     )
-    return _parse_response(response.choices[0].message.content.strip())
+    content = response.choices[0].message.content
+    if content is None:
+        return {"raw_response": None, "parse_error": True}
+    return _parse_response(content.strip())
 
 
 def extract_vision(client: OpenAI, image, category: str) -> dict:
@@ -62,4 +65,7 @@ def extract_vision(client: OpenAI, image, category: str) -> dict:
         max_tokens=8000,
         temperature=0,
     )
-    return _parse_response(response.choices[0].message.content.strip())
+    content = response.choices[0].message.content
+    if content is None:
+        return {"raw_response": None, "parse_error": True}
+    return _parse_response(content.strip())

@@ -8,8 +8,8 @@
 ## In Progress
 
 - [x] Test pipeline on all 6 input PDFs ✅ COMPLETE
-- [ ] **Clarify scope with Melvin** — pipeline delivers specs + hardware well, but NOT quantity takeoff numbers (CY concrete, LF rebar, lumber piece counts). Does he expect AI to generate full takeoff, or enter quantities himself and get specs/hardware from AI? ← BLOCKER
-- [ ] Write implementation plan (invoke writing-plans skill) — after scope clarified
+- [x] Scope resolved — V1 = specs + hardware + connections (what pipeline delivers). Quantity takeoff (CY, LF, counts) is V2. ✅
+- [x] Write implementation plan → `docs/superpowers/plans/2026-05-21-web-app.md` ✅
 
 ---
 
@@ -134,21 +134,26 @@ Current logic as of Paseo Miramar classification run:
 
 ---
 
-## App Build (after pipeline validated on all PDFs)
+## App Build ✅ COMPLETE (2026-05-21) — PDF report fully verified
 
-- [ ] Set up project with Docker + docker-compose
-- [ ] Share folder structure with client (Atul will provide)
-- [ ] FastAPI backend skeleton
-- [ ] PostgreSQL schema + Alembic migrations
-- [ ] JWT auth (username + password)
-- [ ] PDF upload endpoint
-- [ ] Background processing with ProcessPoolExecutor
-- [ ] SSE progress stream (DB-backed polling)
-- [ ] GPT-4o Vision extraction pipeline (production version)
-- [ ] PDF report generation (reportlab)
-- [ ] Next.js frontend (black + yellow theme)
-- [ ] Project history / dashboard
-- [ ] Docker compose wiring
+- [x] Set up project with Docker + docker-compose (`app/` dir, docker-compose.yml, Dockerfiles)
+- [x] FastAPI backend skeleton (main.py, config.py, database.py, lifespan handler)
+- [x] PostgreSQL schema + Alembic migrations (User, Project, JobEvent, AnalysisResult; migration 001)
+- [x] JWT auth (PyJWT[crypto] + pwdlib/bcrypt; POST /api/auth/login; get_current_user dep)
+- [x] PDF upload endpoint (POST /api/projects/upload; path traversal fix; list/get/delete)
+- [x] Background processing with ProcessPoolExecutor (pipeline_worker in separate OS process)
+- [x] SSE progress stream (GET /api/projects/{id}/stream; own session; explicit SELECT; token query param)
+- [x] GPT-4o Vision extraction pipeline (classify/extract/aggregate/prompts ported to app/backend)
+- [x] PDF report generation (reportlab black/yellow brand; GET /api/projects/{id}/report)
+- [x] Next.js 14 frontend (black+yellow theme, TypeScript, Tailwind 3)
+- [x] Login page, dashboard, upload page, progress page (SSE live feed), results page
+- [x] Docker compose wiring (db:5432, backend:8037, frontend:3036)
+- [x] End-to-end smoke test (LHERT SONG: 10 pages, 43 connections, 7.8K PDF report ✅)
+
+**Implementation plan:** `docs/superpowers/plans/2026-05-21-web-app.md`
+**App directory:** `app/` (backend + frontend + docker-compose.yml)
+**To start:** `cd app && docker compose up -d` then run migrations with `docker compose exec backend python -m alembic upgrade head`
+**Note:** No `/api/auth/register` — create users via `docker compose exec backend python -c "...create_user()..."`
 
 ---
 
@@ -157,12 +162,18 @@ Current logic as of Paseo Miramar classification run:
 - [x] Architecture design spec → `docs/superpowers/specs/2026-05-20-ai-construction-estimator-design.md`
 - [x] Pipeline findings → `docs/pipeline-findings.md`
 - [x] Findings + feasibility report → `docs/findings-and-feasibility.md`
-- [ ] Implementation plan (invoke writing-plans skill — after scope clarified with Melvin)
+- [x] Implementation plan → `docs/superpowers/plans/2026-05-21-web-app.md` ✅
 
 ---
 
 ## Blocked / Waiting
 
-- **Scope clarification from Melvin** — pipeline delivers material specs + hardware schedules reliably, but NOT full quantity takeoff (concrete CY, lumber piece counts, sheathing sheets). The spec output schema includes `concrete_cubic_yards`, `rebar_lf`, `labor_estimate`, `equipment_costs`, `construction_schedule` — these cannot be extracted from PDF text layers. Need to confirm: (a) AI generates best-effort estimates from drawings, or (b) Melvin enters quantities manually and AI provides specs/hardware only.
-- Folder structure from Atul — needed before scaffolding the app
-- Complete structural drawing set (with S1 sheets) — needed to test foundation/framing plan quantity extraction
+- None — all known gaps resolved ✅
+
+## V2 Ideas (future)
+
+- [x] ~~**Fix project info extraction**~~ — ✅ confirmed NOT broken. Data correctly extracted at `raw_json["project"]`. Earlier diagnosis used wrong lookup path. See `docs/pipeline-findings.md` Section 10.
+- [ ] Full quantity takeoff module (CY, LF, piece counts) — needs R&D, Vision-based geometry reading
+- [ ] Register endpoint for self-service user creation
+- [ ] Raster PDF support in web app (currently digital PDFs only)
+- [ ] Cover sheet index parser for A-series architectural page routing

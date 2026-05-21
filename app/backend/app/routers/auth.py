@@ -13,5 +13,5 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     user = await authenticate_user(db, body.username, body.password)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    token = create_access_token(user.username)
+    token = create_access_token(str(user.id))
     return TokenResponse(access_token=token)

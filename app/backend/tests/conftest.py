@@ -15,18 +15,29 @@ from app.main import app  # noqa: E402
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
+_engine = None
+_session_factory = None
+
+
+@pytest_asyncio.fixture(scope="session")
+async def engine():
+    eng = create_async_engine(TEST_DATABASE_URL)
+    async with eng.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield eng
+    await eng.dispose()
+
 
 @pytest_asyncio.fixture
-async def db_session():
-    engine = create_async_engine(TEST_DATABASE_URL)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with session_factory() as session:
-        yield session
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+async def db_session(engine):
+    async with engine.connect() as conn:
+        await conn.begin_nested()
+        session = AsyncSession(bind=conn, expire_on_commit=False)
+        try:
+            yield session
+        finally:
+            await session.close()
+            await conn.rollback()
 
 
 @pytest_asyncio.fixture

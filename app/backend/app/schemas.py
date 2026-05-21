@@ -31,7 +31,7 @@ class ProjectOut(BaseModel):
 
 class ProjectDetail(ProjectOut):
     raw_json: dict | None = None
-    report_pdf_path: str | None = None
+    report_pdf_url: str | None = None
 
 
 class JobEventOut(BaseModel):

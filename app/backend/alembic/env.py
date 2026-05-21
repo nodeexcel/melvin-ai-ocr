@@ -9,7 +9,10 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_SYNC_URL"])
+_db_url = os.environ.get("DATABASE_SYNC_URL")
+if not _db_url:
+    raise RuntimeError("DATABASE_SYNC_URL environment variable is required for Alembic migrations")
+config.set_main_option("sqlalchemy.url", _db_url)
 
 from app.models import Base  # noqa: E402
 

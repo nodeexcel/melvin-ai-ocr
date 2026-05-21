@@ -19,7 +19,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(as_uuid=True), primary_key=True),
         sa.Column("username", sa.String(), nullable=False, unique=True),
         sa.Column("hashed_password", sa.String(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
 
     op.create_table(
@@ -35,8 +35,8 @@ def upgrade() -> None:
             nullable=False,
             server_default="pending",
         ),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
-        sa.Column("completed_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
     )
 
     op.create_table(
@@ -46,7 +46,7 @@ def upgrade() -> None:
         sa.Column("step", sa.String(), nullable=False),
         sa.Column("message", sa.Text(), nullable=False),
         sa.Column("progress_pct", sa.Integer(), server_default="0"),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
 
     op.create_table(
@@ -55,7 +55,7 @@ def upgrade() -> None:
         sa.Column("project_id", sa.Uuid(as_uuid=True), sa.ForeignKey("projects.id"), nullable=False, unique=True),
         sa.Column("raw_json", sa.JSON(), nullable=False),
         sa.Column("report_pdf_path", sa.String(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
 
 

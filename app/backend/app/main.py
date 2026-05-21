@@ -1,9 +1,21 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import auth, projects
 
-app = FastAPI(title="AI Construction Estimator")
+
+@asynccontextmanager
+async def lifespan(app):
+    from concurrent.futures import ProcessPoolExecutor
+    projects._executor = ProcessPoolExecutor(max_workers=2)
+    yield
+    if projects._executor:
+        projects._executor.shutdown(wait=False)
+
+
+app = FastAPI(title="AI Construction Estimator", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,10 +1,10 @@
 import uuid
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.database import get_db
@@ -14,7 +14,7 @@ from app.pipeline.runner import pipeline_worker
 from app.schemas import ProjectDetail, ProjectOut
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
-_executor = ProcessPoolExecutor(max_workers=2)
+_executor = None  # initialized via lifespan in main.py
 
 
 def _submit_pipeline(project_id: str, pdf_path: str, db_sync_url: str, openai_api_key: str) -> None:
@@ -42,7 +42,7 @@ async def upload_project(
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     project_id = uuid.uuid4()
-    safe_filename = f"{project_id}_{file.filename}"
+    safe_filename = f"{project_id}_{Path(file.filename).name}"
     file_path = upload_dir / safe_filename
 
     content = await file.read()
@@ -90,7 +90,9 @@ async def get_project(
     current_user: User = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(Project).where(Project.id == project_id, Project.user_id == current_user.id)
+        select(Project)
+        .options(selectinload(Project.result))
+        .where(Project.id == project_id, Project.user_id == current_user.id)
     )
     project = result.scalar_one_or_none()
     if not project:
@@ -114,7 +116,9 @@ async def delete_project(
     current_user: User = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(Project).where(Project.id == project_id, Project.user_id == current_user.id)
+        select(Project)
+        .options(selectinload(Project.result))
+        .where(Project.id == project_id, Project.user_id == current_user.id)
     )
     project = result.scalar_one_or_none()
     if not project:
@@ -122,6 +126,8 @@ async def delete_project(
 
     if project.file_path:
         Path(project.file_path).unlink(missing_ok=True)
+    if project.result and project.result.report_pdf_path:
+        Path(project.result.report_pdf_path).unlink(missing_ok=True)
 
     await db.delete(project)
     await db.commit()

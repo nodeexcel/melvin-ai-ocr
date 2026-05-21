@@ -64,4 +64,5 @@ def downgrade() -> None:
     op.drop_table("job_events")
     op.drop_table("projects")
     op.drop_table("users")
-    op.execute("DROP TYPE project_status")
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute("DROP TYPE project_status")

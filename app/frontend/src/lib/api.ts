@@ -28,6 +28,13 @@ export async function login(username: string, password: string): Promise<TokenRe
   })
 }
 
+export async function register(username: string, password: string, inviteCode: string): Promise<TokenResponse> {
+  return request<TokenResponse>('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ username, password, invite_code: inviteCode }),
+  })
+}
+
 export async function listProjects(): Promise<ProjectOut[]> {
   return request<ProjectOut[]>('/api/projects')
 }

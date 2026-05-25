@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     secret_key: str
     openai_api_key: str
     upload_dir: str = "/uploads"
+    register_secret: str = ""
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 480
 

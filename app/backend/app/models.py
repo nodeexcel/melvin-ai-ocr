@@ -35,8 +35,8 @@ class Project(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="projects")
-    events: Mapped[list["JobEvent"]] = relationship("JobEvent", back_populates="project")
-    result: Mapped["AnalysisResult | None"] = relationship("AnalysisResult", back_populates="project", uselist=False)
+    events: Mapped[list["JobEvent"]] = relationship("JobEvent", back_populates="project", cascade="all, delete-orphan")
+    result: Mapped["AnalysisResult | None"] = relationship("AnalysisResult", back_populates="project", uselist=False, cascade="all, delete-orphan")
 
 
 class JobEvent(Base):

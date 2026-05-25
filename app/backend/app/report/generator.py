@@ -79,10 +79,31 @@ def _section_title(text: str, styles) -> list:
 def _hardware_table(hardware: list) -> Table | None:
     if not hardware:
         return None
-    rows = [["Model", "Qty"]]
+    # Deduplicate by model, keeping highest qty
+    # Normalise common prefixes so "Simpson H1" and "H1" merge
+    def _normalise(m: str) -> str:
+        for prefix in ("Simpson Strong-Tie ", "Simpson Strong Tie ", "Simpson "):
+            if m.startswith(prefix):
+                return m[len(prefix):]
+        return m
+
+    seen: dict[str, int] = {}
     for h in hardware:
-        if h.get("model"):
-            rows.append([h.get("model", ""), str(h.get("qty", h.get("qty_mentioned", "—")))])
+        model = (h.get("model") or "").strip()
+        if not model:
+            continue
+        model = _normalise(model)
+        try:
+            qty = int(h.get("qty", h.get("qty_mentioned", 0)) or 0)
+        except (ValueError, TypeError):
+            qty = 0
+        if model not in seen or qty > seen[model]:
+            seen[model] = qty
+    # Filter zero-qty rows
+    rows = [["Model", "Qty"]]
+    for model, qty in seen.items():
+        if qty > 0:
+            rows.append([model, str(qty)])
     if len(rows) == 1:
         return None
     t = Table(rows, colWidths=[2.5 * inch, 1 * inch])
@@ -116,8 +137,10 @@ def generate_report(data: dict, output_path: str) -> None:
 
     elements.extend(_header_block(styles, data.get("project", {})))
 
-    elements.extend(_section_title("Foundation", styles))
     foundation = data.get("foundation", {})
+    _has_foundation = bool(foundation.get("footing_types") or foundation.get("rebar"))
+    if _has_foundation:
+        elements.extend(_section_title("Foundation", styles))
     footing_rows = [["Type", "Width (in)", "Depth (in)", "Linear Ft"]]
     for ft in foundation.get("footing_types", []):
         footing_rows.append([
@@ -168,6 +191,10 @@ def generate_report(data: dict, output_path: str) -> None:
     if lumber_specs:
         elements.extend(_section_title("Lumber Specifications", styles))
         for ls in lumber_specs:
+            if isinstance(ls, str):
+                elements.append(Paragraph(f"  • {ls}", styles["body"]))
+                elements.append(Spacer(1, 0.03 * inch))
+                continue
             lumber_type = ls.get("type", ls.get("species_grade", ls.get("species", "")))
             if lumber_type:
                 elements.append(Paragraph(lumber_type, styles["label"]))
@@ -176,7 +203,6 @@ def generate_report(data: dict, output_path: str) -> None:
                 for prop in props:
                     elements.append(Paragraph(f"  • {prop}", styles["body"]))
             else:
-                # flat schema fallback: size / use / notes
                 parts = [ls.get("size", ""), ls.get("use", ""), ls.get("notes", "")]
                 line = "  —  ".join(p for p in parts if p)
                 if line:
@@ -188,6 +214,10 @@ def generate_report(data: dict, output_path: str) -> None:
     if concrete_specs:
         elements.extend(_section_title("Concrete Specifications", styles))
         for cs in concrete_specs:
+            if isinstance(cs, str):
+                elements.append(Paragraph(f"  • {cs}", styles["body"]))
+                elements.append(Spacer(1, 0.03 * inch))
+                continue
             concrete_type = cs.get("type", cs.get("location", cs.get("use", "")))
             if concrete_type:
                 elements.append(Paragraph(concrete_type, styles["label"]))
@@ -212,6 +242,10 @@ def generate_report(data: dict, output_path: str) -> None:
     if nailing:
         elements.extend(_section_title("Nailing Schedule", styles))
         for n in nailing:
+            if isinstance(n, str):
+                elements.append(Paragraph(f"  • {n}", styles["body"]))
+                elements.append(Spacer(1, 0.03 * inch))
+                continue
             desc = n.get("description", "")
             connection = n.get("connection", n.get("connection_type", ""))
             nail_size = n.get("nail_size", n.get("size", ""))
@@ -229,35 +263,38 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(Spacer(1, 0.05 * inch))
 
     hardware = data.get("simpson_hardware", [])
-    if hardware:
+    ht = _hardware_table(hardware)
+    if ht:
         elements.extend(_section_title("Simpson Hardware Schedule", styles))
-        ht = _hardware_table(hardware)
-        if ht:
-            elements.append(ht)
-            elements.append(Spacer(1, 0.1 * inch))
+        elements.append(ht)
+        elements.append(Spacer(1, 0.1 * inch))
 
     connections = [c for c in data.get("framing_details", []) if c.get("description")]
     if connections:
         elements.extend(_section_title("Framing Connection Details", styles))
-        conn_rows = [["Connection Description", "Hardware", "Lumber Sizes"]]
+        cell_style = ParagraphStyle("cell", fontName="Helvetica", fontSize=8, leading=10)
+        hdr_style = ParagraphStyle("hdr", fontName="Helvetica-Bold", fontSize=8, textColor=BRAND_YELLOW, leading=10)
+        conn_rows = [[
+            Paragraph("Connection Description", hdr_style),
+            Paragraph("Hardware", hdr_style),
+            Paragraph("Lumber Sizes", hdr_style),
+        ]]
         for c in connections:
             conn_rows.append([
-                c.get("description", ""),
-                c.get("hardware", ""),
-                ", ".join(c.get("lumber_sizes", [])),
+                Paragraph(c.get("description", ""), cell_style),
+                Paragraph(c.get("hardware", ""), cell_style),
+                Paragraph(", ".join(c.get("lumber_sizes", [])), cell_style),
             ])
-        ct = Table(conn_rows, colWidths=[3 * inch, 1.5 * inch, 2 * inch])
+        ct = Table(conn_rows, colWidths=[3.5 * inch, 2.0 * inch, 1.5 * inch])
         ct.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
-            ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ("TOPPADDING", (0, 0), (-1, -1), 3),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
             ("LEFTPADDING", (0, 0), (-1, -1), 6),
-            ("WORDWRAP", (0, 0), (-1, -1), True),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ]))
         elements.append(ct)
         elements.append(Spacer(1, 0.1 * inch))

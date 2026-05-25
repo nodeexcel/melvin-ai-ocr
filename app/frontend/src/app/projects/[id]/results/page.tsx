@@ -38,11 +38,6 @@ export default function ResultsPage() {
       })
   }, [id])
 
-  // Sync null render — AFTER all hooks
-  if (typeof window !== 'undefined' && !getToken()) {
-    return null
-  }
-
   return (
     <div className="min-h-screen bg-brand-black">
       <header className="bg-brand-gray border-b border-brand-lightgray px-6 py-4 flex items-center justify-between">

@@ -102,9 +102,7 @@ async def get_project(
 
     if project.result:
         out.raw_json = project.result.raw_json
-        # Map filesystem path to download URL
-        if project.result.report_pdf_path:
-            out.report_pdf_url = f"/api/projects/{project_id}/report"
+        out.report_pdf_url = f"/api/projects/{project_id}/report"
 
     return out
 

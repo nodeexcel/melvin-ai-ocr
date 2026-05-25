@@ -9,6 +9,12 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    invite_code: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

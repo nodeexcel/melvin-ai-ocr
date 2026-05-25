@@ -3,44 +3,16 @@ import uuid
 from collections.abc import Callable
 from pathlib import Path
 
-import pypdfium2 as pdfium
 from openai import OpenAI
 from pdf2image import convert_from_path
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 from app.pipeline.aggregate import aggregate_results
-from app.pipeline.classify import classify_page, extract_sheet_info, is_text_heavy
+from app.pipeline.classify import classify_pages
 from app.pipeline.extract import extract_text, extract_vision
 
 ProgressCallback = Callable[[str, str, int], None]
-
-
-def classify_all_pages(pdf_path: str) -> list[dict]:
-    """Classify all pages in the PDF. Returns list of page classification dicts."""
-    doc = pdfium.PdfDocument(pdf_path)
-    pages = []
-    try:
-        total = len(doc)
-        for i in range(total):
-            page = doc[i]
-            textpage = page.get_textpage()
-            raw_text = textpage.get_text_range()
-            textpage.close()
-            page.close()
-            category = classify_page(raw_text)
-            sheet_no, _ = extract_sheet_info(raw_text)
-            use_text = is_text_heavy(raw_text, category) and category not in ("skip", "unknown")
-            pages.append({
-                "page": i + 1,
-                "category": category,
-                "sheet_no": sheet_no,
-                "text": raw_text,
-                "use_text": use_text,
-            })
-    finally:
-        doc.close()
-    return pages
 
 
 def render_vision_pages(pdf_path: str, pages: list[dict], dpi: int = 250) -> dict[int, object]:
@@ -98,16 +70,17 @@ def run_pipeline_sync(
     """
     client = OpenAI(api_key=openai_api_key)
 
-    on_progress("classifying", "Classifying pages...", 5)
-    pages = classify_all_pages(pdf_path)
+    on_progress("classifying", "Analysing PDF...", 5)
+    pages = classify_pages(client, pdf_path, on_progress)
+
     relevant_count = sum(1 for p in pages if p["category"] not in ("skip", "unknown"))
-    on_progress("classifying", f"Found {relevant_count} relevant pages out of {len(pages)} total", 20)
+    on_progress("classifying", f"Found {relevant_count} relevant pages out of {len(pages)} total", 38)
 
-    on_progress("rendering", "Rendering pages for visual analysis...", 25)
+    on_progress("rendering", "Rendering pages for visual analysis...", 43)
     images = render_vision_pages(pdf_path, pages)
-    on_progress("rendering", f"Rendered {len(images)} pages", 40)
+    on_progress("rendering", f"Rendered {len(images)} pages", 48)
 
-    on_progress("extracting", f"Extracting data from {relevant_count} pages...", 45)
+    on_progress("extracting", f"Extracting data from {relevant_count} pages...", 53)
     extractions = extract_all_pages(client, pages, images)
     errors = sum(1 for e in extractions if e["data"].get("parse_error") or e["data"].get("error"))
     on_progress("extracting", f"Extracted {len(extractions)} pages ({errors} errors)", 80)

@@ -24,6 +24,45 @@ function toTitleCase(key: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+function InlineValue({ v }: { v: unknown }) {
+  if (Array.isArray(v)) {
+    if (v.length === 0) return <span className="text-gray-500 text-sm">None</span>
+    return (
+      <details className="text-right">
+        <summary className="text-brand-yellow text-sm cursor-pointer hover:text-yellow-300 select-none list-none">
+          {v.length} item{v.length !== 1 ? 's' : ''} ▸
+        </summary>
+        <ul className="mt-2 space-y-1 text-left">
+          {v.map((item, i) => (
+            <li key={i} className="text-gray-300 text-xs bg-brand-black rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
+              {typeof item === 'object' && item !== null ? JSON.stringify(item, null, 2) : String(item)}
+            </li>
+          ))}
+        </ul>
+      </details>
+    )
+  }
+  if (v !== null && typeof v === 'object') {
+    const entries = Object.entries(v as Record<string, unknown>)
+    if (entries.length === 0) return <span className="text-gray-500 text-sm">None</span>
+    return (
+      <details className="text-right">
+        <summary className="text-brand-yellow text-sm cursor-pointer hover:text-yellow-300 select-none list-none">
+          {entries.length} field{entries.length !== 1 ? 's' : ''} ▸
+        </summary>
+        <ul className="mt-2 space-y-1 text-left">
+          {entries.map(([k, val]) => (
+            <li key={k} className="text-gray-300 text-xs bg-brand-black rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
+              {k}: {String(val ?? '')}
+            </li>
+          ))}
+        </ul>
+      </details>
+    )
+  }
+  return <span className="text-white text-sm font-mono break-all">{String(v ?? '')}</span>
+}
+
 function DynamicSection({ sectionKey, value }: { sectionKey: string; value: unknown }) {
   const title = toTitleCase(sectionKey)
 
@@ -41,7 +80,7 @@ function DynamicSection({ sectionKey, value }: { sectionKey: string; value: unkn
             <ul className="mt-2 space-y-1 pl-3">
               {value.map((item, i) => (
                 <li key={i} className="text-gray-300 text-xs bg-brand-black rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
-                  {JSON.stringify(item, null, 2)}
+                  {typeof item === 'object' && item !== null ? JSON.stringify(item, null, 2) : String(item)}
                 </li>
               ))}
             </ul>
@@ -57,20 +96,16 @@ function DynamicSection({ sectionKey, value }: { sectionKey: string; value: unkn
       <section className="bg-brand-gray rounded-lg p-5">
         <SectionHeader title={title} />
         {entries.length === 0 ? (
-          <span className="text-gray-500 text-sm">Empty</span>
+          <span className="text-gray-500 text-sm">None</span>
         ) : (
           <div>
             {entries.map(([k, v]) => (
               <div
                 key={k}
-                className="flex justify-between items-start py-1.5 border-b border-brand-lightgray last:border-0"
+                className="flex justify-between items-start py-1.5 border-b border-brand-lightgray last:border-0 gap-4"
               >
-                <span className="text-gray-400 text-sm">{toTitleCase(k)}</span>
-                <span className="text-white text-sm text-right ml-4 font-mono break-all">
-                  {Array.isArray(v) || (v !== null && typeof v === 'object')
-                    ? JSON.stringify(v)
-                    : String(v ?? '')}
-                </span>
+                <span className="text-gray-400 text-sm shrink-0">{toTitleCase(k)}</span>
+                <InlineValue v={v} />
               </div>
             ))}
           </div>

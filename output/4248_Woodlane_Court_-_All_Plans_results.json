@@ -8,7 +8,7 @@
     "sheet_list": [
       {
         "sheet_no": "A1.3",
-        "title": "NO SCALE"
+        "title": "NO SCALE ENGINEER"
       }
     ]
   },
@@ -95,26 +95,6 @@
     {
       "model": "",
       "qty": 0
-    },
-    {
-      "description": "Backing Bar Beam Flange Column Flange AWS Prequalified CJP Groove Welded Joint Detail",
-      "hardware": "",
-      "lumber_sizes": []
-    },
-    {
-      "description": "Sample Steel Moment Frame Web Doubler Plate Detail",
-      "hardware": "",
-      "lumber_sizes": []
-    },
-    {
-      "description": "Weld Access Hole Detail",
-      "hardware": "",
-      "lumber_sizes": []
-    },
-    {
-      "description": "Plug Welding of Doubler Plate to Column",
-      "hardware": "",
-      "lumber_sizes": []
     }
   ],
   "waste_factors": {},
@@ -150,7 +130,7 @@
         "sheet_list": [
           {
             "sheet_no": "A1.3",
-            "title": "NO SCALE"
+            "title": "NO SCALE ENGINEER"
           }
         ],
         "waste_factors": {},
@@ -278,6 +258,12 @@
           "Continuity plate shall have a thickness greater than or equal to the beam flange or beam flange connection plate.",
           "Warning Sign shall be provided as required by Part IV Item 6 on Sheet 1.",
           "Length of the plastic hinging zone shall be a min. of 2 x beam depth, unless noted otherwise on the structural plans.",
+          "Bevel as required by a selected AWS prequalified CJP groove welded joint detail.",
+          "Larger of t or 1/2\" (plus 1/2 t , or minus 1/4 t ).",
+          "3/4 t to t , 3/4\" minimum ( \u00b1 1/4\").",
+          "3/8\" minimum radius (plus not limited, or minus 0).",
+          "3 t ( \u00b11/2\").",
+          "Tolerances shall not accumulate to the extent that the angle of the access hole cut to the flange surface exceed 25\u00b0.",
           "Weld access hole shall be ground smooth to a surface roughness value not to exceed 500 micro inch; and shall be free of notches and gouges.",
           "For maximum fill pass thickness, see Table 5 on Sheet 2.",
           "For moment connection at bottom beam flange to column flange, the maximum root pass thickness shall not exceed 1/4\" per Part V, Item 1.",
@@ -286,7 +272,7 @@
           "Welding pass numbers are shown diagrammatically to indicate sequence. Quantity of passes may vary due to depth and/or position of weld.",
           "This figure is intended to illustrate recommended welding sequence for FCAW and SMAW welding process only.",
           "Text may be printed on either light gage plate or adhesive material and shall be affixed to both side of the beam within the plastic hinging zone.",
-          "It is PROHIBITED to attach and to cause penetration or damage to the plastic hinging zones of steel moment-frames. These PROHIBITED conditions include bolts, holes, screws, shot pins, welds and tack welds (permanent or temporary). Failure to comply with these requirements may cause the replacement of steel.",
+          "\"It is PROHIBITED to attach and to cause penetration or damage to the plastic hinging zones of steel moment-frames. These PROHIBITED conditions include bolts, holes, screws, shot pins, welds and tack welds (permanent or temporary). Failure to comply with these requirements may cause the replacement of steel.\"",
           "This detail is for illustrative purpose only. Refer to the structural plans for actual frame connections and details.",
           "The size of columns or beams, continuity or doubler plate thickness, size and length of fillet welds, beam to column moment connections, steel column frame to foundation connections, and length of plastic hinging zone shall be determined by the Engineer or Architect of Record.",
           "The Engineer or Architect of Record shall appropriately dimension and specify the minimum detailing information illustrated on this Sheet to the structural plans.",
@@ -297,16 +283,17 @@
           "Adapted with permission from the AWS D1.1 Committee on Structural Welding, Structural Welding Code - Steel, AWS D1.1/D1.1M: 2002, Miami: American Welding Society, Figure 3.4 pg. 92 (top left).",
           "Plug welding if required by AISC Seismic Provisions, Section 9.3, 10.3, or 11.3.",
           "This detail is intended to illustrate doubler plate connection to column web.",
-          "Doubler plate extend beyond continuity plate a distance not less than Continuity Plate Doubler Plate min. k + 1 1/2\" col min. 2.5 kcol.",
+          "Doubler plate extend beyond continuity plate a distance not less than Continuity Plate Doubler Plate min. k + 1 1/2\" col min. 2.5 kcol",
           "This detail is intended to illustrate doubler plate connection to column.",
           "Top and bottom of doubler plate terminates at the continuity plates.",
           "Continuity Plate Doubler Plate Plug welding if required by AISC Seismic Provisions, Section 9.3, 10.3, or 11.3.",
           "Detail as illustrate in Detail 16.",
-          "Continuity Plate min. 1/2\" radius C Beam L fillet weld, if used, shall terminate a min 1/4\" from end of joint on both side.",
-          "Align continuity plate with beam flange or min. k + 1 1/2\" col min. k1 col CL.",
+          "Continuity Plate min. 1/2\" radius C Beam L fillet weld, if used, shall terminate a min 1/4\" from end of joint on both side",
+          "Align continuity plate with beam flange or min. k + 1 1/2\" col min. k1 col CL",
           "This detail is intended to illustrate the location of the \"Warning Sign\" at the plastic hinging zone.",
-          "WARNING SIGN DO NOT MOVE OR REMOVE THIS SIGN paint with yellow or ink stripes Column CL where fireproofing occurs Plastic Hinging Zone hanger wire Column CL 1\" x 16 gage strapPlastic Hinging Zone BEFORE AFTER C Column Web L C Doubler Plate L C Column Web L C Column Web L eq. min. k + 1 1/2\" col C Doubler Plate L 8a 9a 10b C Column Web L eq. C Doubler Plate L 8b Continuity Plate C Column Web L Continuity Plate 9c C Doubler Plate L C Doubler Plate L C Column Web L9b C Doubler Plate L 10\u00b0 C Column Web L C Doubler Plate L min. 2.5 kcol 10a Continuity Plate Detail 9 Scale: Not to Scale Doubler Plate Welds to Continuity Plate Doubler Plate Welds to Continuity Plate or or or or",
+          "WARNING SIGN DO NOT MOVE OR REMOVE THIS SIGN paint with yellow or ink stripes Column CL where fireproofing occurs Plastic Hinging Zone hanger wire Column CL 1\" x 16 gage strapPlastic Hinging Zone BEFORE AFTER",
           "This detail is intended to illustrate plug welding of doubler plate to column web, when required.",
+          "STANDARD QUALITY ASSURANCE PLAN For Steel Moment Frames",
           "The specifications and illustrative details presented in this Standard Quality Assurance Plan have been prepared in accordance with recognized engineering principles and are for general information only.",
           "This Standard Quality Assurance Plan should not be used or relied upon for any specific application without competent professional examination and verification of its accuracy, suitability, and applicability by the Engineer or Architect of Record.",
           "By signing and sealing this Standard Quality Assurance Plan, the Engineer or Architect of Record assumes full responsibility for the application of all of the specifications and illustrative details associated with the subject property.",

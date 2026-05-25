@@ -223,30 +223,20 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 
 ## Remaining V2 Work
 
-- [x] **Raster PDF support — Phase 1.5 ✅ (2026-05-23):** `raster.py` module added. `is_raster_pdf()` detects scanned PDFs (<500 chars across first 10 pages). `classify_pages_raster()` does batch Vision thumbnail classification (4 pages/call). Output matches `classify_all_pages()` format so rest of pipeline (render, extract, aggregate) reuses unchanged. Validated on Paseo Miramar — extracted foundation LF, rebar LF+qty, hardware, connections from scanned PDF.
-- [ ] **Step 1 — Restructure: consolidate scripts into app (do first)**
-  - Move test scripts INTO `app/backend/scripts/` so they import directly from `app.pipeline`
-  - Delete `scripts/test_pipeline/` at repo root — no more duplicate pipeline logic
-  - Scripts become thin CLI wrappers: `python scripts/test_pdf.py --pdf /path/to/file.pdf`
-  - Run via Docker: `docker compose exec backend python scripts/test_pdf.py --pdf ...`
-  - OR with local venv: `cd app/backend && source venv/bin/activate && python scripts/test_pdf.py`
-  - Whatever is tested = what runs in production. No drift possible.
+- [x] **Raster PDF support ✅ (superseded by Vision-first 2026-05-25):** Was Phase 1.5. `raster.py` deleted — Vision-first classification in `classify.py` handles raster and digital PDFs identically. Paseo Miramar: 31 relevant pages, 61 hardware, 160 connections extracted.
+- [x] **Step 1 — Restructure ✅ (2026-05-25):** `app/backend/scripts/test_pdf.py` imports from `app.pipeline.runner` directly. Old `scripts/test_pipeline/` deleted. One codebase, no drift.
+
+- [x] **Step 2 — Vision-first classification ✅ (2026-05-25):** `classify.py` replaced with Vision thumbnail classification (gpt-4o-mini, 4 pages/batch, detail:low). Firm-agnostic, handles mixed PDFs and any page ordering. `raster.py` deleted. Two-signal text cross-check prevents schedule page misclassification.
+
+- [x] **aggregate.py most-common fix ✅ (2026-05-25):** Project name/address/SE now use most-common value across all pages. Fixes LHERT-SONG returning wrong address from early-page outliers.
 
 - [ ] **GPT-4o Vision refusal handling (known limitation — not yet fixed):**
-  - ~2% of Vision pages return a refusal: "I'm unable to extract text or data from the image provided."
-  - Confirmed: LHERT SONG page 59 (floor_framing), SVR page 132 (framing_details)
+  - ~5-8% of Vision extraction pages return a refusal
+  - Confirmed across all PDFs: Whaleon (3), Woodlane (7), LHERT SONG (4-5), SVR (3-4), Paseo (5)
   - Current behaviour: page silently skipped, `parse_error: True` in `_pages`
-  - Proper fix: one retry per refused page with a simplified prompt targeted at the category
-  - Do NOT add a generic fallback — diagnose which page types trigger refusals and tune prompts per category
+  - Proper fix: one retry per refused page with simplified prompt targeted at the category
+  - Do NOT add a generic fallback — tune prompts per category
   - Low priority: refused pages are dense graphical drawings that return mostly zeros anyway
-
-- [ ] **Step 2 — Vision-first classification (replaces pattern matching entirely)**
-  - **Problem:** Text patterns break on new SE firms, mixed PDFs, wrong page ordering, binary raster detection. Every new client PDF is a potential failure.
-  - **Real solution:** Remove `is_raster_pdf()`, remove `classify.py` patterns entirely. Classify EVERY page via batch Vision thumbnails (4 pages/call, `detail:low`, `gpt-4o-mini`). Per-page decision — works for any firm, any ordering, any PDF type.
-  - Text extraction still used for EXTRACTION phase when text layer exists. Vision only replaces CLASSIFICATION.
-  - `raster.py` already proves this works — make it universal.
-  - Model split: `gpt-4o-mini` for classification (cheap+fast), `gpt-4o` for extraction (accuracy)
-  - Cost: ~$0.001/page classification with mini. 60-page PDF = ~$0.06 total overhead. Negligible.
 - [ ] **Quantity takeoff — Phase 2 (core gap):** Vision-based geometry reading for LF, piece counts, CY, sheathing sheets
 - [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate, equipment costs, construction schedule
 - [ ] Cover sheet index parser for A-series architectural page routing

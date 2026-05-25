@@ -147,6 +147,41 @@ def _classify_batch(client: OpenAI, batch: list[dict]) -> list[dict]:
     return results
 
 
+# ── Text cross-check ─────────────────────────────────────────────────────────
+
+# Phrases that ONLY appear in structural spec/schedule pages — never in
+# graphical framing plans, foundation plans, or architectural drawings.
+# Used to correct Vision misclassifications on text-dense pages.
+_SCHEDULE_PHRASES = [
+    "NAILING SCHEDULE",
+    "NAILING REQUIREMENTS",
+    "LUMBER SPECIFICATIONS",
+    "LUMBER SCHEDULE",
+    "CONCRETE SPECIFICATIONS",
+    "CONCRETE SCHEDULE",
+    "GENERAL STRUCTURAL NOTES",
+    "STRUCTURAL SPECIFICATIONS",
+    "STRUCTURAL GENERAL NOTES",
+    "SHANK DIAMETER",        # nail spec tables always contain this
+    "COMMON WIRE NAILS",     # nailing schedule header text
+    "DOUGLAS FIR - LARCH",   # lumber spec text
+    "DOUGLAS FIR-LARCH",
+    "DOUGLAS FIR - COSTAL",
+]
+
+
+def _text_schedule_override(text: str) -> bool:
+    """
+    Return True if the text layer strongly signals this is a structural
+    spec/schedule page, regardless of what Vision classified it as.
+
+    Only fires on unambiguous phrases that cannot appear on graphical plan
+    pages (framing plans, foundation plans, elevation sheets).
+    """
+    text_upper = text.upper()
+    return any(phrase in text_upper for phrase in _SCHEDULE_PHRASES)
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def is_text_heavy(text: str, category: str) -> bool:
@@ -204,6 +239,17 @@ def classify_pages(
             for j, result in enumerate(results):
                 text = batch_texts[j] if j < len(batch_texts) else ""
                 cat  = result["category"]
+
+                # Two-signal correction: if Vision classified this as a
+                # graphical plan type but the text layer has unambiguous
+                # schedule/spec phrases, trust the text signal.
+                if (
+                    cat in ("foundation", "floor_framing", "roof_framing", "wall_framing", "unknown")
+                    and len(text.strip()) > 500
+                    and _text_schedule_override(text)
+                ):
+                    cat = "schedules"
+
                 pages.append({
                     "page":     result["page_num"],
                     "category": cat,

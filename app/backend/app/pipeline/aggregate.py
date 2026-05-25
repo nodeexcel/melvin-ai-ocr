@@ -1,3 +1,12 @@
+from collections import Counter
+
+
+def _most_common(values: list[str]) -> str:
+    """Return the most frequently occurring non-empty string in values."""
+    counts = Counter(v.strip() for v in values if v and v.strip())
+    return counts.most_common(1)[0][0] if counts else ""
+
+
 def aggregate_results(extractions: list[dict]) -> dict:
     result = {
         "project": {
@@ -21,6 +30,14 @@ def aggregate_results(extractions: list[dict]) -> dict:
         "_pages":          extractions,
     }
 
+    # Collect all candidate values for project string fields across pages.
+    # Use most-common instead of first-non-empty to avoid early pages with
+    # wrong addresses (adjacent properties, vicinity maps) winning.
+    proj_names:   list[str] = []
+    proj_addrs:   list[str] = []
+    proj_archs:   list[str] = []
+    proj_ses:     list[str] = []
+
     for item in extractions:
         cat  = item["category"]
         data = item["data"]
@@ -28,20 +45,19 @@ def aggregate_results(extractions: list[dict]) -> dict:
             continue
 
         if cat == "schedules":
-            proj = result["project"]
-            if data.get("project_name") and not proj["name"]:
-                proj["name"] = data["project_name"]
-            if data.get("project_address") and not proj["address"]:
-                proj["address"] = data["project_address"]
-            if data.get("architect") and not proj["architect"]:
-                proj["architect"] = data["architect"]
-            if data.get("structural_engineer") and not proj["structural_engineer"]:
-                proj["structural_engineer"] = data["structural_engineer"]
-            if data.get("total_sqft", 0) > proj["total_sqft"]:
-                proj["total_sqft"] = data["total_sqft"]
+            if data.get("project_name"):
+                proj_names.append(data["project_name"])
+            if data.get("project_address"):
+                proj_addrs.append(data["project_address"])
+            if data.get("architect"):
+                proj_archs.append(data["architect"])
+            if data.get("structural_engineer"):
+                proj_ses.append(data["structural_engineer"])
+            if data.get("total_sqft", 0) > result["project"]["total_sqft"]:
+                result["project"]["total_sqft"] = data["total_sqft"]
             new_sheets = data.get("sheet_list") or []
-            if len(new_sheets) > len(proj["sheet_list"]):
-                proj["sheet_list"] = new_sheets
+            if len(new_sheets) > len(result["project"]["sheet_list"]):
+                result["project"]["sheet_list"] = new_sheets
             if data.get("waste_factors"):
                 result["waste_factors"] = data["waste_factors"]
             result["lumber_specs"].extend(data.get("lumber_specs") or [])
@@ -79,6 +95,12 @@ def aggregate_results(extractions: list[dict]) -> dict:
         elif cat == "framing_details":
             result["framing_details"].extend(data.get("connections") or [])
             result["framing_details"].extend(data.get("hardware") or [])
+
+    # Resolve project string fields using most-common value
+    result["project"]["name"]               = _most_common(proj_names)
+    result["project"]["address"]            = _most_common(proj_addrs)
+    result["project"]["architect"]          = _most_common(proj_archs)
+    result["project"]["structural_engineer"] = _most_common(proj_ses)
 
     result["simpson_hardware"] = (
         result["foundation"].get("hold_downs", [])

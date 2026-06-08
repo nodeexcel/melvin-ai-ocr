@@ -25,7 +25,7 @@ TAGLINE = "On Time, On Budget, Beyond Expectations."
 
 def _styles():
     return {
-        "title": ParagraphStyle("title", fontName="Helvetica-Bold", fontSize=22, textColor=BRAND_YELLOW),
+        "title": ParagraphStyle("title", fontName="Helvetica-Bold", fontSize=16, textColor=BRAND_YELLOW),
         "tagline": ParagraphStyle("tagline", fontName="Helvetica-Oblique", fontSize=10, textColor=colors.white),
         "section": ParagraphStyle("section", fontName="Helvetica-Bold", fontSize=13, textColor=BRAND_YELLOW, spaceBefore=16),
         "body": ParagraphStyle("body", fontName="Helvetica", fontSize=9, textColor=colors.black),
@@ -101,12 +101,21 @@ def _hardware_table(hardware: list) -> Table | None:
                 return m[len(prefix):]
         return m
 
+    _GENERIC = {
+        "nails", "nail", "bolts", "bolt", "screws", "screw", "welds", "weld",
+        "strap", "straps", "holdown", "holdowns", "strong-tie", "hardware",
+        "anchor bolts", "anchor bolt", "joist hangers", "joist hanger",
+        "shear plates", "shear plate", "base plate", "post cap",
+    }
+
     seen: dict[str, int] = {}
     for h in hardware:
         model = (h.get("model") or "").strip()
         if not model:
             continue
         model = _normalise(model)
+        if model.lower() in _GENERIC:
+            continue
         try:
             qty = int(h.get("qty", h.get("qty_mentioned", 0)) or 0)
         except (ValueError, TypeError):
@@ -380,7 +389,10 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(ht)
         elements.append(Spacer(1, 0.1 * inch))
 
-    connections = [c for c in data.get("framing_details", []) if c.get("description")]
+    connections = [
+        c for c in data.get("framing_details", [])
+        if c.get("description") and (c.get("hardware") or c.get("lumber_sizes"))
+    ]
     if connections:
         elements.extend(_section_title("Framing Connection Details", styles))
         cell_style = ParagraphStyle("cell", fontName="Helvetica", fontSize=8, leading=10)

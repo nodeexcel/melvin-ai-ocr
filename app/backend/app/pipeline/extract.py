@@ -47,12 +47,12 @@ def extract_vision_gemini(google_api_key: str, image, category: str) -> dict:
     prompt = EXTRACTION_PROMPTS.get(category, EXTRACTION_PROMPTS["schedules"])
     genai.configure(api_key=google_api_key)
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-pro",
+        model_name="gemini-2.5-flash",
         system_instruction=SYSTEM_PROMPT,
     )
     response = model.generate_content(
         [prompt, image],
-        generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=8000),
+        generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=16000),
     )
     content = response.text if response.text else None
     if content is None:

@@ -27,7 +27,7 @@ if str(_backend_dir) not in sys.path:
 env_file = _backend_dir.parent / ".env"
 if env_file.exists():
     from dotenv import load_dotenv
-    load_dotenv(env_file, override=False)
+    load_dotenv(env_file, override=True)
 
 from app.pipeline.runner import run_pipeline_sync
 
@@ -47,6 +47,8 @@ def main() -> None:
         print("ERROR: OPENAI_API_KEY not set. Check app/.env", file=sys.stderr)
         sys.exit(1)
 
+    google_api_key = os.environ.get("GOOGLE_API_KEY", "")
+
     pdf_path = args.pdf
     if not Path(pdf_path).exists():
         print(f"ERROR: PDF not found: {pdf_path}", file=sys.stderr)
@@ -65,6 +67,7 @@ def main() -> None:
         pdf_path=pdf_path,
         openai_api_key=api_key,
         on_progress=on_progress,
+        google_api_key=google_api_key,
     )
     elapsed = time.time() - t0
 

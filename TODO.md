@@ -246,22 +246,39 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Both keys confirmed live in running container
   - NOTE: Melvin should rotate both keys — they were sent over plain chat
 
-- [ ] **Gemini integration for Vision extraction (next — highest impact)**
-  - Research confirms: Gemini Pro ~80% accuracy vs GPT-4o ~40% on dense technical drawings
-  - Swap extraction model on vision-only pages (foundation, floor_framing, roof_framing)
-  - Keep GPT-4o-mini for classification (cheap, fast, classification doesn't need Gemini's depth)
-  - Keep GPT-4o for text-heavy schedule/detail extraction (already works well)
-  - Needs: `google-generativeai` package, Gemini client in `extract.py`, model routing in `runner.py`
+- [x] **Gemini integration for Vision extraction ✅ (2026-06-08)**
+  - `google-generativeai==0.8.5` added to requirements.txt, Docker image rebuilt
+  - `GOOGLE_API_KEY` added to `config.py`, `docker-compose.yml`, `.env`
+  - `extract_vision_gemini()` added to `extract.py` using `gemini-2.5-flash`
+  - `GEMINI_CATEGORIES = {foundation, floor_framing, roof_framing}` in `runner.py`
+  - Foundation/framing plan pages now route to Gemini, all other pages unchanged
+  - `test_pdf.py` updated: `override=True` on dotenv, passes `google_api_key`
+  - Whaleon validated: hardware 32→36, connections 46→53, 5 Gemini pages
+  - Gemini extracts: hold_downs with qty, footing types P1-P4, rebar piece counts, anchor bolts
 
-- [ ] **PDF report quality improvements (step 2)**
-  - Add page numbers + footer (company name + date)
-  - Add summary block near top: "X hardware items · X connections · X pages analyzed"
-  - Add report generation date
-  - Better visual hierarchy between major/minor sections
-  - Logo support if Melvin provides one
+- [x] **PDF report quality improvements ✅ (2026-06-08)**
+  - Footer on every page: company name (left) · generated date (centre) · page number (right) · yellow rule
+  - Summary block under project header: "X hardware · X connections · X pages analyzed"
+  - Header font 22→16pt (was wrapping to 2 lines)
+  - New sections: Floor Framing Joists, Floor Framing Beams, Wall Framing, Roof Framing Rafters, Ridge Beam, Anchor Bolts
+  - Filtered generic hardware names (Nails, Bolts, Strong-Tie, Holdown, etc.) from hardware table
+  - Filtered blank connection rows (no hardware + no lumber sizes) from connections table
+  - `_std_table()` helper refactored to remove repeated TableStyle code
+
+- [x] **Frontend ResultsPanel improvements ✅ (2026-06-08)**
+  - `_pages` hidden from results view (was showing "35 items" of internal debug data)
+  - Sheet list: `S0.1 — Structural Notes` instead of raw JSON
+  - Hardware: `HDU4 ×10` instead of raw JSON
+  - Connections: show description field directly
+
+- [ ] **GPT-4o Vision refusal retry (next)**
+  - ~5-8% of Vision extraction pages return a refusal, page silently skipped
+  - Confirmed: Whaleon (3), Woodlane (7), LHERT SONG (4-5), SVR (3-4), Paseo (5)
+  - Fix: one retry per refused page with simplified prompt per category
+  - Do NOT add generic fallback — tune prompts per category
 
 - [ ] **Quantity takeoff — Phase 2 (blocked — needs Melvin accuracy decision)**
-  - Melvin needs to answer: is 75-80% AI accuracy good enough as a starting point for review, or need 90%+?
+  - Melvin needs to answer: is 75-80% AI accuracy good enough as a starting point for review?
   - Path A (75-80%): Gemini-only extraction from plan images
   - Path B (90%): PyMuPDF vector geometry extraction for footing LF + CY
   - Path C (98%+): iBeam AI specialist service ($150-500/job)

@@ -121,6 +121,35 @@ def _hardware_table(hardware: list) -> Table | None:
     return t
 
 
+def _std_table(rows: list, col_widths: list) -> Table:
+    t = Table(rows, colWidths=col_widths)
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
+        ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    return t
+
+
+def _framing_section(title: str, items: list, headers: list, col_widths: list, row_fn, styles) -> list:
+    """Render a framing quantities table (joists, beams, rafters, etc.)."""
+    valid = [r for r in items if any(row_fn(r))]
+    if not valid:
+        return []
+    elements = []
+    elements.extend(_section_title(title, styles))
+    rows = [headers] + [row_fn(r) for r in valid]
+    elements.append(_std_table(rows, col_widths))
+    elements.append(Spacer(1, 0.1 * inch))
+    return elements
+
+
 def generate_report(data: dict, output_path: str) -> None:
     """Generate a branded PDF report from the analysis result dict."""
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
@@ -171,21 +200,25 @@ def generate_report(data: dict, output_path: str) -> None:
                 r.get("size", ""), str(r.get("spacing_in", 0)),
                 str(r.get("linear_feet", 0)), str(r.get("qty_pieces", 0)),
             ])
-        rt = Table(rebar_rows, colWidths=[1.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch])
-        rt.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
-            ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 9),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ]))
         elements.append(Paragraph("Rebar", styles["label"]))
-        elements.append(rt)
+        elements.append(_std_table(rebar_rows, [1.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch]))
         elements.append(Spacer(1, 0.1 * inch))
+
+    anchor = foundation.get("anchor_bolts") or {}
+    if anchor.get("size"):
+        ab_rows = [["Size", "Spacing (in)", "Qty"], [
+            anchor.get("size", "—"),
+            str(anchor.get("spacing_in", 0)) if anchor.get("spacing_in") else "per plan",
+            str(anchor.get("qty", 0)) if anchor.get("qty") else "per plan",
+        ]]
+        elements.append(Paragraph("Anchor Bolts", styles["label"]))
+        elements.append(_std_table(ab_rows, [2 * inch, 2 * inch, 1.5 * inch]))
+        elements.append(Spacer(1, 0.1 * inch))
+
+    cy = foundation.get("concrete_cubic_yards") or 0
+    if cy:
+        elements.append(Paragraph(f"Estimated Concrete: {cy} CY", styles["body"]))
+        elements.append(Spacer(1, 0.05 * inch))
 
     lumber_specs = data.get("lumber_specs", [])
     if lumber_specs:
@@ -237,6 +270,59 @@ def generate_report(data: dict, output_path: str) -> None:
                     elements.append(Paragraph(f"  {line}", styles["body"]))
             elements.append(Spacer(1, 0.05 * inch))
         elements.append(Spacer(1, 0.05 * inch))
+
+    floor_framing = data.get("floor_framing", {})
+    elements.extend(_framing_section(
+        "Floor Framing — Joists",
+        floor_framing.get("joists", []),
+        ["Size", "Spacing (in)", "Span (ft)", "Linear Ft", "Qty Pieces"],
+        [1.5*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
+        lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),
+                   str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
+        styles,
+    ))
+    elements.extend(_framing_section(
+        "Floor Framing — Beams",
+        floor_framing.get("beams", []),
+        ["Size", "Span (ft)", "Linear Ft", "Qty Pieces"],
+        [2*inch, 1.5*inch, 1.5*inch, 1.5*inch],
+        lambda r: [r.get("size",""), str(r.get("span_ft",0)),
+                   str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
+        styles,
+    ))
+
+    wall_framing = data.get("wall_framing", {})
+    ext = wall_framing.get("exterior_walls") or {}
+    int_ = wall_framing.get("interior_walls") or {}
+    if ext.get("stud_size") or int_.get("stud_size"):
+        elements.extend(_section_title("Wall Framing", styles))
+        wall_rows = [["", "Stud Size", "Spacing (in)", "Height (ft)", "Linear Ft"]]
+        if ext.get("stud_size"):
+            wall_rows.append(["Exterior", ext.get("stud_size",""), str(ext.get("stud_spacing_in",0)),
+                               str(ext.get("height_ft",0)), str(ext.get("linear_feet",0))])
+        if int_.get("stud_size"):
+            wall_rows.append(["Interior", int_.get("stud_size",""), str(int_.get("stud_spacing_in",0)),
+                               str(int_.get("height_ft",0)), str(int_.get("linear_feet",0))])
+        elements.append(_std_table(wall_rows, [1.2*inch, 1.5*inch, 1.3*inch, 1.3*inch, 1.2*inch]))
+        elements.append(Spacer(1, 0.1*inch))
+
+    roof_framing = data.get("roof_framing", {})
+    elements.extend(_framing_section(
+        "Roof Framing — Rafters",
+        roof_framing.get("rafters", []),
+        ["Size", "Spacing (in)", "Span (ft)", "Linear Ft", "Qty Pieces"],
+        [1.5*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
+        lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),
+                   str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
+        styles,
+    ))
+    ridge = roof_framing.get("ridge_beam") or {}
+    if ridge.get("size"):
+        elements.extend(_section_title("Roof Framing — Ridge Beam", styles))
+        elements.append(Paragraph(
+            f"{ridge['size']}  —  {ridge.get('linear_feet', 0)} LF", styles["body"]
+        ))
+        elements.append(Spacer(1, 0.1*inch))
 
     nailing = data.get("nailing_schedule", [])
     if nailing:

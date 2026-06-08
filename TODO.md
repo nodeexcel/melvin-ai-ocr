@@ -1,7 +1,7 @@
 # Project TODO
 
 **Project:** AI Construction Estimator — Mel's Builders Pro Systems  
-**Last Updated:** 2026-05-23
+**Last Updated:** 2026-06-08
 
 ---
 
@@ -237,6 +237,34 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Proper fix: one retry per refused page with simplified prompt targeted at the category
   - Do NOT add a generic fallback — tune prompts per category
   - Low priority: refused pages are dense graphical drawings that return mostly zeros anyway
-- [ ] **Quantity takeoff — Phase 2 (core gap):** Vision-based geometry reading for LF, piece counts, CY, sheathing sheets
-- [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate, equipment costs, construction schedule
+
+## Session 2026-06-08 — Keys received, next phase planned
+
+- [x] **Melvin's API keys received and deployed ✅ (2026-06-08)**
+  - OpenAI key: switched from dev key to Melvin's key (costs now bill to him)
+  - Gemini key: added to `.env` + `docker-compose.yml` (`GOOGLE_API_KEY`)
+  - Both keys confirmed live in running container
+  - NOTE: Melvin should rotate both keys — they were sent over plain chat
+
+- [ ] **Gemini integration for Vision extraction (next — highest impact)**
+  - Research confirms: Gemini Pro ~80% accuracy vs GPT-4o ~40% on dense technical drawings
+  - Swap extraction model on vision-only pages (foundation, floor_framing, roof_framing)
+  - Keep GPT-4o-mini for classification (cheap, fast, classification doesn't need Gemini's depth)
+  - Keep GPT-4o for text-heavy schedule/detail extraction (already works well)
+  - Needs: `google-generativeai` package, Gemini client in `extract.py`, model routing in `runner.py`
+
+- [ ] **PDF report quality improvements (step 2)**
+  - Add page numbers + footer (company name + date)
+  - Add summary block near top: "X hardware items · X connections · X pages analyzed"
+  - Add report generation date
+  - Better visual hierarchy between major/minor sections
+  - Logo support if Melvin provides one
+
+- [ ] **Quantity takeoff — Phase 2 (blocked — needs Melvin accuracy decision)**
+  - Melvin needs to answer: is 75-80% AI accuracy good enough as a starting point for review, or need 90%+?
+  - Path A (75-80%): Gemini-only extraction from plan images
+  - Path B (90%): PyMuPDF vector geometry extraction for footing LF + CY
+  - Path C (98%+): iBeam AI specialist service ($150-500/job)
+
+- [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate (RSMeans), equipment costs, construction schedule
 - [ ] Cover sheet index parser for A-series architectural page routing

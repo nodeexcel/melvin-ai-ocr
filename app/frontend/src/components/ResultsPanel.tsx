@@ -24,6 +24,18 @@ function toTitleCase(key: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+function formatItem(item: unknown): string {
+  if (typeof item !== 'object' || item === null) return String(item)
+  const obj = item as Record<string, unknown>
+  if (obj.sheet_no !== undefined && obj.title !== undefined)
+    return `${obj.sheet_no} — ${obj.title}`
+  if (obj.model !== undefined && obj.qty !== undefined)
+    return `${obj.model}  ×${obj.qty}`
+  if (obj.description !== undefined)
+    return String(obj.description)
+  return JSON.stringify(item, null, 2)
+}
+
 function InlineValue({ v }: { v: unknown }) {
   if (Array.isArray(v)) {
     if (v.length === 0) return <span className="text-gray-500 text-sm">None</span>
@@ -35,7 +47,7 @@ function InlineValue({ v }: { v: unknown }) {
         <ul className="mt-2 space-y-1 text-left">
           {v.map((item, i) => (
             <li key={i} className="text-gray-300 text-xs bg-brand-black rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
-              {typeof item === 'object' && item !== null ? JSON.stringify(item, null, 2) : String(item)}
+              {formatItem(item)}
             </li>
           ))}
         </ul>
@@ -80,7 +92,7 @@ function DynamicSection({ sectionKey, value }: { sectionKey: string; value: unkn
             <ul className="mt-2 space-y-1 pl-3">
               {value.map((item, i) => (
                 <li key={i} className="text-gray-300 text-xs bg-brand-black rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
-                  {typeof item === 'object' && item !== null ? JSON.stringify(item, null, 2) : String(item)}
+                  {formatItem(item)}
                 </li>
               ))}
             </ul>
@@ -170,9 +182,11 @@ export default function ResultsPanel({
         </div>
       ) : (
         <div className="space-y-4">
-          {Object.entries(rawJson).map(([key, value]) => (
-            <DynamicSection key={key} sectionKey={key} value={value} />
-          ))}
+          {Object.entries(rawJson)
+            .filter(([key]) => !key.startsWith('_'))
+            .map(([key, value]) => (
+              <DynamicSection key={key} sectionKey={key} value={value} />
+            ))}
         </div>
       )}
     </div>

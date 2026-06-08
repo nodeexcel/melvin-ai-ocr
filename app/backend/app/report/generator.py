@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -70,6 +71,19 @@ def _header_block(styles, project: dict) -> list:
     elements.append(proj_table)
     elements.append(HRFlowable(width="100%", thickness=2, color=BRAND_YELLOW, spaceAfter=6))
     return elements
+
+
+def _footer(canvas, doc):
+    canvas.saveState()
+    canvas.setFont("Helvetica", 8)
+    canvas.setFillColor(BRAND_GRAY)
+    canvas.drawString(0.75 * inch, 0.45 * inch, COMPANY_NAME)
+    canvas.drawCentredString(4.25 * inch, 0.45 * inch, f"Generated: {date.today().strftime('%B %d, %Y')}")
+    canvas.drawRightString(7.75 * inch, 0.45 * inch, f"Page {doc.page}")
+    canvas.setStrokeColor(BRAND_YELLOW)
+    canvas.setLineWidth(0.5)
+    canvas.line(0.75 * inch, 0.6 * inch, 7.75 * inch, 0.6 * inch)
+    canvas.restoreState()
 
 
 def _section_title(text: str, styles) -> list:
@@ -165,6 +179,17 @@ def generate_report(data: dict, output_path: str) -> None:
     elements = []
 
     elements.extend(_header_block(styles, data.get("project", {})))
+
+    hw_count = len([h for h in data.get("simpson_hardware", []) if h.get("model") and h.get("qty", 0) > 0])
+    conn_count = len([c for c in data.get("framing_details", []) if c.get("description")])
+    pages_analyzed = len([p for p in data.get("_pages", []) if p.get("category") not in ("skip", "unknown")])
+    summary_parts = []
+    if hw_count:      summary_parts.append(f"{hw_count} hardware items")
+    if conn_count:    summary_parts.append(f"{conn_count} framing connections")
+    if pages_analyzed: summary_parts.append(f"{pages_analyzed} pages analyzed")
+    if summary_parts:
+        elements.append(Paragraph("  ·  ".join(summary_parts), styles["body"]))
+        elements.append(Spacer(1, 0.15 * inch))
 
     foundation = data.get("foundation", {})
     _has_foundation = bool(foundation.get("footing_types") or foundation.get("rebar"))
@@ -408,4 +433,4 @@ def generate_report(data: dict, output_path: str) -> None:
         ]))
         elements.append(st)
 
-    doc.build(elements)
+    doc.build(elements, onFirstPage=_footer, onLaterPages=_footer)

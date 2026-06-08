@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.pipeline.aggregate import aggregate_results
 from app.pipeline.classify import classify_pages
-from app.pipeline.extract import extract_text, extract_vision
+from app.pipeline.extract import extract_text, extract_vision, extract_vision_gemini
 
 ProgressCallback = Callable[[str, str, int], None]
 
@@ -26,12 +26,16 @@ def render_vision_pages(pdf_path: str, pages: list[dict], dpi: int = 250) -> dic
     return images
 
 
+GEMINI_CATEGORIES = {"floor_framing", "roof_framing", "foundation"}
+
+
 def extract_all_pages(
     client: OpenAI,
     pages: list[dict],
     images: dict[int, object],
+    google_api_key: str = "",
 ) -> list[dict]:
-    """Run GPT-4o extraction on all relevant pages."""
+    """Run extraction on all relevant pages. Vision-only plan pages use Gemini; others use GPT-4o."""
     relevant = [p for p in pages if p["category"] not in ("skip", "unknown")]
     extractions = []
     for p in relevant:
@@ -45,8 +49,12 @@ def extract_all_pages(
                 image = images.get(page_num)
                 if image is None:
                     continue
-                data = extract_vision(client, image, category)
-                method = "vision"
+                if google_api_key and category in GEMINI_CATEGORIES:
+                    data = extract_vision_gemini(google_api_key, image, category)
+                    method = "vision_gemini"
+                else:
+                    data = extract_vision(client, image, category)
+                    method = "vision"
             extractions.append({"page": page_num, "category": category, "data": data, "method": method})
         except Exception as e:
             extractions.append({
@@ -62,6 +70,7 @@ def run_pipeline_sync(
     pdf_path: str,
     openai_api_key: str,
     on_progress: ProgressCallback,
+    google_api_key: str = "",
 ) -> dict:
     """
     Run the full extraction pipeline synchronously.
@@ -81,7 +90,7 @@ def run_pipeline_sync(
     on_progress("rendering", f"Rendered {len(images)} pages", 48)
 
     on_progress("extracting", f"Extracting data from {relevant_count} pages...", 53)
-    extractions = extract_all_pages(client, pages, images)
+    extractions = extract_all_pages(client, pages, images, google_api_key=google_api_key)
     errors = sum(1 for e in extractions if e["data"].get("parse_error") or e["data"].get("error"))
     on_progress("extracting", f"Extracted {len(extractions)} pages ({errors} errors)", 80)
 
@@ -98,6 +107,7 @@ def pipeline_worker(
     output_dir: str,
     db_sync_url: str,
     openai_api_key: str,
+    google_api_key: str = "",
 ) -> None:
     """
     Entry point for ProcessPoolExecutor. Runs in a separate OS process.
@@ -140,6 +150,7 @@ def pipeline_worker(
             pdf_path=pdf_path,
             openai_api_key=openai_api_key,
             on_progress=write_event,
+            google_api_key=google_api_key,
         )
 
         result_id = str(uuid.uuid4())

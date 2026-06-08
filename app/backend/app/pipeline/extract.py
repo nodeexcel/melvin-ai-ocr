@@ -2,6 +2,7 @@ import base64
 import json
 from io import BytesIO
 
+import google.generativeai as genai
 from openai import OpenAI
 
 from app.pipeline.prompts import EXTRACTION_PROMPTS, SYSTEM_PROMPT
@@ -36,6 +37,24 @@ def extract_text(client: OpenAI, text: str, category: str) -> dict:
         temperature=0,
     )
     content = response.choices[0].message.content
+    if content is None:
+        return {"raw_response": None, "parse_error": True}
+    return _parse_response(content.strip())
+
+
+def extract_vision_gemini(google_api_key: str, image, category: str) -> dict:
+    """Extract structured data from a rendered page image using Gemini Pro."""
+    prompt = EXTRACTION_PROMPTS.get(category, EXTRACTION_PROMPTS["schedules"])
+    genai.configure(api_key=google_api_key)
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-pro",
+        system_instruction=SYSTEM_PROMPT,
+    )
+    response = model.generate_content(
+        [prompt, image],
+        generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=8000),
+    )
+    content = response.text if response.text else None
     if content is None:
         return {"raw_response": None, "parse_error": True}
     return _parse_response(content.strip())

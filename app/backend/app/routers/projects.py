@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/projects", tags=["projects"])
 _executor = None  # initialized via lifespan in main.py
 
 
-def _submit_pipeline(project_id: str, pdf_path: str, db_sync_url: str, openai_api_key: str) -> None:
+def _submit_pipeline(project_id: str, pdf_path: str, db_sync_url: str, openai_api_key: str, google_api_key: str = "") -> None:
     _executor.submit(
         pipeline_worker,
         project_id,
@@ -25,6 +25,7 @@ def _submit_pipeline(project_id: str, pdf_path: str, db_sync_url: str, openai_ap
         settings.upload_dir,
         db_sync_url,
         openai_api_key,
+        google_api_key,
     )
 
 
@@ -65,6 +66,7 @@ async def upload_project(
         pdf_path=str(file_path),
         db_sync_url=settings.database_sync_url,
         openai_api_key=settings.openai_api_key,
+        google_api_key=settings.google_api_key,
     )
 
     return project

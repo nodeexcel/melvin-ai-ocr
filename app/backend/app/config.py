@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     database_sync_url: str
     secret_key: str
     openai_api_key: str
+    google_api_key: str = ""
     upload_dir: str = "/uploads"
     register_secret: str = ""
     algorithm: str = "HS256"

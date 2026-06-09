@@ -312,7 +312,7 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Scale `1/4"=1'-0"` extracted ✅. Raw sum of visible dimensions = 79.4 ft (partial — image was downscaled)
   - Also reads: W-sections (`W12x30`), PSL specs (`5.25×11.25PSL2.2E`), framing schedules
 
-- [ ] **Build `scripts/ocr/extract_lf.py` (next — Phase 2 LF for scanned PDFs)**
+- [x] **Build `scripts/ocr/extract_lf.py` ✅ (2026-06-09)**
   - Tile the page at full resolution (render 2000px tiles with overlap) to avoid 4000px OCR limit
   - Run PaddleOCR on each tile, deduplicate overlapping text by position
   - Parse all feet-inches patterns → filter for structural dimension range (3ft–200ft)

@@ -296,40 +296,36 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Too many undifferentiated lines to reliably identify footing perimeter without CAD layer info
   - **Not viable for these specific CAD-generated PDFs without DXF/layer access**
 
-- [x] **PaddleOCR investigation (installed, runtime incompatible)**
-  - Installed `paddleocr-3.6.0` + `paddlepaddle-3.3.1`
-  - Runtime error: `NotImplementedError: ConvertPirAttribute2RuntimeAttribute` — incompatible with Python 3.13 / this hardware
-  - DO NOT add to `requirements.txt` — not usable
-  - Uninstall from venv before next Docker rebuild to avoid bloating image
+- [x] **PaddleOCR + full LF pipeline ✅ (2026-06-09)**
+  - Docker backend is `python:3.11-slim` → PaddleOCR works in Docker ✅
+  - `app/backend/app/pipeline/ocr.py` — PaddleOCR module (tiled rendering, dedup, feet-inches parsing, footing filter, graceful fallback)
+  - `scripts/ocr/extract_lf.py` — standalone CLI for testing (Python 3.11 venv/melvin311)
+  - `aggregate.py inject_lf_data()` — distributes LF to footing types, calculates CY from LF × avg footing cross-section
+  - `runner.py pipeline_worker` — calls OCR after main extraction, injects LF data
+  - `requirements.txt` + `Dockerfile` — PaddleOCR 3.3.0 + PaddlePaddle 3.2.0 + pymupdf + libgl1
+  - Docker image rebuilt and verified: `PaddleOCR available: True` ✅
+  - PDF report already shows: LF* in footing table, CY* estimate, `" *"` estimated flag, verification note
+  - Full run validated: 128.6 LF from Paseo Miramar p35/37/38, CY = 14.3 ✅
 
-- [x] **PaddleOCR breakthrough ✅ (2026-06-09) — scanned PDFs NOW SOLVABLE**
-  - Problem: Python 3.13 incompatible with PaddlePaddle (runtime error on any version)
-  - Fix: Python 3.11 venv (`venv/melvin311/`) works perfectly
-  - Working stack: Python 3.11 + PaddleOCR 3.3.0 + PaddlePaddle 3.2.0
-  - Install: `pip install paddleocr==3.3.0` then `pip install paddlepaddle==3.2.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/`
-  - Tested on Paseo Miramar foundation plan (p35): 915 text items extracted vs 102 from PyMuPDF
-  - Dimension callouts successfully read: `6'-0"`, `10'-11"`, `8'-10"`, `7'-5"`, `±8'-6"`, `±5'-2"`, etc.
-  - Scale `1/4"=1'-0"` extracted ✅. Raw sum of visible dimensions = 79.4 ft (partial — image was downscaled)
-  - Also reads: W-sections (`W12x30`), PSL specs (`5.25×11.25PSL2.2E`), framing schedules
+- [ ] **CRITICAL — Paseo Miramar classification issue (blocks LF auto-trigger)**
+  - Foundation/framing plan pages (p35=foundation, p37=floor framing, p38=roof framing) classified as `framing_details`/`schedules` by Vision classifier
+  - OCR only fires when pages classified as `foundation`/`floor_framing`/`roof_framing` (GEMINI_CATEGORIES)
+  - Root cause: Paseo Miramar is a complex multi-firm RTI bundle — Vision classifier sees mixed content and defaults to `framing_details`
+  - Fix needed: examine which thumbnail features distinguish structural plan pages from detail sheets in this PDF, tune classify.py prompts or add post-classification override for known structural sheet titles (S1.1, S1.2, S1.3)
+  - Until fixed: LF = 0 on Paseo Miramar upload via web app
 
-- [x] **Build `scripts/ocr/extract_lf.py` ✅ (2026-06-09)**
-  - Tile the page at full resolution (render 2000px tiles with overlap) to avoid 4000px OCR limit
-  - Run PaddleOCR on each tile, deduplicate overlapping text by position
-  - Parse all feet-inches patterns → filter for structural dimension range (3ft–200ft)
-  - Sum footing-specific dimensions (exclude CANT, BEAM SPAN, etc.)
-  - Output: total_lf, dimension_list, drawing_scale
-  - Run from Python 3.11 venv — separate from main Docker pipeline
-  - IMPORTANT: PaddleOCR CANNOT go in Docker image (Python 3.13 incompatible)
-  - Option: run as separate subprocess call from main pipeline, or manual preprocessing step
+- [ ] **PDF test matrix — what works on each PDF:**
+  - Paseo Miramar (scanned): Hardware/connections ✅ | LF/CY: 0 (classification bug — see above)
+  - Whaleon (CAD): Hardware/connections/hold-downs ✅ | LF/CY: 0 (CAD vector text, not solvable without DXF)
+  - LHERT SONG (CAD): Hardware/connections/specs ✅ | LF/CY: 0
+  - Woodlane Court (CAD): Hardware/connections ✅ | LF/CY: 0
+  - SVR 80% CD (CAD): Hardware/connections/specs ✅ | LF/CY: 0
+  - BARAGHOUSH: 0 structural data (architectural-only set)
+  - **For a working LF/CY demo: fix Paseo classification first**
 
-- [ ] **CAD PDFs (Whaleon, LHERT SONG, Woodlane, SVR) — still needs approach**
-  - PaddleOCR confirmed NOT viable (dimension text is vector-rendered in CAD PDFs)
-  - Options: tesseract (`sudo apt install tesseract-ocr`), DXF export, or iBeam AI
-  - Defer until scanned PDF approach is validated end-to-end
-
-- [ ] **Quantity takeoff — Phase 2 (unblocked for scanned PDFs)**
-  - Architecture ready: dimension pass, estimated flag, PDF display all built
-  - Next: build tiled PaddleOCR extraction + wire into pipeline as preprocessing step
+- [ ] **CAD PDFs LF extraction (future — after Paseo is working)**
+  - Options: tesseract OCR (`sudo apt install tesseract-ocr`), DXF export from engineer, iBeam AI
+  - Defer until scanned PDF LF is fully validated end-to-end
 
 - [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate (RSMeans), equipment costs, construction schedule
 - [ ] Cover sheet index parser for A-series architectural page routing

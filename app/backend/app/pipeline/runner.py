@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.pipeline.aggregate import aggregate_results
 from app.pipeline.classify import classify_pages
-from app.pipeline.extract import extract_text, extract_vision, extract_vision_gemini
+from app.pipeline.extract import extract_dimensions_gemini, extract_text, extract_vision, extract_vision_gemini
 
 ProgressCallback = Callable[[str, str, int], None]
 
@@ -52,6 +52,10 @@ def extract_all_pages(
                 if google_api_key and category in GEMINI_CATEGORIES:
                     data = extract_vision_gemini(google_api_key, image, category)
                     method = "vision_gemini"
+                    dim = extract_dimensions_gemini(google_api_key, image, category)
+                    if dim:
+                        data = {**data, **{k: v for k, v in dim.items() if v}}
+
                 else:
                     data = extract_vision(client, image, category)
                     method = "vision"

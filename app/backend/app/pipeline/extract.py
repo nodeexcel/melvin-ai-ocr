@@ -5,7 +5,7 @@ from io import BytesIO
 import google.generativeai as genai
 from openai import OpenAI
 
-from app.pipeline.prompts import EXTRACTION_PROMPTS, RETRY_PROMPTS, SYSTEM_PROMPT, is_refusal
+from app.pipeline.prompts import DIMENSION_PROMPTS, EXTRACTION_PROMPTS, RETRY_PROMPTS, SYSTEM_PROMPT, is_refusal
 
 
 def _encode_image(image) -> str:
@@ -40,6 +40,27 @@ def extract_text(client: OpenAI, text: str, category: str) -> dict:
     if content is None:
         return {"raw_response": None, "parse_error": True}
     return _parse_response(content.strip())
+
+
+def extract_dimensions_gemini(google_api_key: str, image, category: str) -> dict:
+    """Second-pass dimension extraction — reads LF/scale from drawing image. Returns {} on any failure."""
+    prompt = DIMENSION_PROMPTS.get(category)
+    if not prompt:
+        return {}
+    try:
+        genai.configure(api_key=google_api_key)
+        model = genai.GenerativeModel(model_name="gemini-2.5-flash", system_instruction=SYSTEM_PROMPT)
+        response = model.generate_content(
+            [prompt, image],
+            generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=2000),
+        )
+        content = response.text.strip() if response.text else ""
+        if not content or is_refusal(content):
+            return {}
+        result = _parse_response(content)
+        return {} if result.get("parse_error") else result
+    except Exception:
+        return {}
 
 
 def extract_vision_gemini(google_api_key: str, image, category: str) -> dict:

@@ -16,10 +16,11 @@ def aggregate_results(extractions: list[dict]) -> dict:
         "foundation": {
             "footing_types": [], "concrete_cubic_yards": 0,
             "rebar": [], "anchor_bolts": {}, "hold_downs": [],
+            "drawing_scale": "", "estimated": False,
         },
-        "floor_framing":   {"joists": [], "beams": [], "posts": [], "blocking": {}, "hardware": []},
-        "wall_framing":    {"exterior_walls": {}, "interior_walls": {}, "headers": [], "sheathing": {}, "hardware": []},
-        "roof_framing":    {"rafters": [], "ridge_beam": {}, "hip_valley": [], "sheathing": {}, "hardware": []},
+        "floor_framing":   {"joists": [], "beams": [], "posts": [], "blocking": {}, "hardware": [], "drawing_scale": "", "estimated": False},
+        "wall_framing":    {"exterior_walls": {}, "interior_walls": {}, "headers": [], "sheathing": {}, "hardware": [], "drawing_scale": "", "estimated": False},
+        "roof_framing":    {"rafters": [], "ridge_beam": {}, "hip_valley": [], "sheathing": {}, "hardware": [], "drawing_scale": "", "estimated": False},
         "framing_details": [],
         "simpson_hardware": [],
         "lumber_specs":    [],
@@ -73,17 +74,29 @@ def aggregate_results(extractions: list[dict]) -> dict:
             result["foundation"]["hold_downs"].extend(data.get("hold_downs") or [])
             if data.get("anchor_bolts"):
                 result["foundation"]["anchor_bolts"] = data["anchor_bolts"]
+            if data.get("estimated"):
+                result["foundation"]["estimated"] = True
+            if data.get("drawing_scale") and not result["foundation"]["drawing_scale"]:
+                result["foundation"]["drawing_scale"] = data["drawing_scale"]
 
         elif cat == "floor_framing":
             result["floor_framing"]["joists"].extend(data.get("joists") or [])
             result["floor_framing"]["beams"].extend(data.get("beams") or [])
             result["floor_framing"]["hardware"].extend(data.get("hardware") or [])
+            if data.get("estimated"):
+                result["floor_framing"]["estimated"] = True
+            if data.get("drawing_scale") and not result["floor_framing"]["drawing_scale"]:
+                result["floor_framing"]["drawing_scale"] = data["drawing_scale"]
 
         elif cat == "wall_framing":
             if not result["wall_framing"]["exterior_walls"] and data.get("exterior_walls"):
                 result["wall_framing"]["exterior_walls"] = data["exterior_walls"]
             result["wall_framing"]["headers"].extend(data.get("headers") or [])
             result["wall_framing"]["hardware"].extend(data.get("hardware") or [])
+            if data.get("estimated"):
+                result["wall_framing"]["estimated"] = True
+            if data.get("drawing_scale") and not result["wall_framing"]["drawing_scale"]:
+                result["wall_framing"]["drawing_scale"] = data["drawing_scale"]
 
         elif cat == "roof_framing":
             result["roof_framing"]["rafters"].extend(data.get("rafters") or [])
@@ -91,6 +104,10 @@ def aggregate_results(extractions: list[dict]) -> dict:
                 result["roof_framing"]["ridge_beam"] = data["ridge_beam"]
             result["roof_framing"]["hip_valley"].extend(data.get("hip_valley") or [])
             result["roof_framing"]["hardware"].extend(data.get("hardware") or [])
+            if data.get("estimated"):
+                result["roof_framing"]["estimated"] = True
+            if data.get("drawing_scale") and not result["roof_framing"]["drawing_scale"]:
+                result["roof_framing"]["drawing_scale"] = data["drawing_scale"]
 
         elif cat == "framing_details":
             result["framing_details"].extend(data.get("connections") or [])

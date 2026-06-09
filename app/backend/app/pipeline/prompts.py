@@ -38,6 +38,25 @@ RETRY_PROMPTS: dict[str, str] = {
 }
 
 
+DIMENSION_PROMPTS: dict[str, str] = {
+    "foundation": """Foundation plan drawing. Read dimension annotations and scale callout. Return JSON only:
+{"drawing_scale": "", "footing_runs": [{"label": "", "length_ft": 0}], "total_linear_feet": 0, "concrete_cubic_yards": 0, "estimated": true}
+If total_linear_feet cannot be read, return 0. Do not refuse — return zeros for unreadable fields.""",
+
+    "floor_framing": """Floor framing plan drawing. Read span dimensions, spacing callouts, scale callout. Return JSON only:
+{"drawing_scale": "", "joist_span_ft": 0, "joist_spacing_in": 0, "floor_width_ft": 0, "total_joist_lf": 0, "beam_spans": [{"label": "", "length_ft": 0}], "estimated": true}
+If dimensions cannot be read, return 0. Do not refuse — return zeros for unreadable fields.""",
+
+    "wall_framing": """Floor plan or shear wall plan drawing. Read perimeter wall dimensions and scale callout. Return JSON only:
+{"drawing_scale": "", "exterior_lf": 0, "interior_lf": 0, "estimated": true}
+If dimensions cannot be read, return 0. Do not refuse — return zeros for unreadable fields.""",
+
+    "roof_framing": """Roof framing plan drawing. Read rafter spans, spacing callouts, ridge beam length, scale callout. Return JSON only:
+{"drawing_scale": "", "rafter_span_ft": 0, "rafter_spacing_in": 0, "roof_width_ft": 0, "total_rafter_lf": 0, "ridge_lf": 0, "estimated": true}
+If dimensions cannot be read, return 0. Do not refuse — return zeros for unreadable fields.""",
+}
+
+
 EXTRACTION_PROMPTS: dict[str, str] = {
     "foundation": """This is a foundation plan or footing detail sheet.
 Extract ALL of the following as JSON:

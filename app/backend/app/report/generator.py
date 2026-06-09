@@ -201,10 +201,18 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(Spacer(1, 0.15 * inch))
 
     foundation = data.get("foundation", {})
+    _est = foundation.get("estimated", False)
+    _est_tag = " *" if _est else ""
     _has_foundation = bool(foundation.get("footing_types") or foundation.get("rebar"))
     if _has_foundation:
         elements.extend(_section_title("Foundation", styles))
-    footing_rows = [["Type", "Width (in)", "Depth (in)", "Linear Ft"]]
+        if _est and foundation.get("drawing_scale"):
+            elements.append(Paragraph(f"Scale: {foundation['drawing_scale']}  — * quantities AI-estimated from drawing, verify before ordering", styles["body"]))
+            elements.append(Spacer(1, 0.05 * inch))
+        elif _est:
+            elements.append(Paragraph("* quantities AI-estimated from drawing, verify before ordering", styles["body"]))
+            elements.append(Spacer(1, 0.05 * inch))
+    footing_rows = [["Type", "Width (in)", "Depth (in)", f"Linear Ft{_est_tag}"]]
     for ft in foundation.get("footing_types", []):
         footing_rows.append([
             ft.get("type", ""), str(ft.get("width_in", 0)),
@@ -251,7 +259,8 @@ def generate_report(data: dict, output_path: str) -> None:
 
     cy = foundation.get("concrete_cubic_yards") or 0
     if cy:
-        elements.append(Paragraph(f"Estimated Concrete: {cy} CY", styles["body"]))
+        cy_label = f"Concrete: {round(cy, 1)} CY{_est_tag}"
+        elements.append(Paragraph(cy_label, styles["body"]))
         elements.append(Spacer(1, 0.05 * inch))
 
     lumber_specs = data.get("lumber_specs", [])
@@ -306,10 +315,11 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(Spacer(1, 0.05 * inch))
 
     floor_framing = data.get("floor_framing", {})
+    _ff_est = " *" if floor_framing.get("estimated") else ""
     elements.extend(_framing_section(
         "Floor Framing — Joists",
         floor_framing.get("joists", []),
-        ["Size", "Spacing (in)", "Span (ft)", "Linear Ft", "Qty Pieces"],
+        ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_ff_est}", f"Qty Pieces{_ff_est}"],
         [1.5*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
         lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),
                    str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
@@ -318,7 +328,7 @@ def generate_report(data: dict, output_path: str) -> None:
     elements.extend(_framing_section(
         "Floor Framing — Beams",
         floor_framing.get("beams", []),
-        ["Size", "Span (ft)", "Linear Ft", "Qty Pieces"],
+        ["Size", "Span (ft)", f"Linear Ft{_ff_est}", f"Qty Pieces{_ff_est}"],
         [2*inch, 1.5*inch, 1.5*inch, 1.5*inch],
         lambda r: [r.get("size",""), str(r.get("span_ft",0)),
                    str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
@@ -326,11 +336,12 @@ def generate_report(data: dict, output_path: str) -> None:
     ))
 
     wall_framing = data.get("wall_framing", {})
+    _wf_est = " *" if wall_framing.get("estimated") else ""
     ext = wall_framing.get("exterior_walls") or {}
     int_ = wall_framing.get("interior_walls") or {}
     if ext.get("stud_size") or int_.get("stud_size"):
         elements.extend(_section_title("Wall Framing", styles))
-        wall_rows = [["", "Stud Size", "Spacing (in)", "Height (ft)", "Linear Ft"]]
+        wall_rows = [["", "Stud Size", "Spacing (in)", "Height (ft)", f"Linear Ft{_wf_est}"]]
         if ext.get("stud_size"):
             wall_rows.append(["Exterior", ext.get("stud_size",""), str(ext.get("stud_spacing_in",0)),
                                str(ext.get("height_ft",0)), str(ext.get("linear_feet",0))])
@@ -341,10 +352,11 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(Spacer(1, 0.1*inch))
 
     roof_framing = data.get("roof_framing", {})
+    _rf_est = " *" if roof_framing.get("estimated") else ""
     elements.extend(_framing_section(
         "Roof Framing — Rafters",
         roof_framing.get("rafters", []),
-        ["Size", "Spacing (in)", "Span (ft)", "Linear Ft", "Qty Pieces"],
+        ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_rf_est}", f"Qty Pieces{_rf_est}"],
         [1.5*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
         lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),
                    str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],

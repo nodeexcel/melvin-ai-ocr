@@ -302,25 +302,34 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - DO NOT add to `requirements.txt` — not usable
   - Uninstall from venv before next Docker rebuild to avoid bloating image
 
-- [ ] **Phase 2 LF extraction — NEXT STEPS (clear path forward)**
-  - **For scanned PDFs (Paseo Miramar):** Gemini vision OCR on full-res rendered page IS the right approach — scanned = raster image, Gemini can read all text including dimension callouts
-    - Tested approach: render page → send to Gemini with focused "read dimension callouts" prompt
-    - BLOCKED: free tier Gemini keys = 20 req/day, exhausted during testing
-    - Fix: need paid Gemini account (even $5 covers weeks). OR wait for daily quota reset + test immediately
-  - **For CAD PDFs (Whaleon, LHERT SONG, Woodlane, SVR):** 
-    - Option A: `sudo apt install tesseract-ocr` → render page image → pytesseract OCR on drawing annotations
-    - Option B: DXF export from engineer — ezdxf reads CAD layers precisely (~99% accuracy)
-    - Option C: iBeam AI specialist service — outsource entirely ($150-500/job)
-  - **Decision pending:** test Gemini OCR on Paseo Miramar first (easiest path), evaluate numbers, then decide on CAD PDF approach
+- [x] **PaddleOCR breakthrough ✅ (2026-06-09) — scanned PDFs NOW SOLVABLE**
+  - Problem: Python 3.13 incompatible with PaddlePaddle (runtime error on any version)
+  - Fix: Python 3.11 venv (`venv/melvin311/`) works perfectly
+  - Working stack: Python 3.11 + PaddleOCR 3.3.0 + PaddlePaddle 3.2.0
+  - Install: `pip install paddleocr==3.3.0` then `pip install paddlepaddle==3.2.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/`
+  - Tested on Paseo Miramar foundation plan (p35): 915 text items extracted vs 102 from PyMuPDF
+  - Dimension callouts successfully read: `6'-0"`, `10'-11"`, `8'-10"`, `7'-5"`, `±8'-6"`, `±5'-2"`, etc.
+  - Scale `1/4"=1'-0"` extracted ✅. Raw sum of visible dimensions = 79.4 ft (partial — image was downscaled)
+  - Also reads: W-sections (`W12x30`), PSL specs (`5.25×11.25PSL2.2E`), framing schedules
 
-- [ ] **Gemini quota blocker — must resolve before testing**
-  - Both Melvin's key and dev key exhausted (20 req/day free tier)
-  - Solution: paid Gemini billing at aistudio.google.com (any amount) OR daily reset
-  - DO NOT send Melvin message about Phase 2 accuracy until we've tested and have actual LF numbers
+- [ ] **Build `scripts/ocr/extract_lf.py` (next — Phase 2 LF for scanned PDFs)**
+  - Tile the page at full resolution (render 2000px tiles with overlap) to avoid 4000px OCR limit
+  - Run PaddleOCR on each tile, deduplicate overlapping text by position
+  - Parse all feet-inches patterns → filter for structural dimension range (3ft–200ft)
+  - Sum footing-specific dimensions (exclude CANT, BEAM SPAN, etc.)
+  - Output: total_lf, dimension_list, drawing_scale
+  - Run from Python 3.11 venv — separate from main Docker pipeline
+  - IMPORTANT: PaddleOCR CANNOT go in Docker image (Python 3.13 incompatible)
+  - Option: run as separate subprocess call from main pipeline, or manual preprocessing step
 
-- [ ] **Quantity takeoff — Phase 2 (unblocked when quota resolved)**
-  - Architecture is ready (dimension pass, estimated flag, PDF display all built)
-  - Just need a working Gemini key + test Paseo Miramar foundation plan
+- [ ] **CAD PDFs (Whaleon, LHERT SONG, Woodlane, SVR) — still needs approach**
+  - PaddleOCR confirmed NOT viable (dimension text is vector-rendered in CAD PDFs)
+  - Options: tesseract (`sudo apt install tesseract-ocr`), DXF export, or iBeam AI
+  - Defer until scanned PDF approach is validated end-to-end
+
+- [ ] **Quantity takeoff — Phase 2 (unblocked for scanned PDFs)**
+  - Architecture ready: dimension pass, estimated flag, PDF display all built
+  - Next: build tiled PaddleOCR extraction + wire into pipeline as preprocessing step
 
 - [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate (RSMeans), equipment costs, construction schedule
 - [ ] Cover sheet index parser for A-series architectural page routing

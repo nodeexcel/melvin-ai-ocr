@@ -8,7 +8,7 @@ from pdf2image import convert_from_path
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
-from app.pipeline.aggregate import aggregate_results
+from app.pipeline.aggregate import aggregate_results, inject_lf_data
 from app.pipeline.classify import classify_pages
 from app.pipeline.extract import extract_dimensions_gemini, extract_text, extract_vision, extract_vision_gemini
 
@@ -75,6 +75,7 @@ def run_pipeline_sync(
     openai_api_key: str,
     on_progress: ProgressCallback,
     google_api_key: str = "",
+    lf_data: dict | None = None,
 ) -> dict:
     """
     Run the full extraction pipeline synchronously.
@@ -100,6 +101,9 @@ def run_pipeline_sync(
 
     on_progress("aggregating", "Aggregating results...", 85)
     result = aggregate_results(extractions)
+    if lf_data:
+        inject_lf_data(result, lf_data)
+        on_progress("aggregating", f"LF injected: {lf_data.get('grand_total_lf', 0)} ft", 88)
     on_progress("aggregating", "Aggregation complete", 90)
 
     return result

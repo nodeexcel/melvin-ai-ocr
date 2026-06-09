@@ -128,3 +128,39 @@ def aggregate_results(extractions: list[dict]) -> dict:
     )
 
     return result
+
+
+def inject_lf_data(result: dict, lf_data: dict) -> dict:
+    """Inject PaddleOCR LF results into foundation section. Mutates result in place."""
+    foundation = result.get("foundation", {})
+    grand_lf = lf_data.get("grand_total_lf", 0)
+    if not grand_lf:
+        return result
+
+    # Mark as estimated and capture scale
+    foundation["estimated"] = True
+    for page in lf_data.get("pages", []):
+        if page.get("drawing_scale") and not foundation.get("drawing_scale"):
+            foundation["drawing_scale"] = page["drawing_scale"]
+
+    # Distribute total LF evenly across footing types that have no LF yet
+    footing_types = foundation.get("footing_types", [])
+    unset = [ft for ft in footing_types if not ft.get("linear_feet")]
+    if unset:
+        lf_each = round(grand_lf / len(unset), 1)
+        for ft in unset:
+            ft["linear_feet"] = lf_each
+
+    # Calculate CY from LF × average footing cross-section
+    if foundation.get("concrete_cubic_yards", 0) == 0 and footing_types:
+        dims = [
+            (ft.get("width_in", 0), ft.get("depth_in", 0))
+            for ft in footing_types
+            if ft.get("width_in") and ft.get("depth_in")
+        ]
+        if dims:
+            avg_w = sum(d[0] for d in dims) / len(dims)
+            avg_d = sum(d[1] for d in dims) / len(dims)
+            foundation["concrete_cubic_yards"] = round(grand_lf * (avg_w / 12) * (avg_d / 12) / 27, 1)
+
+    return result

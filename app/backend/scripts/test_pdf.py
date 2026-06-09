@@ -14,9 +14,15 @@ Usage (local):
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+_OCR_SCRIPT = _REPO_ROOT / "scripts" / "ocr" / "extract_lf.py"
+_PY311 = _REPO_ROOT / "venv" / "melvin311" / "bin" / "python"
+_OCR_CATEGORIES = {"foundation", "floor_framing", "roof_framing"}
 
 # Ensure app package is importable whether running locally or inside Docker
 _backend_dir = Path(__file__).resolve().parent.parent
@@ -69,6 +75,32 @@ def main() -> None:
         on_progress=on_progress,
         google_api_key=google_api_key,
     )
+
+    # PaddleOCR LF extraction — runs on Python 3.11 (venv/melvin311), scanned PDFs only
+    lf_data = None
+    if _PY311.exists() and _OCR_SCRIPT.exists():
+        ocr_pages = sorted({
+            p["page"] for p in result.get("_pages", [])
+            if p.get("category") in _OCR_CATEGORIES
+        })
+        if ocr_pages:
+            on_progress("ocr", f"Running LF extraction on {len(ocr_pages)} pages...", 91)
+            try:
+                proc = subprocess.run(
+                    [str(_PY311), str(_OCR_SCRIPT),
+                     "--pdf", pdf_path,
+                     "--pages", ",".join(str(p) for p in ocr_pages)],
+                    capture_output=True, text=True, timeout=600,
+                )
+                if proc.returncode == 0:
+                    lf_data = json.loads(proc.stdout)
+                    from app.pipeline.aggregate import inject_lf_data
+                    inject_lf_data(result, lf_data)
+                    on_progress("ocr", f"LF: {lf_data.get('grand_total_lf', 0)} ft extracted", 95)
+                else:
+                    on_progress("ocr", "LF extraction failed — skipped", 95)
+            except Exception as e:
+                on_progress("ocr", f"LF extraction skipped: {e}", 95)
     elapsed = time.time() - t0
 
     with open(out_file, "w") as f:
@@ -86,6 +118,13 @@ def main() -> None:
     print(f"  Nailing:   {len(result.get('nailing_schedule', []))} entries")
     print(f"  Lumber:    {len(result.get('lumber_specs', []))} entries")
     print(f"  Concrete:  {len(result.get('concrete_specs', []))} entries")
+    foundation = result.get("foundation", {})
+    if foundation.get("concrete_cubic_yards"):
+        cy = foundation["concrete_cubic_yards"]
+        lf = lf_data.get("grand_total_lf", 0) if lf_data else 0
+        est = " (est.)" if foundation.get("estimated") else ""
+        print(f"  Footing LF:{lf} ft{est}")
+        print(f"  Concrete:  {cy} CY{est}")
     print(f"  Output:    {out_file}")
 
 

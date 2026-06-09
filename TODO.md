@@ -271,17 +271,56 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Hardware: `HDU4 ×10` instead of raw JSON
   - Connections: show description field directly
 
-- [ ] **GPT-4o Vision refusal retry (next)**
-  - ~5-8% of Vision extraction pages return a refusal, page silently skipped
-  - Confirmed: Whaleon (3), Woodlane (7), LHERT SONG (4-5), SVR (3-4), Paseo (5)
-  - Fix: one retry per refused page with simplified prompt per category
-  - Do NOT add generic fallback — tune prompts per category
+- [x] **Vision refusal retry ✅ (2026-06-08)**
+  - `is_refusal()` + `RETRY_PROMPTS` in `prompts.py` — 15 refusal phrases detected
+  - Both `extract_vision()` (GPT-4o) and `extract_vision_gemini()` retry once on refusal
+  - Retry prompt is short + annotation-focused per category
+  - Whaleon: 2-3 errors → 0 errors. Refusal pages now recover data.
 
-- [ ] **Quantity takeoff — Phase 2 (blocked — needs Melvin accuracy decision)**
-  - Melvin needs to answer: is 75-80% AI accuracy good enough as a starting point for review?
-  - Path A (75-80%): Gemini-only extraction from plan images
-  - Path B (90%): PyMuPDF vector geometry extraction for footing LF + CY
-  - Path C (98%+): iBeam AI specialist service ($150-500/job)
+## Session 2026-06-09 — Phase 2 LF extraction investigation
+
+- [x] **Gemini dimension extraction attempt ✅ (investigated, partially works)**
+  - Added `DIMENSION_PROMPTS` in `prompts.py` — short focused prompts asking for scale + LF
+  - Added `extract_dimensions_gemini()` in `extract.py` — separate second Gemini call on Gemini pages
+  - Added `estimated`/`drawing_scale` fields to foundation/floor_framing/wall_framing/roof_framing in aggregate.py
+  - Added `" *"` suffix on estimated columns in PDF report + verification note
+  - **Result: Gemini reads drawing scale correctly (1/4"=1'-0") but returns 0 for all LF fields**
+  - **Root cause: dimension callouts on CAD PDFs are vector-rendered graphical text — not in PDF text layer, not readable by Gemini's spatial reasoning**
+  - The dimension architecture (separate pass, estimated flag, PDF display) is complete and correct
+
+- [x] **PyMuPDF vector extraction investigation ✅ (investigated, not viable for these PDFs)**
+  - `pymupdf` installed in venv
+  - Tested on Whaleon p68 (foundation plan): 30,712 stroke paths, 107,439 line segments, 1,240 long lines
+  - ALL lines are black (0,0,0) — can't filter by color to isolate footing lines
+  - Dimension text NOT in PDF text layer (only 102 words on page, all title block)
+  - Too many undifferentiated lines to reliably identify footing perimeter without CAD layer info
+  - **Not viable for these specific CAD-generated PDFs without DXF/layer access**
+
+- [x] **PaddleOCR investigation (installed, runtime incompatible)**
+  - Installed `paddleocr-3.6.0` + `paddlepaddle-3.3.1`
+  - Runtime error: `NotImplementedError: ConvertPirAttribute2RuntimeAttribute` — incompatible with Python 3.13 / this hardware
+  - DO NOT add to `requirements.txt` — not usable
+  - Uninstall from venv before next Docker rebuild to avoid bloating image
+
+- [ ] **Phase 2 LF extraction — NEXT STEPS (clear path forward)**
+  - **For scanned PDFs (Paseo Miramar):** Gemini vision OCR on full-res rendered page IS the right approach — scanned = raster image, Gemini can read all text including dimension callouts
+    - Tested approach: render page → send to Gemini with focused "read dimension callouts" prompt
+    - BLOCKED: free tier Gemini keys = 20 req/day, exhausted during testing
+    - Fix: need paid Gemini account (even $5 covers weeks). OR wait for daily quota reset + test immediately
+  - **For CAD PDFs (Whaleon, LHERT SONG, Woodlane, SVR):** 
+    - Option A: `sudo apt install tesseract-ocr` → render page image → pytesseract OCR on drawing annotations
+    - Option B: DXF export from engineer — ezdxf reads CAD layers precisely (~99% accuracy)
+    - Option C: iBeam AI specialist service — outsource entirely ($150-500/job)
+  - **Decision pending:** test Gemini OCR on Paseo Miramar first (easiest path), evaluate numbers, then decide on CAD PDF approach
+
+- [ ] **Gemini quota blocker — must resolve before testing**
+  - Both Melvin's key and dev key exhausted (20 req/day free tier)
+  - Solution: paid Gemini billing at aistudio.google.com (any amount) OR daily reset
+  - DO NOT send Melvin message about Phase 2 accuracy until we've tested and have actual LF numbers
+
+- [ ] **Quantity takeoff — Phase 2 (unblocked when quota resolved)**
+  - Architecture is ready (dimension pass, estimated flag, PDF display all built)
+  - Just need a working Gemini key + test Paseo Miramar foundation plan
 
 - [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate (RSMeans), equipment costs, construction schedule
 - [ ] Cover sheet index parser for A-series architectural page routing

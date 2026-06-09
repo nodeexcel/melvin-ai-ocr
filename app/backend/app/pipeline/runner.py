@@ -161,6 +161,22 @@ def pipeline_worker(
             google_api_key=google_api_key,
         )
 
+        # PaddleOCR LF extraction for scanned PDFs (runs inline — Python 3.11 Docker base)
+        try:
+            from app.pipeline.ocr import extract_lf_from_pages
+            ocr_page_indices = [
+                p["page"] - 1 for p in result.get("_pages", [])
+                if p.get("category") in GEMINI_CATEGORIES
+            ]
+            if ocr_page_indices:
+                write_event("ocr", f"Extracting dimensions from {len(ocr_page_indices)} pages...", 91)
+                lf_data = extract_lf_from_pages(pdf_path, ocr_page_indices)
+                if lf_data.get("grand_total_lf"):
+                    inject_lf_data(result, lf_data)
+                    write_event("ocr", f"LF: {lf_data['grand_total_lf']} ft extracted", 95)
+        except Exception as _ocr_err:
+            write_event("ocr", f"LF extraction skipped: {_ocr_err}", 95)
+
         result_id = str(uuid.uuid4())
         with Session(engine) as session:
             session.execute(

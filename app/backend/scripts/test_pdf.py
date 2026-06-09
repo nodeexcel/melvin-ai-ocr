@@ -24,6 +24,25 @@ _OCR_SCRIPT = _REPO_ROOT / "scripts" / "ocr" / "extract_lf.py"
 _PY311 = _REPO_ROOT / "venv" / "melvin311" / "bin" / "python"
 _OCR_CATEGORIES = {"foundation", "floor_framing", "roof_framing"}
 
+
+def _run_lf_extraction(pdf_path: str, page_indices: list[int]) -> dict:
+    """Try module import first (Docker/Python 3.11 venv), fall back to subprocess."""
+    try:
+        from app.pipeline.ocr import extract_lf_from_pages
+        return extract_lf_from_pages(pdf_path, page_indices)
+    except ImportError:
+        pass
+    # Fallback: subprocess via Python 3.11
+    if _PY311.exists() and _OCR_SCRIPT.exists():
+        pages_str = ",".join(str(i + 1) for i in page_indices)
+        proc = subprocess.run(
+            [str(_PY311), str(_OCR_SCRIPT), "--pdf", pdf_path, "--pages", pages_str],
+            capture_output=True, text=True, timeout=600,
+        )
+        if proc.returncode == 0:
+            return json.loads(proc.stdout)
+    return {}
+
 # Ensure app package is importable whether running locally or inside Docker
 _backend_dir = Path(__file__).resolve().parent.parent
 if str(_backend_dir) not in sys.path:
@@ -76,31 +95,24 @@ def main() -> None:
         google_api_key=google_api_key,
     )
 
-    # PaddleOCR LF extraction — runs on Python 3.11 (venv/melvin311), scanned PDFs only
+    # PaddleOCR LF extraction (module if available, subprocess fallback to Python 3.11)
     lf_data = None
-    if _PY311.exists() and _OCR_SCRIPT.exists():
-        ocr_pages = sorted({
-            p["page"] for p in result.get("_pages", [])
-            if p.get("category") in _OCR_CATEGORIES
-        })
-        if ocr_pages:
-            on_progress("ocr", f"Running LF extraction on {len(ocr_pages)} pages...", 91)
-            try:
-                proc = subprocess.run(
-                    [str(_PY311), str(_OCR_SCRIPT),
-                     "--pdf", pdf_path,
-                     "--pages", ",".join(str(p) for p in ocr_pages)],
-                    capture_output=True, text=True, timeout=600,
-                )
-                if proc.returncode == 0:
-                    lf_data = json.loads(proc.stdout)
-                    from app.pipeline.aggregate import inject_lf_data
-                    inject_lf_data(result, lf_data)
-                    on_progress("ocr", f"LF: {lf_data.get('grand_total_lf', 0)} ft extracted", 95)
-                else:
-                    on_progress("ocr", "LF extraction failed — skipped", 95)
-            except Exception as e:
-                on_progress("ocr", f"LF extraction skipped: {e}", 95)
+    ocr_indices = sorted({
+        p["page"] - 1 for p in result.get("_pages", [])
+        if p.get("category") in _OCR_CATEGORIES
+    })
+    if ocr_indices:
+        on_progress("ocr", f"Running LF extraction on {len(ocr_indices)} pages...", 91)
+        try:
+            lf_data = _run_lf_extraction(pdf_path, ocr_indices)
+            if lf_data.get("grand_total_lf"):
+                from app.pipeline.aggregate import inject_lf_data
+                inject_lf_data(result, lf_data)
+                on_progress("ocr", f"LF: {lf_data['grand_total_lf']} ft", 95)
+            else:
+                on_progress("ocr", "LF extraction returned 0 — skipped", 95)
+        except Exception as e:
+            on_progress("ocr", f"LF extraction skipped: {e}", 95)
     elapsed = time.time() - t0
 
     with open(out_file, "w") as f:

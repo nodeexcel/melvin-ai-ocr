@@ -29,8 +29,10 @@ def _run_lf_extraction(pdf_path: str, page_indices: list[int]) -> dict:
     """Try module import first (Docker/Python 3.11 venv), fall back to subprocess."""
     try:
         from app.pipeline.ocr import extract_lf_from_pages
-        return extract_lf_from_pages(pdf_path, page_indices)
-    except ImportError:
+        result = extract_lf_from_pages(pdf_path, page_indices)
+        if result:
+            return result
+    except Exception:
         pass
     # Fallback: subprocess via Python 3.11
     if _PY311.exists() and _OCR_SCRIPT.exists():

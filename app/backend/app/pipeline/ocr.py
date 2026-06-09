@@ -40,13 +40,16 @@ _ocr_instance = None
 
 
 def _get_ocr():
-    global _ocr_instance
+    global _ocr_instance, _PADDLE_AVAILABLE
     if _ocr_instance is None:
-        _ocr_instance = _PaddleOCR(
-            use_doc_orientation_classify=False,
-            use_doc_unwarping=False,
-            use_textline_orientation=False,
-        )
+        try:
+            _ocr_instance = _PaddleOCR(
+                use_doc_orientation_classify=False,
+                use_doc_unwarping=False,
+                use_textline_orientation=False,
+            )
+        except Exception:
+            _PADDLE_AVAILABLE = False
     return _ocr_instance
 
 

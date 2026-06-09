@@ -60,13 +60,20 @@ For each image (labeled Image 1, Image 2, etc.), identify the sheet type.
 Return a JSON array with one object per image:
 [{"image": 1, "sheet_no": "S1", "category": "structural_notes"}, ...]
 
+KEY VISUAL RULE: If a sheet shows a large overhead PLAN VIEW of the entire building
+(you can see the building's overall footprint, floor layout, or roof layout from above),
+classify it as foundation / floor_framing / roof_framing / wall_framing — even if it
+also has detail callouts, hold-down schedules, or connection symbols on the side.
+Only use "framing_details" when the sheet contains ONLY small isolated connection
+diagrams without any overall building plan view.
+
 Categories — pick exactly one per sheet:
 - "structural_notes"  — general structural notes, specifications, schedules, nailing schedules, title sheets with structural data
-- "foundation"        — foundation plan, footing plan, slab plan, grade beam plan, foundation details
-- "floor_framing"     — floor framing plan, floor joist plan, floor beam plan
-- "roof_framing"      — roof framing plan, roof joist plan, rafter plan, roof beam layout
-- "wall_framing"      — shear wall plan, wall framing plan, wall schedule, lateral force plan
-- "framing_details"   — structural connection details, steel details, wood framing details, hold-down details, hardware callouts
+- "foundation"        — foundation PLAN (overhead view of building footprint showing footing/slab layout), footing plan, slab plan, grade beam plan
+- "floor_framing"     — floor framing PLAN (overhead view showing joist/beam layout across the floor), floor joist plan, floor beam plan
+- "roof_framing"      — roof framing PLAN (overhead view showing rafter/beam layout across the roof), roof joist plan, rafter plan, roof beam layout
+- "wall_framing"      — shear wall plan, wall framing plan, wall schedule, lateral force plan (overhead view)
+- "framing_details"   — sheet containing ONLY small isolated structural connection details, steel details, hold-down details, hardware callouts — NO overall building plan view
 - "civil"             — topographic survey, grading plan, utility plan, drainage plan
 - "architectural"     — floor plan, elevation, building section, ceiling plan, door/window schedule, finish schedule, site plan
 - "skip"              — cover sheet, title 24 energy forms, assessor parcel data, photos, general contractor notes, non-structural admin pages

@@ -39,7 +39,7 @@ def _run_lf_extraction(pdf_path: str, page_indices: list[int]) -> dict:
         pages_str = ",".join(str(i + 1) for i in page_indices)
         proc = subprocess.run(
             [str(_PY311), str(_OCR_SCRIPT), "--pdf", pdf_path, "--pages", pages_str],
-            capture_output=True, text=True, timeout=600,
+            capture_output=True, text=True, timeout=900,
         )
         if proc.returncode == 0:
             return json.loads(proc.stdout)
@@ -99,9 +99,12 @@ def main() -> None:
 
     # PaddleOCR LF extraction (module if available, subprocess fallback to Python 3.11)
     lf_data = None
+    # Only run OCR on structural plan pages (skip early pages — likely misclassified)
+    total_pages = len(result.get("_pages", []))
+    structural_start = max(0, total_pages // 3)  # structural pages rarely in first third
     ocr_indices = sorted({
         p["page"] - 1 for p in result.get("_pages", [])
-        if p.get("category") in _OCR_CATEGORIES
+        if p.get("category") in _OCR_CATEGORIES and p["page"] - 1 >= structural_start
     })
     if ocr_indices:
         on_progress("ocr", f"Running LF extraction on {len(ocr_indices)} pages...", 91)

@@ -29,7 +29,11 @@ DEDUP_DIST = 40  # pixels — text items within this distance treated as same
 DIM_PATTERN = re.compile(r"[±~]?(\d{1,3})[''`][-\s]?(\d{1,2})[\"°*]?|[±~]?(\d{1,3})[''`](?!\d)")
 
 # Strings that indicate a dimension is NOT a footing run (exclude from LF sum)
-EXCLUDE_KEYWORDS = {"cant", "cantilevered", "beam", "span", "header", "hdg", "clear", "elev", "elevation"}
+EXCLUDE_KEYWORDS = {
+    "cant", "cantilevered", "beam", "span", "header", "hdg",
+    "clear", "elev", "elevation", "min.", "min ", "max.", "max ",
+    "setback", "typ.", "typ ", "o.c.", "o.c", "@", "height",
+}
 
 
 def _parse_ft(text: str) -> float | None:

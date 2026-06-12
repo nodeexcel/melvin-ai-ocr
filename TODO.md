@@ -307,25 +307,69 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - PDF report already shows: LF* in footing table, CY* estimate, `" *"` estimated flag, verification note
   - Full run validated: 128.6 LF from Paseo Miramar p35/37/38, CY = 14.3 ✅
 
-- [ ] **CRITICAL — Paseo Miramar classification issue (blocks LF auto-trigger)**
-  - Foundation/framing plan pages (p35=foundation, p37=floor framing, p38=roof framing) classified as `framing_details`/`schedules` by Vision classifier
-  - OCR only fires when pages classified as `foundation`/`floor_framing`/`roof_framing` (GEMINI_CATEGORIES)
-  - Root cause: Paseo Miramar is a complex multi-firm RTI bundle — Vision classifier sees mixed content and defaults to `framing_details`
-  - Fix needed: examine which thumbnail features distinguish structural plan pages from detail sheets in this PDF, tune classify.py prompts or add post-classification override for known structural sheet titles (S1.1, S1.2, S1.3)
-  - Until fixed: LF = 0 on Paseo Miramar upload via web app
+## Session 2026-06-12 — Web app test, PDF fixes, honest gap assessment
 
-- [ ] **PDF test matrix — what works on each PDF:**
-  - Paseo Miramar (scanned): Hardware/connections ✅ | LF/CY: 0 (classification bug — see above)
-  - Whaleon (CAD): Hardware/connections/hold-downs ✅ | LF/CY: 0 (CAD vector text, not solvable without DXF)
-  - LHERT SONG (CAD): Hardware/connections/specs ✅ | LF/CY: 0
-  - Woodlane Court (CAD): Hardware/connections ✅ | LF/CY: 0
-  - SVR 80% CD (CAD): Hardware/connections/specs ✅ | LF/CY: 0
-  - BARAGHOUSH: 0 structural data (architectural-only set)
-  - **For a working LF/CY demo: fix Paseo classification first**
+- [x] **classify.py prompt fix ✅ (2026-06-12)**
+  - Added KEY VISUAL RULE: plan view pages (overhead building footprint) → foundation/floor_framing/roof_framing even with detail callouts
+  - Result: Paseo Miramar p35/37/38 now correctly classified. 4 OCR-eligible pages found vs 0 before.
 
-- [ ] **CAD PDFs LF extraction (future — after Paseo is working)**
-  - Options: tesseract OCR (`sudo apt install tesseract-ocr`), DXF export from engineer, iBeam AI
-  - Defer until scanned PDF LF is fully validated end-to-end
+- [x] **End-to-end web app test ✅ (2026-06-12)**
+  - Uploaded Paseo Miramar via localhost:3036
+  - Pipeline ran: 34 relevant pages, 154 framing connections, 23 hardware items, GBM1/GBM2 footings, anchor bolts, PSL beams
+  - OCR triggered (3 pages) but returned {} due to Docker libpaddle.so conflict
+  - PDF generated and downloaded — 9 pages, all sections rendering
+
+- [x] **PDF report: full-width tables + remove sheet list ✅ (2026-06-12)**
+  - All tables now sum to 7.0" (usable page width) — hardware, footing, rebar, anchor bolts, framing sections
+  - Sheet list removed from PDF (was 9 pages of S1-S100 in Paseo set, not useful in print)
+  - PDF cache cleared, generator deployed to container
+
+- [ ] **Docker OCR — libpaddle.so conflict (unresolved after 3 rebuild attempts)**
+  - PaddleOCR imports fine but fails at model load: `Can not import paddle core while libpaddle.so exists`
+  - Tried: install order swap, force-reinstall, delete .so before reinstall — all failed
+  - LF/CY = 0 in web app. Works via test script (venv/melvin311 subprocess).
+  - Next attempt: `pip install paddleocr==3.3.0 --no-deps` + manual dep install to prevent PyPI paddle conflict
+  - DO NOT rebuild Docker again without a tested fix plan
+
+- [ ] **Summary count bug — "1 hardware items" shows wrong number**
+  - generator.py counts `h.get("qty", 0) > 0` but framing-detail items use `qty_mentioned` not `qty`
+  - Fix: use same logic as `_hardware_table()`: `h.get("qty", h.get("qty_mentioned", 0))`
+
+- [ ] **Beam table bloat — too many zero-span rows**
+  - Floor Framing Beams table shows 25+ rows, many with Span=0 and all LF/pieces=0
+  - Fix: filter rows where ALL of span_ft, linear_feet, qty_pieces are 0 before rendering
+
+## Current honest gap assessment (2026-06-12)
+
+**Fully done:**
+- Simpson hardware list (models + quantities) ✅
+- Lumber specifications (species, grade, design values) ✅
+- Concrete PSI specs ✅
+- Rebar grade/spacing ✅
+- Foundation specs (footing types + dimensions, anchor bolts, hold-downs) ✅
+- Nailing schedules ✅
+- Framing connection details ✅
+- Floor/wall/roof framing sections in PDF (sizes, spacing, spans) ✅
+- Web app end-to-end (upload → process → PDF download) ✅
+- PDF branding, footer, page numbers ✅
+
+**Partially done (quantities = 0 or partial):**
+- Footing LF — works via test script on scanned PDFs only; 0 on CAD PDFs and 0 in web app (Docker OCR)
+- Concrete CY — calculated when LF > 0; 0 everywhere in web app
+- Rebar piece counts — extracted correctly; LF still 0
+- Joist/beam spans extracted; piece counts and LF = 0
+
+**Not built:**
+- Sheathing sheet counts
+- Procurement-ready material list
+- Waste factors
+- Labor estimates (Phase 3 — needs RSMeans)
+- Equipment costs (Phase 3)
+- Construction schedule (Phase 3)
+
+- [ ] **CAD PDFs LF extraction (future)**
+  - Options: `sudo apt install tesseract-ocr`, DXF export from engineer, iBeam AI
+  - Defer until Docker OCR is fixed and scanned PDF LF validated in web app
 
 - [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate (RSMeans), equipment costs, construction schedule
 - [ ] Cover sheet index parser for A-series architectural page routing

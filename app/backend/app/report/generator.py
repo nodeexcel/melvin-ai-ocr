@@ -129,7 +129,7 @@ def _hardware_table(hardware: list) -> Table | None:
             rows.append([model, str(qty)])
     if len(rows) == 1:
         return None
-    t = Table(rows, colWidths=[2.5 * inch, 1 * inch])
+    t = Table(rows, colWidths=[5.5 * inch, 1.5 * inch])
     t.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
         ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
@@ -219,7 +219,7 @@ def generate_report(data: dict, output_path: str) -> None:
             str(ft.get("depth_in", 0)), str(ft.get("linear_feet", 0)),
         ])
     if len(footing_rows) > 1:
-        t = Table(footing_rows, colWidths=[2 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch])
+        t = Table(footing_rows, colWidths=[2.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch])
         t.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
             ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
@@ -243,7 +243,7 @@ def generate_report(data: dict, output_path: str) -> None:
                 str(r.get("linear_feet", 0)), str(r.get("qty_pieces", 0)),
             ])
         elements.append(Paragraph("Rebar", styles["label"]))
-        elements.append(_std_table(rebar_rows, [1.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch]))
+        elements.append(_std_table(rebar_rows, [1.75 * inch, 1.75 * inch, 1.75 * inch, 1.75 * inch]))
         elements.append(Spacer(1, 0.1 * inch))
 
     anchor = foundation.get("anchor_bolts") or {}
@@ -254,7 +254,7 @@ def generate_report(data: dict, output_path: str) -> None:
             str(anchor.get("qty", 0)) if anchor.get("qty") else "per plan",
         ]]
         elements.append(Paragraph("Anchor Bolts", styles["label"]))
-        elements.append(_std_table(ab_rows, [2 * inch, 2 * inch, 1.5 * inch]))
+        elements.append(_std_table(ab_rows, [2.5 * inch, 2.5 * inch, 2.0 * inch]))
         elements.append(Spacer(1, 0.1 * inch))
 
     cy = foundation.get("concrete_cubic_yards") or 0
@@ -320,7 +320,7 @@ def generate_report(data: dict, output_path: str) -> None:
         "Floor Framing — Joists",
         floor_framing.get("joists", []),
         ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_ff_est}", f"Qty Pieces{_ff_est}"],
-        [1.5*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
+        [2.2*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
         lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),
                    str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
         styles,
@@ -329,7 +329,7 @@ def generate_report(data: dict, output_path: str) -> None:
         "Floor Framing — Beams",
         floor_framing.get("beams", []),
         ["Size", "Span (ft)", f"Linear Ft{_ff_est}", f"Qty Pieces{_ff_est}"],
-        [2*inch, 1.5*inch, 1.5*inch, 1.5*inch],
+        [2.5*inch, 1.5*inch, 1.5*inch, 1.5*inch],
         lambda r: [r.get("size",""), str(r.get("span_ft",0)),
                    str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
         styles,
@@ -348,7 +348,7 @@ def generate_report(data: dict, output_path: str) -> None:
         if int_.get("stud_size"):
             wall_rows.append(["Interior", int_.get("stud_size",""), str(int_.get("stud_spacing_in",0)),
                                str(int_.get("height_ft",0)), str(int_.get("linear_feet",0))])
-        elements.append(_std_table(wall_rows, [1.2*inch, 1.5*inch, 1.3*inch, 1.3*inch, 1.2*inch]))
+        elements.append(_std_table(wall_rows, [1.4*inch, 1.6*inch, 1.4*inch, 1.4*inch, 1.2*inch]))
         elements.append(Spacer(1, 0.1*inch))
 
     roof_framing = data.get("roof_framing", {})
@@ -357,7 +357,7 @@ def generate_report(data: dict, output_path: str) -> None:
         "Roof Framing — Rafters",
         roof_framing.get("rafters", []),
         ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_rf_est}", f"Qty Pieces{_rf_est}"],
-        [1.5*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
+        [2.2*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
         lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),
                    str(r.get("linear_feet",0)), str(r.get("qty_pieces",0))],
         styles,
@@ -434,27 +434,6 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(ct)
         elements.append(Spacer(1, 0.1 * inch))
 
-    sheet_list = data.get("project", {}).get("sheet_list", [])
-    if sheet_list:
-        elements.extend(_section_title("Sheet List", styles))
-        sheet_rows = [["Sheet No.", "Title"]]
-        for s in sheet_list:
-            if isinstance(s, dict):
-                sheet_rows.append([s.get("sheet_no", s.get("number", "")), s.get("title", "")])
-            else:
-                sheet_rows.append([str(s), ""])
-        st = Table(sheet_rows, colWidths=[1.5 * inch, 6 * inch])
-        st.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
-            ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 9),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ]))
-        elements.append(st)
+    # Sheet list intentionally excluded from PDF — too long for print, available in web results view
 
     doc.build(elements, onFirstPage=_footer, onLaterPages=_footer)

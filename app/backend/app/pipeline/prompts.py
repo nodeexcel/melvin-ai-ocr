@@ -18,8 +18,8 @@ def is_refusal(content: str) -> bool:
 
 
 RETRY_PROMPTS: dict[str, str] = {
-    "foundation": """Structural drawing. List any footing labels, rebar sizes, hold-down model numbers visible as annotations or callouts. Return JSON:
-{"footing_types": [{"type": "", "width_in": 0, "depth_in": 0, "linear_feet": 0}], "rebar": [{"size": "", "spacing_in": 0, "linear_feet": 0, "qty_pieces": 0}], "hold_downs": [{"model": "", "qty": 0}], "anchor_bolts": {"size": "", "spacing_in": 0, "qty": 0}, "concrete_cubic_yards": 0, "notes": []}""",
+    "foundation": """Structural drawing. List footing types with dimensions and rebar, hold-down models, anchor bolts visible. Return JSON:
+{"footing_types": [{"type": "", "width_in": 0, "depth_in": 0, "top_rf": "", "bottom_rf": "", "stirrups": "", "linear_feet": 0}], "hold_downs": [{"model": "", "qty": 0}], "anchor_bolts": {"size": "", "spacing_in": 0, "qty": 0}, "concrete_cubic_yards": 0, "notes": []}""",
 
     "floor_framing": """Structural drawing. List any joist sizes, beam sizes, hardware model numbers visible as annotations. Return JSON:
 {"joists": [{"size": "", "spacing_in": 0, "span_ft": 0, "linear_feet": 0, "qty_pieces": 0}], "beams": [{"size": "", "span_ft": 0, "linear_feet": 0, "qty_pieces": 0}], "posts": [{"size": "", "height_ft": 0, "qty": 0}], "blocking": {"size": "", "linear_feet": 0}, "hardware": [{"model": "", "qty": 0}], "notes": []}""",
@@ -58,16 +58,30 @@ If dimensions cannot be read, return 0. Do not refuse — return zeros for unrea
 
 
 EXTRACTION_PROMPTS: dict[str, str] = {
-    "foundation": """This is a foundation plan or footing detail sheet.
+    "foundation": """This is a foundation plan or footing detail sheet. Look for a GRADE BEAM SCHEDULE or FOOTING SCHEDULE table on the sheet.
+
 Extract ALL of the following as JSON:
 {
-  "footing_types": [{"type": "", "width_in": 0, "depth_in": 0, "linear_feet": 0}],
+  "footing_types": [
+    {
+      "type": "",
+      "width_in": 0,
+      "depth_in": 0,
+      "top_rf": "",
+      "bottom_rf": "",
+      "stirrups": "",
+      "linear_feet": 0
+    }
+  ],
   "concrete_cubic_yards": 0,
-  "rebar": [{"size": "", "spacing_in": 0, "linear_feet": 0, "qty_pieces": 0}],
   "anchor_bolts": {"size": "", "spacing_in": 0, "qty": 0},
   "hold_downs": [{"model": "", "qty": 0}],
   "notes": []
-}""",
+}
+
+For top_rf and bottom_rf: extract the reinforcement string exactly as shown (e.g. "3-#5", "5-#7").
+For stirrups: extract spacing (e.g. "#4 @12\" O.C.").
+If no schedule table is visible, extract what you can from callouts.""",
 
     "floor_framing": """This is a floor framing plan or detail sheet.
 Extract ALL of the following as JSON:

@@ -202,49 +202,50 @@ def generate_report(data: dict, output_path: str) -> None:
 
     foundation = data.get("foundation", {})
     _est = foundation.get("estimated", False)
-    _est_tag = " *" if _est else ""
-    _has_foundation = bool(foundation.get("footing_types") or foundation.get("rebar"))
+    _has_foundation = bool(foundation.get("footing_types") or foundation.get("anchor_bolts"))
     if _has_foundation:
         elements.extend(_section_title("Foundation", styles))
-        if _est and foundation.get("drawing_scale"):
-            elements.append(Paragraph(f"Scale: {foundation['drawing_scale']}  — * quantities AI-estimated from drawing, verify before ordering", styles["body"]))
-            elements.append(Spacer(1, 0.05 * inch))
-        elif _est:
-            elements.append(Paragraph("* quantities AI-estimated from drawing, verify before ordering", styles["body"]))
-            elements.append(Spacer(1, 0.05 * inch))
-    footing_rows = [["Type", "Width (in)", "Depth (in)", f"Linear Ft{_est_tag}"]]
-    for ft in foundation.get("footing_types", []):
-        footing_rows.append([
-            ft.get("type", ""), str(ft.get("width_in", 0)),
-            str(ft.get("depth_in", 0)), str(ft.get("linear_feet", 0)),
-        ])
-    if len(footing_rows) > 1:
-        t = Table(footing_rows, colWidths=[2.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch])
-        t.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
-            ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_YELLOW),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 9),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ]))
-        elements.append(t)
-        elements.append(Spacer(1, 0.1 * inch))
 
-    rebar = foundation.get("rebar", [])
-    if rebar:
-        rebar_rows = [["Size", "Spacing (in)", "Linear Ft", "Qty Pieces"]]
-        for r in rebar:
-            rebar_rows.append([
-                r.get("size", ""), str(r.get("spacing_in", 0)),
-                str(r.get("linear_feet", 0)), str(r.get("qty_pieces", 0)),
-            ])
-        elements.append(Paragraph("Rebar", styles["label"]))
-        elements.append(_std_table(rebar_rows, [1.75 * inch, 1.75 * inch, 1.75 * inch, 1.75 * inch]))
-        elements.append(Spacer(1, 0.1 * inch))
+        # Quantity summary (from OCR — estimated, not per-type)
+        total_lf = foundation.get("total_lf") or 0
+        cy = foundation.get("concrete_cubic_yards") or 0
+        if total_lf or cy:
+            scale = foundation.get("drawing_scale", "")
+            note = f"Scale: {scale}  — " if scale else ""
+            note += "* AI-estimated from drawing dimensions, verify before ordering"
+            elements.append(Paragraph(note, styles["body"]))
+            qty_parts = []
+            if total_lf:
+                qty_parts.append(f"Total footing LF: {total_lf} ft *")
+            if cy:
+                qty_parts.append(f"Estimated concrete: {round(cy, 1)} CY *")
+            elements.append(Paragraph("  |  ".join(qty_parts), styles["label"]))
+            elements.append(Spacer(1, 0.1 * inch))
+
+        # Footing schedule — type, cross-section, reinforcement
+        footing_types = foundation.get("footing_types", [])
+        if footing_types:
+            has_rf = any(ft.get("top_rf") or ft.get("bottom_rf") for ft in footing_types)
+            if has_rf:
+                hdr = ["Type", "W (in)", "D (in)", "Top R/F", "Bot R/F", "Stirrups"]
+                rows = [hdr]
+                for ft in footing_types:
+                    rows.append([
+                        ft.get("type", ""),
+                        str(ft.get("width_in", 0)),
+                        str(ft.get("depth_in", 0)),
+                        ft.get("top_rf", "—"),
+                        ft.get("bottom_rf", "—"),
+                        ft.get("stirrups", "—"),
+                    ])
+                elements.append(_std_table(rows, [1.5*inch, 0.7*inch, 0.7*inch, 1.1*inch, 1.1*inch, 1.9*inch]))
+            else:
+                # Fallback: no reinforcement data, show basic dimensions
+                rows = [["Type", "Width (in)", "Depth (in)"]]
+                for ft in footing_types:
+                    rows.append([ft.get("type", ""), str(ft.get("width_in", 0)), str(ft.get("depth_in", 0))])
+                elements.append(_std_table(rows, [3.0*inch, 2.0*inch, 2.0*inch]))
+            elements.append(Spacer(1, 0.1 * inch))
 
     anchor = foundation.get("anchor_bolts") or {}
     if anchor.get("size"):
@@ -256,12 +257,6 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(Paragraph("Anchor Bolts", styles["label"]))
         elements.append(_std_table(ab_rows, [2.5 * inch, 2.5 * inch, 2.0 * inch]))
         elements.append(Spacer(1, 0.1 * inch))
-
-    cy = foundation.get("concrete_cubic_yards") or 0
-    if cy:
-        cy_label = f"Concrete: {round(cy, 1)} CY{_est_tag}"
-        elements.append(Paragraph(cy_label, styles["body"]))
-        elements.append(Spacer(1, 0.05 * inch))
 
     lumber_specs = data.get("lumber_specs", [])
     if lumber_specs:

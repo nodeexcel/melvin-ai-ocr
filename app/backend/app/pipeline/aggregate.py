@@ -15,7 +15,8 @@ def aggregate_results(extractions: list[dict]) -> dict:
         },
         "foundation": {
             "footing_types": [], "concrete_cubic_yards": 0,
-            "rebar": [], "anchor_bolts": {}, "hold_downs": [],
+            "total_lf": 0,
+            "anchor_bolts": {}, "hold_downs": [],
             "drawing_scale": "", "estimated": False,
         },
         "floor_framing":   {"joists": [], "beams": [], "posts": [], "blocking": {}, "hardware": [], "drawing_scale": "", "estimated": False},
@@ -70,7 +71,6 @@ def aggregate_results(extractions: list[dict]) -> dict:
             _cy = data.get("concrete_cubic_yards") or 0
             if isinstance(_cy, (int, float)):
                 result["foundation"]["concrete_cubic_yards"] += _cy
-            result["foundation"]["rebar"].extend(data.get("rebar") or [])
             result["foundation"]["hold_downs"].extend(data.get("hold_downs") or [])
             if data.get("anchor_bolts"):
                 result["foundation"]["anchor_bolts"] = data["anchor_bolts"]
@@ -137,22 +137,17 @@ def inject_lf_data(result: dict, lf_data: dict) -> dict:
     if not grand_lf:
         return result
 
-    # Mark as estimated and capture scale
+    # Store total LF — do NOT distribute per footing type (that's fabricated data)
+    foundation["total_lf"] = round(grand_lf, 1)
     foundation["estimated"] = True
+
     for page in lf_data.get("pages", []):
         if page.get("drawing_scale") and not foundation.get("drawing_scale"):
             foundation["drawing_scale"] = page["drawing_scale"]
 
-    # Distribute total LF evenly across footing types that have no LF yet
-    footing_types = foundation.get("footing_types", [])
-    unset = [ft for ft in footing_types if not ft.get("linear_feet")]
-    if unset:
-        lf_each = round(grand_lf / len(unset), 1)
-        for ft in unset:
-            ft["linear_feet"] = lf_each
-
-    # Calculate CY from LF × average footing cross-section
-    if foundation.get("concrete_cubic_yards", 0) == 0 and footing_types:
+    # Calculate CY from total LF × weighted average footing cross-section
+    if foundation.get("concrete_cubic_yards", 0) == 0:
+        footing_types = foundation.get("footing_types", [])
         dims = [
             (ft.get("width_in", 0), ft.get("depth_in", 0))
             for ft in footing_types

@@ -324,20 +324,23 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Sheet list removed from PDF (was 9 pages of S1-S100 in Paseo set, not useful in print)
   - PDF cache cleared, generator deployed to container
 
-- [ ] **Docker OCR — libpaddle.so conflict (unresolved after 3 rebuild attempts)**
-  - PaddleOCR imports fine but fails at model load: `Can not import paddle core while libpaddle.so exists`
-  - Tried: install order swap, force-reinstall, delete .so before reinstall — all failed
-  - LF/CY = 0 in web app. Works via test script (venv/melvin311 subprocess).
-  - Next attempt: `pip install paddleocr==3.3.0 --no-deps` + manual dep install to prevent PyPI paddle conflict
-  - DO NOT rebuild Docker again without a tested fix plan
+- [x] **Docker OCR — libgomp1 was the root cause ✅ (2026-06-12)**
+  - Real error was `libgomp.so.1: cannot open shared object file` — OpenMP not in python:3.11-slim
+  - Added `libgomp1` to apt-get install in Dockerfile
+  - Pinned `python:3.11.0-slim` + pip constraints to prevent paddlepaddle version conflict
+  - PaddleOCR now loads in Docker: `OCR instance: PaddleOCR, Works: True`
+  - Full test: Paseo Miramar LF = 128.6 ft, CY = 10.7 ✅ showing in PDF report
 
-- [ ] **Summary count bug — "1 hardware items" shows wrong number**
-  - generator.py counts `h.get("qty", 0) > 0` but framing-detail items use `qty_mentioned` not `qty`
-  - Fix: use same logic as `_hardware_table()`: `h.get("qty", h.get("qty_mentioned", 0))`
+- [x] **Summary count bug ✅ (2026-06-12)**
+  - Fixed: `hw_count` now checks `qty_mentioned` as fallback — shows "45 hardware items" correctly
 
-- [ ] **Beam table bloat — too many zero-span rows**
-  - Floor Framing Beams table shows 25+ rows, many with Span=0 and all LF/pieces=0
-  - Fix: filter rows where ALL of span_ft, linear_feet, qty_pieces are 0 before rendering
+- [x] **Beam table bloat ✅ (2026-06-12)**
+  - Fixed: joists/beams/rafters pre-filtered to only rows with at least one non-zero numeric value
+
+- [ ] **Hardware table: "OHAGIN ROOF VENT" and generic items**
+  - "OHAGIN ROOF VENT" is not structural hardware — should be in non-Simpson blocklist
+  - "SIMPSON CMSTC16" etc — normalizer strips "Simpson " but not "SIMPSON " (uppercase)
+  - Fix: add uppercase prefix normalization + "OHAGIN", "ROOF VENT" to GENERIC blocklist
 
 ## Current honest gap assessment (2026-06-12)
 

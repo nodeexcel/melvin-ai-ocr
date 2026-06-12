@@ -189,7 +189,7 @@ def generate_report(data: dict, output_path: str) -> None:
 
     elements.extend(_header_block(styles, data.get("project", {})))
 
-    hw_count = len([h for h in data.get("simpson_hardware", []) if h.get("model") and h.get("qty", 0) > 0])
+    hw_count = len([h for h in data.get("simpson_hardware", []) if h.get("model") and (h.get("qty") or h.get("qty_mentioned", 0)) > 0])
     conn_count = len([c for c in data.get("framing_details", []) if c.get("description")])
     pages_analyzed = len([p for p in data.get("_pages", []) if p.get("category") not in ("skip", "unknown")])
     summary_parts = []
@@ -316,9 +316,11 @@ def generate_report(data: dict, output_path: str) -> None:
 
     floor_framing = data.get("floor_framing", {})
     _ff_est = " *" if floor_framing.get("estimated") else ""
+    # Only show rows where at least one numeric value is non-zero
+    joists = [r for r in floor_framing.get("joists", []) if r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces")]
+    beams  = [r for r in floor_framing.get("beams",  []) if r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces")]
     elements.extend(_framing_section(
-        "Floor Framing — Joists",
-        floor_framing.get("joists", []),
+        "Floor Framing — Joists", joists,
         ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_ff_est}", f"Qty Pieces{_ff_est}"],
         [2.2*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
         lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),
@@ -326,8 +328,7 @@ def generate_report(data: dict, output_path: str) -> None:
         styles,
     ))
     elements.extend(_framing_section(
-        "Floor Framing — Beams",
-        floor_framing.get("beams", []),
+        "Floor Framing — Beams", beams,
         ["Size", "Span (ft)", f"Linear Ft{_ff_est}", f"Qty Pieces{_ff_est}"],
         [2.5*inch, 1.5*inch, 1.5*inch, 1.5*inch],
         lambda r: [r.get("size",""), str(r.get("span_ft",0)),
@@ -353,9 +354,9 @@ def generate_report(data: dict, output_path: str) -> None:
 
     roof_framing = data.get("roof_framing", {})
     _rf_est = " *" if roof_framing.get("estimated") else ""
+    rafters = [r for r in roof_framing.get("rafters", []) if r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces")]
     elements.extend(_framing_section(
-        "Roof Framing — Rafters",
-        roof_framing.get("rafters", []),
+        "Roof Framing — Rafters", rafters,
         ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_rf_est}", f"Qty Pieces{_rf_est}"],
         [2.2*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch],
         lambda r: [r.get("size",""), str(r.get("spacing_in",0)), str(r.get("span_ft",0)),

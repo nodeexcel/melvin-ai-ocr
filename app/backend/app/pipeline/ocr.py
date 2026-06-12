@@ -141,6 +141,8 @@ def extract_lf_from_pages(pdf_path: str, page_indices: list[int]) -> dict:
     import fitz
     doc = fitz.open(pdf_path)
     ocr = _get_ocr()
+    if ocr is None:
+        return {}
 
     pages_out = []
     for idx in page_indices:

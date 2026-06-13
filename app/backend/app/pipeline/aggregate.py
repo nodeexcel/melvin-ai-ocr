@@ -119,6 +119,7 @@ def aggregate_results(extractions: list[dict]) -> dict:
     result["project"]["architect"]          = _most_common(proj_archs)
     result["project"]["structural_engineer"] = _most_common(proj_ses)
 
+    # Flat list for backward compatibility
     result["simpson_hardware"] = (
         result["foundation"].get("hold_downs", [])
         + result["floor_framing"].get("hardware", [])
@@ -128,7 +129,35 @@ def aggregate_results(extractions: list[dict]) -> dict:
     )
     result["_ocr_hardware_counts"] = {}  # populated by inject_lf_data if OCR ran
 
+    # Phase-based hardware — organized by where items are installed
+    result["hardware_by_phase"] = {
+        "foundation":    result["foundation"].get("hold_downs", []),
+        "floor_framing": result["floor_framing"].get("hardware", []),
+        "wall_framing":  result["wall_framing"].get("hardware", []),
+        "roof_framing":  result["roof_framing"].get("hardware", []),
+        "general":       [i for i in result["framing_details"] if "model" in i],
+    }
+
     return result
+
+
+def _phase_for_model(model: str) -> str:
+    """Assign a hardware model to a construction phase by prefix heuristics."""
+    m = model.upper()
+    # Foundation: hold-downs, anchor rods
+    if any(m.startswith(p) for p in ("HDU", "PHD", "HDUE", "SSTB", "SB1", "CNW")):
+        return "foundation"
+    # Joist hangers → floor or roof framing
+    if any(m.startswith(p) for p in ("LUS", "ITS", "HUS", "HUC", "HU", "HUCQ", "HHUS",
+                                      "HGUS", "H2.5", "H1", "H10")):
+        return "floor_framing"
+    # Straps → wall framing
+    if any(m.startswith(p) for p in ("CMST", "MSTC", "MST", "CS1", "CS6", "ST62", "LSTA")):
+        return "wall_framing"
+    # Roof connectors
+    if any(m.startswith(p) for p in ("HGA", "H2", "H1")):
+        return "roof_framing"
+    return "general"
 
 
 def _normalise_model(m: str) -> str:
@@ -174,11 +203,23 @@ def inject_lf_data(result: dict, lf_data: dict) -> dict:
         if page.get("drawing_scale") and not foundation.get("drawing_scale"):
             foundation["drawing_scale"] = page["drawing_scale"]
 
-    # Merge OCR hardware callout counts into simpson_hardware
+    # Merge OCR hardware callout counts into simpson_hardware + hardware_by_phase
     ocr_hw = lf_data.get("hardware_counts", {})
     if ocr_hw:
         result["_ocr_hardware_counts"] = ocr_hw
         result["simpson_hardware"] = _merge_hardware(result.get("simpson_hardware", []), ocr_hw)
+        # Assign OCR-counted hardware to phases by model prefix
+        for model, count in ocr_hw.items():
+            phase = _phase_for_model(model)
+            phase_list = result.get("hardware_by_phase", {}).get(phase, [])
+            # Merge into phase list (update qty if exists, else add)
+            existing = next((h for h in phase_list if _normalise_model(h.get("model","")) == model), None)
+            if existing:
+                if count > int(existing.get("qty", 0) or 0):
+                    existing["qty"] = count
+                    existing["qty_source"] = "ocr_callout"
+            else:
+                phase_list.append({"model": model, "qty": count, "qty_source": "ocr_callout"})
 
     # Calculate CY from total LF × weighted average footing cross-section
     if foundation.get("concrete_cubic_yards", 0) == 0:

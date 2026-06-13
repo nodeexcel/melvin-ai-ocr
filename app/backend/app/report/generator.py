@@ -73,6 +73,13 @@ def _header_block(styles, project: dict) -> list:
     return elements
 
 
+def _normalise_hw(m: str) -> str:
+    for prefix in ("Simpson Strong-Tie ", "Simpson Strong Tie ", "Simpson ", "SIMPSON "):
+        if m.upper().startswith(prefix.upper()):
+            return m[len(prefix):].strip()
+    return m.strip()
+
+
 def _footer(canvas, doc):
     canvas.saveState()
     canvas.setFont("Helvetica", 8)
@@ -199,6 +206,65 @@ def generate_report(data: dict, output_path: str) -> None:
     if summary_parts:
         elements.append(Paragraph("  ·  ".join(summary_parts), styles["body"]))
         elements.append(Spacer(1, 0.15 * inch))
+
+    # ── Hardware by Construction Phase ────────────────────────────────────────
+    hw_by_phase = data.get("hardware_by_phase", {})
+    _phase_labels = [
+        ("foundation",    "Foundation Hardware"),
+        ("floor_framing", "Floor Framing Hardware"),
+        ("wall_framing",  "Wall Framing Hardware"),
+        ("roof_framing",  "Roof Framing Hardware"),
+        ("general",       "General / Connections Hardware"),
+    ]
+    _phase_headers = ParagraphStyle("ph", fontName="Helvetica-Bold", fontSize=8,
+                                    textColor=BRAND_YELLOW, leading=10)
+    _phase_cell = ParagraphStyle("pc", fontName="Helvetica", fontSize=8, leading=10)
+    any_phase_hw = any(
+        [h for h in hw_by_phase.get(k, []) if h.get("model") and (h.get("qty") or h.get("qty_mentioned", 0))]
+        for k, _ in _phase_labels
+    )
+    if any_phase_hw:
+        elements.extend(_section_title("Hardware Schedule — by Phase", styles))
+        elements.append(Paragraph(
+            "* counts from OCR plan callouts where available, otherwise from Gemini extraction",
+            styles["body"]
+        ))
+        elements.append(Spacer(1, 0.05 * inch))
+        for phase_key, phase_label in _phase_labels:
+            items = [
+                h for h in hw_by_phase.get(phase_key, [])
+                if h.get("model") and (h.get("qty") or h.get("qty_mentioned", 0))
+            ]
+            if not items:
+                continue
+            # Deduplicate
+            seen: dict[str, int] = {}
+            for h in items:
+                m = _normalise_hw(h.get("model", ""))
+                if not m:
+                    continue
+                qty = int(h.get("qty") or h.get("qty_mentioned", 0) or 0)
+                if m not in seen or qty > seen[m]:
+                    seen[m] = qty
+            rows = [[Paragraph(phase_label, _phase_headers),
+                     Paragraph("Qty", _phase_headers)]]
+            for m, qty in sorted(seen.items()):
+                if qty > 0:
+                    rows.append([Paragraph(m, _phase_cell), Paragraph(str(qty), _phase_cell)])
+            if len(rows) > 1:
+                pt = Table(rows, colWidths=[5.5 * inch, 1.5 * inch])
+                pt.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), BRAND_BLACK),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ]))
+                elements.append(pt)
+                elements.append(Spacer(1, 0.06 * inch))
+        elements.append(Spacer(1, 0.1 * inch))
 
     foundation = data.get("foundation", {})
     _est = foundation.get("estimated", False)

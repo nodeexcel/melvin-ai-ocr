@@ -104,6 +104,14 @@ def run_pipeline_sync(
     if lf_data:
         inject_lf_data(result, lf_data)
         on_progress("aggregating", f"LF injected: {lf_data.get('grand_total_lf', 0)} ft", 88)
+
+    # Quantity estimation — preliminary lumber/plywood counts
+    try:
+        from app.pipeline.quantities import estimate_quantities
+        result["quantities"] = estimate_quantities(result)
+    except Exception:
+        result["quantities"] = {}
+
     on_progress("aggregating", "Aggregation complete", 90)
 
     return result

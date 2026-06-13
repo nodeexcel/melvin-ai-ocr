@@ -334,6 +334,54 @@ def generate_report(data: dict, output_path: str) -> None:
                 elements.append(Spacer(1, 0.06 * inch))
         elements.append(Spacer(1, 0.1 * inch))
 
+    # ── Preliminary Quantities ────────────────────────────────────────────────
+    qty = data.get("quantities", {})
+    _has_qty = bool(qty.get("floor_framing") or qty.get("wall_framing") or qty.get("plywood"))
+    if _has_qty:
+        elements.extend(_section_title("Preliminary Quantities *", styles))
+        elements.append(Paragraph(
+            f"* AI-estimated from {qty.get('total_sqft', 0):,} sqft floor area + extracted specs. "
+            "Verify all quantities before ordering.",
+            styles["body"]
+        ))
+        elements.append(Spacer(1, 0.08 * inch))
+
+        # Framing lumber
+        framing_rows = [["Description", "Size", "Spacing", "Length", "Est. Qty"]]
+        for item in qty.get("floor_framing", []):
+            framing_rows.append([
+                f"Floor Joists ({item.get('wall_type','') or 'Floor'})",
+                item.get("size", ""),
+                f"{item.get('spacing_in', '')}\"" if item.get("spacing_in") else "—",
+                f"{item.get('span_ft', '')}ft" if item.get("span_ft") else "—",
+                str(item.get("estimated_qty", 0)),
+            ])
+        for item in qty.get("wall_framing", []):
+            framing_rows.append([
+                f"{item.get('wall_type', '')} Wall Studs",
+                item.get("size", ""),
+                f"{item.get('spacing_in', '')}\"" if item.get("spacing_in") else "—",
+                f"{item.get('stud_length_ft', '')}ft" if item.get("stud_length_ft") else "—",
+                str(item.get("estimated_qty", 0)),
+            ])
+        if len(framing_rows) > 1:
+            elements.append(_std_table(framing_rows,
+                [2.2*inch, 1.1*inch, 0.9*inch, 0.9*inch, 0.9*inch]))
+            elements.append(Spacer(1, 0.08 * inch))
+
+        # Plywood
+        ply_rows = [["Plywood / Sheathing", "Size", "Grade", "Est. Sheets"]]
+        for item in qty.get("plywood", []):
+            ply_rows.append([
+                item.get("description", ""),
+                item.get("size", ""),
+                item.get("grade", ""),
+                str(item.get("estimated_qty", 0)),
+            ])
+        if len(ply_rows) > 1:
+            elements.append(_std_table(ply_rows, [2.8*inch, 0.7*inch, 2.0*inch, 1.5*inch]))
+            elements.append(Spacer(1, 0.1 * inch))
+
     foundation = data.get("foundation", {})
     _est = foundation.get("estimated", False)
     _has_foundation = bool(foundation.get("footing_types") or foundation.get("anchor_bolts"))

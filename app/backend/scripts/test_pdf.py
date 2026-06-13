@@ -49,7 +49,7 @@ def _run_lf_extraction(pdf_path: str, page_indices: list[int], fast: bool = Fals
         cmd = [str(_PY311), str(_OCR_SCRIPT), "--pdf", pdf_path, "--pages", pages_str]
         if fast:
             cmd.append("--fast")
-        timeout = 300 if fast else 900  # fast pass is much quicker
+        timeout = 900  # hardware fast pass: 23 pages × ~13s ≈ 5 min
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         if proc.returncode == 0:
             return json.loads(proc.stdout)
@@ -131,7 +131,7 @@ def main() -> None:
     hw_indices = sorted({
         p["page"] - 1 for p in result.get("_pages", [])
         if p.get("category") in _ALL_STRUCTURAL and p["page"] - 1 >= structural_start
-    })
+    })[:15]  # cap at 15 pages — enough for good hardware counts
     if hw_indices:
         on_progress("ocr", f"Counting hardware callouts on {len(hw_indices)} pages...", 94)
         try:

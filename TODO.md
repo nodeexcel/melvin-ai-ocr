@@ -395,22 +395,36 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 
 ## Phase 2 Plan (from docs/PLAN.md)
 
+- [x] **Priority 1 — Hardware schedule extraction ✅ (2026-06-13)**
+  - OCR callout counting from plan pages: CMST12×4, ST6236×6, HDU11×1 etc.
+  - Fast low-res pass (0.7x, ~5s/page) for hardware counting
+  - Full tiled pass (1.5x) for LF extraction
+  - Both wired into pipeline_worker + test_pdf.py (module import + subprocess fallback)
+
+- [x] **Priority 2 — Phase-based output reorganization ✅ (2026-06-13)**
+  - `hardware_by_phase` dict in aggregate.py + _phase_for_model() heuristics
+  - Render-time redistribution in generator.py (_redistribute_phases, _hw_phase)
+  - Works on cached results too — no re-run needed
+  - PDF now shows: Foundation / Floor Framing / Wall Framing / Roof Framing / General
+  - Generic items filtered (OHAGIN ROOF VENT, Nails, HSS, etc.)
+  - Old redundant Simpson Hardware Schedule hidden when phase section present
+  - Validated: estimate (23) — HDU foundation, LUS floor, CMST wall, H1/H2.5A roof ✅
+  - Remaining: B1/W1/S1/AB123 uncertain codes — ask Melvin to verify
+
 - [ ] **Priority 1 — Hardware schedule extraction** (HIGH VALUE, START HERE)
   - Read hold-down + strap + joist hanger SCHEDULE TABLES from plan pages via OCR
   - Evidence: Paseo p35 has GRADE BEAM SCHEDULE with HDU4×13, HDU8×14 — readable
   - This is why real order has HDU4=13 but we extract ~3 (we read callouts, not schedules)
   - Files: ocr.py (schedule table parser), aggregate.py (merge schedule + Gemini hardware)
 
-- [ ] **Priority 2 — Phase-based output reorganization** (HIGH VALUE)
-  - Reorganize from type-based to floor-based: Foundation → 1st Floor → Wall → Roof → Hardware
-  - Matches Ganahl format Melvin actually uses
-  - Files: aggregate.py (new phase structure), generator.py (new PDF sections)
+- [x] **Priority 2 — Phase-based output reorganization ✅ (see above)**
 
-- [ ] **Priority 3 — Quantity estimation module** (MEDIUM VALUE)
-  - Use extracted specs + floor area + standard factors → estimated piece counts
-  - studs/LF, joists/sqft, plywood sheets/sqft
+- [ ] **Priority 3 — Quantity estimation module (NEXT)**
+  - Use extracted specs (stud size/spacing, joist spacing) + total_sqft → estimated piece counts
+  - Standard CA residential factors: studs per LF wall, joists per sqft floor, plywood sheets
   - New file: app/pipeline/quantities.py
-  - Mark all as estimated: true
+  - Mark all as estimated: true, organized by phase to match Ganahl format
+  - Reference: memory/procurement_format.md (Ganahl EST618017 gold standard)
 
 - [ ] **CAD PDFs LF extraction (future)**
   - Options: `sudo apt install tesseract-ocr`, DXF export from engineer, iBeam AI

@@ -219,8 +219,24 @@ def generate_report(data: dict, output_path: str) -> None:
     _phase_headers = ParagraphStyle("ph", fontName="Helvetica-Bold", fontSize=8,
                                     textColor=BRAND_YELLOW, leading=10)
     _phase_cell = ParagraphStyle("pc", fontName="Helvetica", fontSize=8, leading=10)
+    _PHASE_GENERIC = {
+        "nails", "nail", "bolts", "bolt", "screws", "screw", "welds", "weld",
+        "strap", "straps", "holdown", "holdowns", "strong-tie", "hardware",
+        "anchor bolts", "anchor bolt", "joist hangers", "joist hanger",
+        "shear plates", "shear plate", "base plate", "post cap",
+        "ohagin roof vent", "ohagin", "roof vent", "sim. hanger",
+        "post base", "anchor bolt", "holdown", "holdown strap",
+    }
+
+    def _is_real_model(m: str) -> bool:
+        if not m or len(m) < 2:
+            return False
+        return m.lower() not in _PHASE_GENERIC
+
     any_phase_hw = any(
-        [h for h in hw_by_phase.get(k, []) if h.get("model") and (h.get("qty") or h.get("qty_mentioned", 0))]
+        [h for h in hw_by_phase.get(k, [])
+         if _is_real_model(_normalise_hw(h.get("model", ""))) and
+         (h.get("qty") or h.get("qty_mentioned", 0))]
         for k, _ in _phase_labels
     )
     if any_phase_hw:
@@ -233,7 +249,8 @@ def generate_report(data: dict, output_path: str) -> None:
         for phase_key, phase_label in _phase_labels:
             items = [
                 h for h in hw_by_phase.get(phase_key, [])
-                if h.get("model") and (h.get("qty") or h.get("qty_mentioned", 0))
+                if _is_real_model(_normalise_hw(h.get("model", ""))) and
+                (h.get("qty") or h.get("qty_mentioned", 0))
             ]
             if not items:
                 continue
@@ -456,9 +473,11 @@ def generate_report(data: dict, output_path: str) -> None:
             elements.append(Spacer(1, 0.03 * inch))
         elements.append(Spacer(1, 0.05 * inch))
 
+    # Show consolidated hardware table only when phase section is absent
+    # (when phase section is shown it already covers all hardware)
     hardware = data.get("simpson_hardware", [])
     ht = _hardware_table(hardware)
-    if ht:
+    if ht and not any_phase_hw:
         elements.extend(_section_title("Simpson Hardware Schedule", styles))
         elements.append(ht)
         elements.append(Spacer(1, 0.1 * inch))

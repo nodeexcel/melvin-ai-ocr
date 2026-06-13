@@ -147,16 +147,17 @@ def _phase_for_model(model: str) -> str:
     # Foundation: hold-downs, anchor rods
     if any(m.startswith(p) for p in ("HDU", "PHD", "HDUE", "SSTB", "SB1", "CNW")):
         return "foundation"
-    # Joist hangers → floor or roof framing
-    if any(m.startswith(p) for p in ("LUS", "ITS", "HUS", "HUC", "HU", "HUCQ", "HHUS",
-                                      "HGUS", "H2.5", "H1", "H10")):
-        return "floor_framing"
-    # Straps → wall framing
-    if any(m.startswith(p) for p in ("CMST", "MSTC", "MST", "CS1", "CS6", "ST62", "LSTA")):
+    # Straps → wall framing (check before joist hangers to avoid false matches)
+    if any(m.startswith(p) for p in ("CMST", "MSTC", "MST", "CS14", "CS16", "ST62", "LSTA")):
         return "wall_framing"
-    # Roof connectors
-    if any(m.startswith(p) for p in ("HGA", "H2", "H1")):
+    # Hurricane ties + roof connectors → roof framing
+    if any(m.startswith(p) for p in ("HGA", "H2.5", "H10", "H1 ", "H1\t")):
         return "roof_framing"
+    if m in ("H1", "H2", "H2.5", "H2.5A", "H10"):
+        return "roof_framing"
+    # Joist hangers → floor framing
+    if any(m.startswith(p) for p in ("LUS", "ITS", "HUS", "HUC", "HUCQ", "HHUS", "HGUS")):
+        return "floor_framing"
     return "general"
 
 

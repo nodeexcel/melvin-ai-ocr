@@ -161,25 +161,36 @@ def pipeline_worker(
             google_api_key=google_api_key,
         )
 
-        # PaddleOCR: LF from plan pages + hardware callout counting from ALL structural pages
+        # PaddleOCR: two passes — LF (slow, few pages) + hardware counting (fast, all structural)
         try:
-            from app.pipeline.ocr import extract_lf_from_pages
-            # All non-skip structural pages — needed for hardware callout counting
-            # GEMINI_CATEGORIES for LF; framing_details/wall_framing for strap callouts
-            _structural = {"foundation", "floor_framing", "roof_framing",
-                           "wall_framing", "framing_details"}
-            ocr_page_indices = sorted({
+            from app.pipeline.ocr import extract_lf_from_pages, count_hardware_from_pages
+            # Pass 1: full-res tiled LF extraction on plan pages only
+            ocr_page_indices = [
                 p["page"] - 1 for p in result.get("_pages", [])
-                if p.get("category") in _structural
-            })
+                if p.get("category") in GEMINI_CATEGORIES
+            ]
             if ocr_page_indices:
                 write_event("ocr", f"Extracting dimensions from {len(ocr_page_indices)} pages...", 91)
                 lf_data = extract_lf_from_pages(pdf_path, ocr_page_indices)
                 if lf_data.get("grand_total_lf"):
                     inject_lf_data(result, lf_data)
-                    write_event("ocr", f"LF: {lf_data['grand_total_lf']} ft extracted", 95)
+                    write_event("ocr", f"LF: {lf_data['grand_total_lf']} ft extracted", 93)
+
+            # Pass 2: fast low-res hardware callout counting on ALL structural pages
+            _structural = {"foundation", "floor_framing", "roof_framing",
+                           "wall_framing", "framing_details"}
+            hw_page_indices = [
+                p["page"] - 1 for p in result.get("_pages", [])
+                if p.get("category") in _structural
+            ]
+            if hw_page_indices:
+                write_event("ocr", f"Counting hardware callouts across {len(hw_page_indices)} pages...", 94)
+                hw_counts = count_hardware_from_pages(pdf_path, hw_page_indices)
+                if hw_counts:
+                    inject_lf_data(result, {"grand_total_lf": 0, "pages": [], "hardware_counts": hw_counts})
+                    write_event("ocr", f"Hardware: {len(hw_counts)} types from plan callouts", 95)
         except Exception as _ocr_err:
-            write_event("ocr", f"LF extraction skipped: {_ocr_err}", 95)
+            write_event("ocr", f"OCR skipped: {_ocr_err}", 95)
 
         result_id = str(uuid.uuid4())
         with Session(engine) as session:

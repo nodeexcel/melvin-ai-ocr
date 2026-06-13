@@ -184,6 +184,44 @@ def count_hardware_callouts(items: list[dict]) -> dict[str, int]:
     return {m: len(locs) for m, locs in counts.items() if locs}
 
 
+def count_hardware_from_pages(pdf_path: str, page_indices: list[int]) -> dict[str, int]:
+    """
+    Fast hardware callout counting at low resolution (no tiling needed).
+    Scans all structural pages for model name callouts.
+    Returns {model: count} or {} on failure.
+    """
+    if not _PADDLE_AVAILABLE or not _FITZ_AVAILABLE:
+        return {}
+    import fitz
+    doc = fitz.open(pdf_path)
+    ocr = _get_ocr()
+    if ocr is None:
+        return {}
+
+    total: dict[str, int] = {}
+    for idx in page_indices:
+        page = doc[idx]
+        # Low res — hardware labels are large text, 0.7x is sufficient
+        pix = page.get_pixmap(matrix=fitz.Matrix(0.7, 0.7))
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = str(Path(tmp) / "hw.png")
+            img.save(path)
+            result = ocr.predict(path)
+        if not result or not result[0].get("rec_texts"):
+            continue
+        items = [
+            {"text": t.strip(), "cx": (b[0]+b[2])/2, "cy": (b[1]+b[3])/2}
+            for t, s, b in zip(result[0]["rec_texts"], result[0]["rec_scores"], result[0]["rec_boxes"])
+            if s >= 0.5 and t.strip()
+        ]
+        page_counts = count_hardware_callouts(items)
+        for model, count in page_counts.items():
+            total[model] = total.get(model, 0) + count
+
+    return total
+
+
 def extract_lf_from_pages(pdf_path: str, page_indices: list[int]) -> dict:
     """
     Run PaddleOCR on the given page indices (0-indexed) and return LF data.

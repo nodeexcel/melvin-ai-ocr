@@ -25,22 +25,32 @@ _PY311 = _REPO_ROOT / "venv" / "melvin311" / "bin" / "python"
 _OCR_CATEGORIES = {"foundation", "floor_framing", "roof_framing"}
 
 
-def _run_lf_extraction(pdf_path: str, page_indices: list[int]) -> dict:
+def _run_lf_extraction(pdf_path: str, page_indices: list[int], fast: bool = False) -> dict:
     """Try module import first (Docker/Python 3.11 venv), fall back to subprocess."""
-    try:
-        from app.pipeline.ocr import extract_lf_from_pages
-        result = extract_lf_from_pages(pdf_path, page_indices)
-        if result:
-            return result
-    except Exception:
-        pass
+    if not fast:
+        try:
+            from app.pipeline.ocr import extract_lf_from_pages
+            result = extract_lf_from_pages(pdf_path, page_indices)
+            if result:
+                return result
+        except Exception:
+            pass
+    else:
+        try:
+            from app.pipeline.ocr import count_hardware_from_pages
+            hw = count_hardware_from_pages(pdf_path, page_indices)
+            if hw is not None:
+                return {"grand_total_lf": 0, "pages": [], "hardware_counts": hw}
+        except Exception:
+            pass
     # Fallback: subprocess via Python 3.11
     if _PY311.exists() and _OCR_SCRIPT.exists():
         pages_str = ",".join(str(i + 1) for i in page_indices)
-        proc = subprocess.run(
-            [str(_PY311), str(_OCR_SCRIPT), "--pdf", pdf_path, "--pages", pages_str],
-            capture_output=True, text=True, timeout=900,
-        )
+        cmd = [str(_PY311), str(_OCR_SCRIPT), "--pdf", pdf_path, "--pages", pages_str]
+        if fast:
+            cmd.append("--fast")
+        timeout = 300 if fast else 900  # fast pass is much quicker
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         if proc.returncode == 0:
             return json.loads(proc.stdout)
     return {}
@@ -97,30 +107,42 @@ def main() -> None:
         google_api_key=google_api_key,
     )
 
-    # PaddleOCR: LF from plan pages + hardware callout counting from ALL structural pages
+    # OCR Pass 1: full-res tiled LF extraction (plan pages only, slow)
     lf_data = None
     total_pages = len(result.get("_pages", []))
     structural_start = max(0, total_pages // 3)
-    # Expanded to include framing_details + wall_framing for hardware callout counting
-    _ALL_STRUCTURAL = _OCR_CATEGORIES | {"framing_details", "wall_framing"}
     ocr_indices = sorted({
         p["page"] - 1 for p in result.get("_pages", [])
-        if p.get("category") in _ALL_STRUCTURAL and p["page"] - 1 >= structural_start
+        if p.get("category") in _OCR_CATEGORIES and p["page"] - 1 >= structural_start
     })
     if ocr_indices:
         on_progress("ocr", f"Running LF extraction on {len(ocr_indices)} pages...", 91)
         try:
             lf_data = _run_lf_extraction(pdf_path, ocr_indices)
-            if lf_data.get("grand_total_lf") or lf_data.get("hardware_counts"):
+            if lf_data.get("grand_total_lf"):
                 from app.pipeline.aggregate import inject_lf_data
                 inject_lf_data(result, lf_data)
-                lf_msg = f"LF: {lf_data.get('grand_total_lf', 0)} ft"
-                hw_msg = f", hw: {lf_data.get('hardware_counts', {})}" if lf_data.get('hardware_counts') else ""
-                on_progress("ocr", lf_msg + hw_msg, 95)
-            else:
-                on_progress("ocr", "OCR returned 0 — skipped", 95)
+                on_progress("ocr", f"LF: {lf_data['grand_total_lf']} ft", 93)
         except Exception as e:
-            on_progress("ocr", f"OCR skipped: {e}", 95)
+            on_progress("ocr", f"LF skipped: {e}", 93)
+
+    # OCR Pass 2: fast low-res hardware callout counting on ALL structural pages
+    _ALL_STRUCTURAL = _OCR_CATEGORIES | {"framing_details", "wall_framing"}
+    hw_indices = sorted({
+        p["page"] - 1 for p in result.get("_pages", [])
+        if p.get("category") in _ALL_STRUCTURAL and p["page"] - 1 >= structural_start
+    })
+    if hw_indices:
+        on_progress("ocr", f"Counting hardware callouts on {len(hw_indices)} pages...", 94)
+        try:
+            hw_data = _run_lf_extraction(pdf_path, hw_indices, fast=True)
+            hw_counts = hw_data.get("hardware_counts", {})
+            if hw_counts:
+                from app.pipeline.aggregate import inject_lf_data
+                inject_lf_data(result, {"grand_total_lf": 0, "pages": [], "hardware_counts": hw_counts})
+                on_progress("ocr", f"Hardware callouts: {dict(list(sorted(hw_counts.items(), key=lambda x: -x[1]))[:5])}", 95)
+        except Exception as e:
+            on_progress("ocr", f"Hardware count skipped: {e}", 95)
     elapsed = time.time() - t0
 
     with open(out_file, "w") as f:

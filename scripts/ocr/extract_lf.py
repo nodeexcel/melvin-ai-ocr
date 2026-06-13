@@ -233,6 +233,7 @@ def main() -> None:
     parser.add_argument("--pages", required=True, help="Comma-separated 1-indexed page numbers, e.g. 35,36,37")
     parser.add_argument("--debug", action="store_true", help="Print detailed extraction info")
     parser.add_argument("--out", default=None, help="Output JSON path (default: stdout)")
+    parser.add_argument("--fast", action="store_true", help="Fast low-res hardware-only scan (no LF extraction)")
     args = parser.parse_args()
 
     pdf_path = args.pdf
@@ -248,6 +249,41 @@ def main() -> None:
         use_doc_unwarping=False,
         use_textline_orientation=False,
     )
+
+    if args.fast:
+        # Fast pass: low-res, hardware counting only — no LF extraction
+        import fitz
+        doc = fitz.open(pdf_path)
+        total_hw: dict = {}
+        for p in page_nums:
+            page = doc[p - 1]
+            pix = page.get_pixmap(matrix=fitz.Matrix(0.7, 0.7))
+            from PIL import Image as _PIL_Image
+            img = _PIL_Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            import tempfile as _tmplib
+            with _tmplib.TemporaryDirectory() as tmp:
+                path = f"{tmp}/hw.png"
+                img.save(path)
+                result = ocr.predict(path)
+            items = []
+            if result and result[0].get("rec_texts"):
+                items = [
+                    {"text": t.strip(), "cx": (b[0]+b[2])/2, "cy": (b[1]+b[3])/2}
+                    for t, s, b in zip(result[0]["rec_texts"], result[0]["rec_scores"], result[0]["rec_boxes"])
+                    if s >= 0.5 and t.strip()
+                ]
+            counts = count_hardware_callouts(items)
+            for model, count in counts.items():
+                total_hw[model] = total_hw.get(model, 0) + count
+            print(f"  p{p}: hw={counts}", file=sys.stderr)
+        summary = {"pdf": pdf_path, "pages": [], "grand_total_lf": 0, "hardware_counts": total_hw}
+        output = json.dumps(summary, indent=2)
+        if args.out:
+            from pathlib import Path as _Path
+            _Path(args.out).write_text(output)
+        else:
+            print(output)
+        return
 
     results = []
     for p in page_nums:

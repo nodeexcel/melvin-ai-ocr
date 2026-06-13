@@ -73,6 +73,47 @@ def _header_block(styles, project: dict) -> list:
     return elements
 
 
+_HW_PHASE_MAP = {
+    # Foundation: hold-downs, anchor rods
+    "foundation":    ("HDU", "PHD", "HDUE", "SSTB", "SB1", "CNW"),
+    # Wall: straps
+    "wall_framing":  ("CMST", "MSTC", "MST", "CS14", "CS16", "ST62", "LSTA"),
+    # Roof: hurricane ties
+    "roof_framing":  ("HGA", "H2.5", "H10"),
+    # Floor: joist hangers, beam connectors
+    "floor_framing": ("LUS", "ITS", "HUS", "HUC", "HUCQ", "HHUS", "HGUS"),
+}
+_HW_EXACT_PHASE = {"H1": "roof_framing", "H2": "roof_framing", "H2.5A": "roof_framing",
+                   "H10": "roof_framing", "H2.5": "roof_framing"}
+
+
+def _hw_phase(model: str) -> str:
+    m = model.upper()
+    if m in _HW_EXACT_PHASE:
+        return _HW_EXACT_PHASE[m]
+    if m.startswith("HDU") or m.startswith("PHD") or m.startswith("SSTB"):
+        return "foundation"
+    for phase, prefixes in _HW_PHASE_MAP.items():
+        if any(m.startswith(p.upper()) for p in prefixes):
+            return phase
+    return "general"
+
+
+def _redistribute_phases(hw_by_phase: dict) -> dict:
+    """Re-apply phase assignment at render time so cached results are also correct."""
+    out: dict[str, list] = {k: [] for k in hw_by_phase}
+    for phase, items in hw_by_phase.items():
+        for item in items:
+            model = _normalise_hw(item.get("model", ""))
+            if not model:
+                continue
+            correct = _hw_phase(model)
+            if correct not in out:
+                out[correct] = []
+            out[correct].append(item)
+    return out
+
+
 def _normalise_hw(m: str) -> str:
     for prefix in ("Simpson Strong-Tie ", "Simpson Strong Tie ", "Simpson ", "SIMPSON "):
         if m.upper().startswith(prefix.upper()):
@@ -208,7 +249,16 @@ def generate_report(data: dict, output_path: str) -> None:
         elements.append(Spacer(1, 0.15 * inch))
 
     # ── Hardware by Construction Phase ────────────────────────────────────────
-    hw_by_phase = data.get("hardware_by_phase", {})
+    # Also pull from simpson_hardware for items not in hardware_by_phase
+    _raw_phase = data.get("hardware_by_phase", {})
+    if not any(_raw_phase.values()):
+        # Fallback: build from simpson_hardware using phase heuristics
+        _raw_phase = {"foundation": [], "floor_framing": [], "wall_framing": [],
+                      "roof_framing": [], "general": []}
+        for h in data.get("simpson_hardware", []):
+            if h.get("model"):
+                _raw_phase["general"].append(h)
+    hw_by_phase = _redistribute_phases(_raw_phase)
     _phase_labels = [
         ("foundation",    "Foundation Hardware"),
         ("floor_framing", "Floor Framing Hardware"),

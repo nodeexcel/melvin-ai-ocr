@@ -97,27 +97,30 @@ def main() -> None:
         google_api_key=google_api_key,
     )
 
-    # PaddleOCR LF extraction (module if available, subprocess fallback to Python 3.11)
+    # PaddleOCR: LF from plan pages + hardware callout counting from ALL structural pages
     lf_data = None
-    # Only run OCR on structural plan pages (skip early pages — likely misclassified)
     total_pages = len(result.get("_pages", []))
-    structural_start = max(0, total_pages // 3)  # structural pages rarely in first third
+    structural_start = max(0, total_pages // 3)
+    # Expanded to include framing_details + wall_framing for hardware callout counting
+    _ALL_STRUCTURAL = _OCR_CATEGORIES | {"framing_details", "wall_framing"}
     ocr_indices = sorted({
         p["page"] - 1 for p in result.get("_pages", [])
-        if p.get("category") in _OCR_CATEGORIES and p["page"] - 1 >= structural_start
+        if p.get("category") in _ALL_STRUCTURAL and p["page"] - 1 >= structural_start
     })
     if ocr_indices:
         on_progress("ocr", f"Running LF extraction on {len(ocr_indices)} pages...", 91)
         try:
             lf_data = _run_lf_extraction(pdf_path, ocr_indices)
-            if lf_data.get("grand_total_lf"):
+            if lf_data.get("grand_total_lf") or lf_data.get("hardware_counts"):
                 from app.pipeline.aggregate import inject_lf_data
                 inject_lf_data(result, lf_data)
-                on_progress("ocr", f"LF: {lf_data['grand_total_lf']} ft", 95)
+                lf_msg = f"LF: {lf_data.get('grand_total_lf', 0)} ft"
+                hw_msg = f", hw: {lf_data.get('hardware_counts', {})}" if lf_data.get('hardware_counts') else ""
+                on_progress("ocr", lf_msg + hw_msg, 95)
             else:
-                on_progress("ocr", "LF extraction returned 0 — skipped", 95)
+                on_progress("ocr", "OCR returned 0 — skipped", 95)
         except Exception as e:
-            on_progress("ocr", f"LF extraction skipped: {e}", 95)
+            on_progress("ocr", f"OCR skipped: {e}", 95)
     elapsed = time.time() - t0
 
     with open(out_file, "w") as f:

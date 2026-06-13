@@ -50,6 +50,45 @@ def _parse_ft(text: str) -> float | None:
     return val if 1.0 < val < 250 else None
 
 
+_STRAP_PATTERNS = [
+    (re.compile(r'CMSTC16', re.I), 'CMSTC16'),
+    (re.compile(r'CMST14',  re.I), 'CMST14'),
+    (re.compile(r'CMST12',  re.I), 'CMST12'),
+    (re.compile(r'MST60',   re.I), 'MST60'),
+    (re.compile(r'MST48',   re.I), 'MST48'),
+    (re.compile(r'MST36',   re.I), 'MST36'),
+    (re.compile(r'MSTC16',  re.I), 'MSTC16'),
+    (re.compile(r'CS14\b',  re.I), 'CS14'),
+    (re.compile(r'CS16\b',  re.I), 'CS16'),
+    (re.compile(r'LSTA24',  re.I), 'LSTA24'),
+    (re.compile(r'LSTA36',  re.I), 'LSTA36'),
+    (re.compile(r'ST6236',  re.I), 'ST6236'),
+    (re.compile(r'HDU\d+',  re.I), None),
+    (re.compile(r'HDUE\d+', re.I), None),
+    (re.compile(r'PHD\d+',  re.I), None),
+    (re.compile(r'SSTB\d+', re.I), None),
+    (re.compile(r'A35\b',   re.I), 'A35'),
+    (re.compile(r'LTP4\b',  re.I), 'LTP4'),
+]
+_HW_DEDUP_PX = 80
+
+
+def count_hardware_callouts(items: list[dict]) -> dict:
+    counts: dict[str, list] = {}
+    for item in items:
+        for pattern, fixed_name in _STRAP_PATTERNS:
+            m = pattern.search(item['text'])
+            if m:
+                model = fixed_name if fixed_name else m.group(0).upper()
+                if model not in counts:
+                    counts[model] = []
+                cx, cy = item['cx'], item['cy']
+                if not any(abs(cx-ex) < _HW_DEDUP_PX and abs(cy-ey) < _HW_DEDUP_PX
+                           for ex, ey in counts[model]):
+                    counts[model].append((cx, cy))
+    return {m: len(locs) for m, locs in counts.items() if locs}
+
+
 def _is_footing_dim(text: str, context: list[str]) -> bool:
     """Heuristic: is this dimension likely a footing run rather than a beam span/other?"""
     t_lower = text.lower()
@@ -165,6 +204,7 @@ def extract_page(ocr: PaddleOCR, pdf_path: str, page_index: int, debug: bool = F
 
     footing_dims = [d for d in dimensions if d["likely_footing"]]
     total_lf = round(sum(d["feet"] for d in footing_dims), 1)
+    hw_callouts = count_hardware_callouts(items)
 
     if debug:
         print(f"  Drawing scale: {drawing_scale!r}")
@@ -173,12 +213,15 @@ def extract_page(ocr: PaddleOCR, pdf_path: str, page_index: int, debug: bool = F
             flag = "FOOTING" if d["likely_footing"] else "skip"
             print(f"    {d['text']:<25} = {d['feet']:.1f} ft  [{flag}]")
         print(f"  Total footing LF estimate: {total_lf} ft")
+        if hw_callouts:
+            print(f"  Hardware callouts: {hw_callouts}")
 
     return {
         "page": page_index + 1,
         "drawing_scale": drawing_scale,
         "total_lf": total_lf,
         "dimensions": dimensions,
+        "hardware_callouts": hw_callouts,
         "tile_count": len(tiles),
         "text_count": len(items),
     }
@@ -211,12 +254,20 @@ def main() -> None:
         print(f"Processing page {p}...", file=sys.stderr)
         result = extract_page(ocr, pdf_path, p - 1, debug=args.debug)
         results.append(result)
-        print(f"  p{p}: {result['total_lf']} LF from {len(result['dimensions'])} dimensions ({result['tile_count']} tiles, {result['text_count']} text items)", file=sys.stderr)
+        hw_str = f", hw={result['hardware_callouts']}" if result.get('hardware_callouts') else ""
+        print(f"  p{p}: {result['total_lf']} LF from {len(result['dimensions'])} dims ({result['tile_count']} tiles){hw_str}", file=sys.stderr)
+
+    # Aggregate hardware counts across all pages
+    total_hw: dict = {}
+    for r in results:
+        for model, count in r.get("hardware_callouts", {}).items():
+            total_hw[model] = total_hw.get(model, 0) + count
 
     summary = {
         "pdf": pdf_path,
         "pages": results,
         "grand_total_lf": round(sum(r["total_lf"] for r in results), 1),
+        "hardware_counts": total_hw,
     }
 
     output = json.dumps(summary, indent=2)

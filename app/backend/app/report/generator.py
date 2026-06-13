@@ -226,6 +226,7 @@ def generate_report(data: dict, output_path: str) -> None:
         "shear plates", "shear plate", "base plate", "post cap",
         "ohagin roof vent", "ohagin", "roof vent", "sim. hanger",
         "post base", "anchor bolt", "holdown", "holdown strap",
+        "hss", "weld", "strap", "joist hanger", "holdown",
     }
 
     def _is_real_model(m: str) -> bool:

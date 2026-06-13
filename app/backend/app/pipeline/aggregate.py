@@ -130,13 +130,20 @@ def aggregate_results(extractions: list[dict]) -> dict:
     result["_ocr_hardware_counts"] = {}  # populated by inject_lf_data if OCR ran
 
     # Phase-based hardware — organized by where items are installed
-    result["hardware_by_phase"] = {
-        "foundation":    result["foundation"].get("hold_downs", []),
-        "floor_framing": result["floor_framing"].get("hardware", []),
-        "wall_framing":  result["wall_framing"].get("hardware", []),
-        "roof_framing":  result["roof_framing"].get("hardware", []),
-        "general":       [i for i in result["framing_details"] if "model" in i],
+    _phase_hw: dict[str, list] = {
+        "foundation":    list(result["foundation"].get("hold_downs", [])),
+        "floor_framing": list(result["floor_framing"].get("hardware", [])),
+        "wall_framing":  list(result["wall_framing"].get("hardware", [])),
+        "roof_framing":  list(result["roof_framing"].get("hardware", [])),
+        "general":       [],
     }
+    # Redistribute framing_details hardware using phase heuristics
+    for item in result["framing_details"]:
+        if "model" not in item:
+            continue
+        phase = _phase_for_model(_normalise_model(item.get("model", "")))
+        _phase_hw[phase].append(item)
+    result["hardware_by_phase"] = _phase_hw
 
     return result
 

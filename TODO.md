@@ -370,6 +370,29 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 - Equipment costs (Phase 3)
 - Construction schedule (Phase 3)
 
+## Session 2026-06-13 — Melvin's procurement list received (CRITICAL)
+
+- [x] **Received Ganahl Lumber estimate #618017 ✅ (2026-06-13)**
+  - Job: LHERT-SONG (3333 Cabrillo Blvd) | Total: $125,665.15
+  - This is the GOLD STANDARD for what Phase 2 output must produce
+  - Saved to memory/procurement_format.md — read before every Phase 2 session
+
+**Key findings from the real order:**
+
+- **Format**: Qty | Size | Length | Grade | Board Footage | Price | Amount
+- **Organized by construction phase**: Material → 1st Floor → 2nd Floor → Ceiling (NOT by data type like our current report)
+- **Simpson hardware quantities**: LUS210=410pcs, HDU4=27pcs, HDU8=19pcs, A35=500pcs, LUS28=200pcs, CMST12=10pcs, DTT2Z=10pcs, HGA10KT=30pcs — our extraction captures the RIGHT models but undercounts quantities
+- **Lumber counts we don't have**: 195 pcs 2x6x10, 80 pcs 2x6x12, 300 ITS2.06 I-joist hangers, etc.
+- **TJI I-joists**: 300+ pieces of 11-7/8" TJI-210/230 — not extracted anywhere
+- **Plywood**: 86 sheets 4x8 23/32 subfloor, 104 sheets 4x8 19/32 sheathing — not calculated
+- **Fasteners**: foundation bolts, wedge anchors, all-thread rods, nails — not in scope
+
+**What this tells us about Phase 2 priority:**
+1. Lumber piece counts by size/length/floor — highest value
+2. Plywood/sheathing sheet counts — second priority
+3. Reorganize output BY FLOOR (not by type)
+4. Hardware quantities are directionally right but need improvement
+
 - [ ] **CAD PDFs LF extraction (future)**
   - Options: `sudo apt install tesseract-ocr`, DXF export from engineer, iBeam AI
   - Defer until Docker OCR is fixed and scanned PDF LF validated in web app

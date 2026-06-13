@@ -393,6 +393,25 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 3. Reorganize output BY FLOOR (not by type)
 4. Hardware quantities are directionally right but need improvement
 
+## Phase 2 Plan (from docs/PLAN.md)
+
+- [ ] **Priority 1 — Hardware schedule extraction** (HIGH VALUE, START HERE)
+  - Read hold-down + strap + joist hanger SCHEDULE TABLES from plan pages via OCR
+  - Evidence: Paseo p35 has GRADE BEAM SCHEDULE with HDU4×13, HDU8×14 — readable
+  - This is why real order has HDU4=13 but we extract ~3 (we read callouts, not schedules)
+  - Files: ocr.py (schedule table parser), aggregate.py (merge schedule + Gemini hardware)
+
+- [ ] **Priority 2 — Phase-based output reorganization** (HIGH VALUE)
+  - Reorganize from type-based to floor-based: Foundation → 1st Floor → Wall → Roof → Hardware
+  - Matches Ganahl format Melvin actually uses
+  - Files: aggregate.py (new phase structure), generator.py (new PDF sections)
+
+- [ ] **Priority 3 — Quantity estimation module** (MEDIUM VALUE)
+  - Use extracted specs + floor area + standard factors → estimated piece counts
+  - studs/LF, joists/sqft, plywood sheets/sqft
+  - New file: app/pipeline/quantities.py
+  - Mark all as estimated: true
+
 - [ ] **CAD PDFs LF extraction (future)**
   - Options: `sudo apt install tesseract-ocr`, DXF export from engineer, iBeam AI
   - Defer until Docker OCR is fixed and scanned PDF LF validated in web app

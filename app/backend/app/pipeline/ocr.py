@@ -130,6 +130,60 @@ def _dedup(items, dist):
     return kept
 
 
+# Known strap/connector patterns that appear as plan callouts
+# Each occurrence on a plan = 1 piece installed at that location
+_STRAP_PATTERNS = [
+    (re.compile(r'CMSTC16', re.I), 'CMSTC16'),
+    (re.compile(r'CMST14', re.I),  'CMST14'),
+    (re.compile(r'CMST12', re.I),  'CMST12'),
+    (re.compile(r'MST60',  re.I),  'MST60'),
+    (re.compile(r'MST48',  re.I),  'MST48'),
+    (re.compile(r'MST36',  re.I),  'MST36'),
+    (re.compile(r'MSTC16', re.I),  'MSTC16'),
+    (re.compile(r'CS14\b', re.I),  'CS14'),
+    (re.compile(r'CS16\b', re.I),  'CS16'),
+    (re.compile(r'LSTA24', re.I),  'LSTA24'),
+    (re.compile(r'LSTA36', re.I),  'LSTA36'),
+    (re.compile(r'ST6236', re.I),  'ST6236'),
+    (re.compile(r'HDU\d+', re.I),  None),   # HDU2, HDU4, HDU8 etc — capture whole match
+    (re.compile(r'HDUE\d+', re.I), None),
+    (re.compile(r'PHD\d+', re.I),  None),
+    (re.compile(r'SSTB\d+', re.I), None),
+    (re.compile(r'A35\b', re.I),   'A35'),
+    (re.compile(r'LTP4\b', re.I),  'LTP4'),
+]
+_CALLOUT_DEDUP_PX = 80  # two callouts within 80px = same location
+
+
+def count_hardware_callouts(items: list[dict]) -> dict[str, int]:
+    """
+    Count hardware model callouts from OCR text items.
+    Each unique occurrence on the plan = 1 piece at that location.
+    Returns {model: count} — only models with count >= 1.
+    """
+    counts: dict[str, list[tuple]] = {}  # model → [(cx, cy), ...]
+
+    for item in items:
+        text = item['text']
+        cx, cy = item['cx'], item['cy']
+
+        for pattern, fixed_name in _STRAP_PATTERNS:
+            m = pattern.search(text)
+            if m:
+                model = fixed_name if fixed_name else m.group(0).upper()
+                if model not in counts:
+                    counts[model] = []
+                # Deduplicate: skip if we already have a callout within DEDUP px
+                is_dup = any(
+                    abs(cx - ex) < _CALLOUT_DEDUP_PX and abs(cy - ey) < _CALLOUT_DEDUP_PX
+                    for ex, ey in counts[model]
+                )
+                if not is_dup:
+                    counts[model].append((cx, cy))
+
+    return {m: len(locs) for m, locs in counts.items() if locs}
+
+
 def extract_lf_from_pages(pdf_path: str, page_indices: list[int]) -> dict:
     """
     Run PaddleOCR on the given page indices (0-indexed) and return LF data.
@@ -167,14 +221,23 @@ def extract_lf_from_pages(pdf_path: str, page_indices: list[int]) -> dict:
                 })
 
         footing_lf = sum(d["feet"] for d in dimensions if d["likely_footing"])
+        hw_callouts = count_hardware_callouts(items)
         pages_out.append({
             "page": idx + 1,
             "drawing_scale": drawing_scale,
             "total_lf": round(footing_lf, 1),
             "dimensions": dimensions,
+            "hardware_callouts": hw_callouts,
         })
+
+    # Aggregate hardware counts across all pages
+    total_hardware: dict[str, int] = {}
+    for p in pages_out:
+        for model, count in p.get("hardware_callouts", {}).items():
+            total_hardware[model] = total_hardware.get(model, 0) + count
 
     return {
         "pages": pages_out,
         "grand_total_lf": round(sum(p["total_lf"] for p in pages_out), 1),
+        "hardware_counts": total_hardware,
     }

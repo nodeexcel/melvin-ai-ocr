@@ -126,8 +126,37 @@ def aggregate_results(extractions: list[dict]) -> dict:
         + result["roof_framing"].get("hardware", [])
         + [item for item in result["framing_details"] if "model" in item]
     )
+    result["_ocr_hardware_counts"] = {}  # populated by inject_lf_data if OCR ran
 
     return result
+
+
+def _normalise_model(m: str) -> str:
+    for prefix in ("Simpson Strong-Tie ", "Simpson Strong Tie ", "Simpson ", "SIMPSON "):
+        if m.upper().startswith(prefix.upper()):
+            return m[len(prefix):].strip()
+    return m.strip()
+
+
+def _merge_hardware(existing: list[dict], ocr_counts: dict[str, int]) -> list[dict]:
+    """
+    Merge OCR-counted hardware into existing simpson_hardware list.
+    OCR count takes priority when it's higher than Gemini's extracted qty.
+    """
+    # normalise inline (same logic as generator.py _hardware_table)
+    merged = {_normalise_model(h.get("model", "")): h.copy()
+              for h in existing if h.get("model")}
+    for raw_model, count in ocr_counts.items():
+        model = _normalise_model(raw_model)
+        if model in merged:
+            # Take the higher of OCR count vs Gemini qty
+            existing_qty = int(merged[model].get("qty", merged[model].get("qty_mentioned", 0)) or 0)
+            if count > existing_qty:
+                merged[model]["qty"] = count
+                merged[model]["qty_source"] = "ocr_callout"
+        else:
+            merged[model] = {"model": model, "qty": count, "qty_source": "ocr_callout"}
+    return list(merged.values())
 
 
 def inject_lf_data(result: dict, lf_data: dict) -> dict:
@@ -144,6 +173,12 @@ def inject_lf_data(result: dict, lf_data: dict) -> dict:
     for page in lf_data.get("pages", []):
         if page.get("drawing_scale") and not foundation.get("drawing_scale"):
             foundation["drawing_scale"] = page["drawing_scale"]
+
+    # Merge OCR hardware callout counts into simpson_hardware
+    ocr_hw = lf_data.get("hardware_counts", {})
+    if ocr_hw:
+        result["_ocr_hardware_counts"] = ocr_hw
+        result["simpson_hardware"] = _merge_hardware(result.get("simpson_hardware", []), ocr_hw)
 
     # Calculate CY from total LF × weighted average footing cross-section
     if foundation.get("concrete_cubic_yards", 0) == 0:

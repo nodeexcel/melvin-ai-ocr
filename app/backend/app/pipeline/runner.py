@@ -161,13 +161,17 @@ def pipeline_worker(
             google_api_key=google_api_key,
         )
 
-        # PaddleOCR LF extraction for scanned PDFs (runs inline — Python 3.11 Docker base)
+        # PaddleOCR: LF from plan pages + hardware callout counting from ALL structural pages
         try:
             from app.pipeline.ocr import extract_lf_from_pages
-            ocr_page_indices = [
+            # All non-skip structural pages — needed for hardware callout counting
+            # GEMINI_CATEGORIES for LF; framing_details/wall_framing for strap callouts
+            _structural = {"foundation", "floor_framing", "roof_framing",
+                           "wall_framing", "framing_details"}
+            ocr_page_indices = sorted({
                 p["page"] - 1 for p in result.get("_pages", [])
-                if p.get("category") in GEMINI_CATEGORIES
-            ]
+                if p.get("category") in _structural
+            })
             if ocr_page_indices:
                 write_event("ocr", f"Extracting dimensions from {len(ocr_page_indices)} pages...", 91)
                 lf_data = extract_lf_from_pages(pdf_path, ocr_page_indices)

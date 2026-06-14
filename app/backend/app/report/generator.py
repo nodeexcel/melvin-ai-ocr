@@ -336,6 +336,13 @@ def generate_report(data: dict, output_path: str) -> None:
 
     # ── Preliminary Quantities ────────────────────────────────────────────────
     qty = data.get("quantities", {})
+    if not qty and data.get("project", {}).get("total_sqft"):
+        # Compute at render time for cached results
+        try:
+            from app.pipeline.quantities import estimate_quantities
+            qty = estimate_quantities(data)
+        except Exception:
+            qty = {}
     _has_qty = bool(qty.get("floor_framing") or qty.get("wall_framing") or qty.get("plywood"))
     if _has_qty:
         elements.extend(_section_title("Preliminary Quantities *", styles))

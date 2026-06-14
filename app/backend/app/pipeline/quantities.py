@@ -77,7 +77,13 @@ def estimate_wall_framing(wall_framing: dict, total_sqft: int) -> list[dict]:
         height_ft = walls.get("height_ft", 9) or 9
 
         if not size:
-            continue
+            if not total_sqft:
+                continue
+            # Gemini didn't extract wall framing — use CA residential defaults.
+            # 2-story exterior: 2x6 @ 16" O.C.; interior: 2x4 @ 16" O.C.
+            size = "2x6" if wall_type == "Exterior" else "2x4"
+            spacing_in = 16
+            height_ft = 9
 
         if lf:
             # We have LF — calculate studs

@@ -156,6 +156,15 @@ def _classify_batch(client: OpenAI, batch: list[dict]) -> list[dict]:
 
 # ── Text cross-check ─────────────────────────────────────────────────────────
 
+# Title phrases that confirm a page is a foundation plan.
+# Used as fallback when Vision misclassifies foundation plan pages.
+_FOUNDATION_PLAN_PHRASES = [
+    "FOUNDATION PLAN",
+    "FOOTING PLAN",
+    "GRADE BEAM PLAN",
+    "SLAB PLAN",
+]
+
 # Phrases that ONLY appear in structural spec/schedule pages — never in
 # graphical framing plans, foundation plans, or architectural drawings.
 # Used to correct Vision misclassifications on text-dense pages.
@@ -256,6 +265,15 @@ def classify_pages(
                     and _text_schedule_override(text)
                 ):
                     cat = "schedules"
+
+                # Foundation plan override: if the text layer contains an
+                # unambiguous foundation plan title and Vision missed it,
+                # correct the category. Only fires when not already schedules
+                # (schedule override already ran above and takes precedence).
+                if cat not in ("foundation", "schedules", "skip") and text:
+                    text_upper = text.upper()
+                    if any(p in text_upper for p in _FOUNDATION_PLAN_PHRASES):
+                        cat = "foundation"
 
                 pages.append({
                     "page":     result["page_num"],

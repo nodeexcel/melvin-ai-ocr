@@ -92,7 +92,9 @@ Extract ALL of the following as JSON:
   "blocking": {"size": "", "linear_feet": 0},
   "hardware": [{"model": "", "qty": 0}],
   "notes": []
-}""",
+}
+
+IMPORTANT: For TJI or engineered I-joists (e.g. 11-7/8" TJI-210 @ 16" O.C., 9-1/2" TJI-230), include them in the joists array with the exact model number as the size field (e.g. size: "11-7/8 TJI-210"). Capture spacing_in and span_ft from callouts or the framing plan.""",
 
     "wall_framing": """This is a floor plan or shear wall plan.
 Extract ALL of the following as JSON:

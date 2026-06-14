@@ -280,7 +280,11 @@ def generate_report(data: dict, output_path: str) -> None:
     }
 
     def _is_real_model(m: str) -> bool:
-        if not m or len(m) < 2:
+        if not m:
+            return False
+        # 1-2 char codes like B1/W1/S1 are drawing labels, not hardware.
+        # Exception: H-series (H1, H2) are real Simpson hurricane ties.
+        if len(m) < 3 and not m.upper().startswith("H"):
             return False
         return m.lower() not in _PHASE_GENERIC
 
@@ -613,8 +617,8 @@ def generate_report(data: dict, output_path: str) -> None:
             ("FONTSIZE", (0, 0), (-1, -1), 8),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT]),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("TOPPADDING", (0, 0), (-1, -1), 2),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
             ("LEFTPADDING", (0, 0), (-1, -1), 6),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ]))

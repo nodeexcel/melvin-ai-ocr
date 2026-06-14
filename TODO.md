@@ -426,9 +426,72 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Mark all as estimated: true, organized by phase to match Ganahl format
   - Reference: memory/procurement_format.md (Ganahl EST618017 gold standard)
 
+## Current State — 2026-06-14 (post estimate 25 validation)
+
+### What's working in production
+- Hardware Schedule by Phase: Foundation/Floor/Wall/Roof/General all correct ✅
+- Phase redistribution at render time (works for cached results) ✅
+- Preliminary Quantities: 87 sheets subfloor vs real order 86 — essentially exact ✅
+- OCR callout counting: CMST12×4, ST6236×6, HDU11×1 etc. from plan pages ✅
+- LF + CY for scanned PDFs (Paseo Miramar: 128.6 ft) ✅
+- PDF: footer, phase section, quantities section, 5 clean pages ✅
+
+### Remaining — Short Term (code changes, no external dependency)
+
+- [ ] **#1 INDEPENDENT — Page 5 waste**
+  - Connections table spills to near-empty last page in estimate (25)
+  - Fix: compact connection table rows or cap display count
+
+- [ ] **#2 INDEPENDENT — Lumber piece counts (wall studs + joists)**
+  - Priority 3 quantities.py works for plywood (87 sheets ✅) but shows 0 studs/joists
+  - Root cause: Gemini rarely extracts stud_spacing_in AND wall_lf together
+  - Fix A: improve wall_framing + floor_framing Gemini prompts to extract spacing + LF
+  - Fix B: use total_sqft + standard factors even without Gemini data (fallback)
+  - Expected output: "~580 pcs 2x6×10 Exterior Studs (est.)"
+
+- [ ] **#3 INDEPENDENT — TJI/engineered lumber in quantities**
+  - Real Ganahl order has 300+ TJI-210 I-joists — not extracted at all
+  - Fix: update floor_framing Gemini prompt to ask for TJI model + spacing + span
+
+- [ ] **#4 INDEPENDENT — Foundation section missing in most runs**
+  - Classification variance: footing plan pages not always classified as `foundation`
+  - Fix: if page sheet_no matches S1.1 or title contains "FOUNDATION PLAN" → override to `foundation`
+
+- [ ] **#5 INDEPENDENT — B1/W1/S1 filter**
+  - 1-2 char codes unlikely to be real Simpson models
+  - Fix: add min-length filter (3+ chars) to phase section generic filter
+
+- [ ] **#6 NEEDS MELVIN — Hardware quantities still low**
+  - LUS210×12 extracted vs real order LUS210×380+
+  - "TYP." connections repeated throughout plans not captured by callout counting
+  - Solution requires plan digitization or Melvin confirming counts manually
+  - Cannot fix without knowing plan density
+
+- [ ] **#7 NEEDS MELVIN — B1/W1/S1/AB123/JH456/SP789 unknown codes**
+  - Ask Melvin: are these real model numbers or placeholders?
+
+- [ ] **#8 NEEDS MELVIN — CAD PDF LF = 0**
+  - Whaleon, LHERT-SONG, SVR, Woodlane all show 0 LF (vector text not readable)
+  - Options: DXF export from engineer, iBeam AI, tesseract OCR
+  - Defer until Melvin confirms accuracy threshold
+
+### Remaining — Phase 3 (needs external data or Melvin input)
+- Labor estimates → needs RSMeans subscription ($500-2k/yr)
+- Equipment costs → same RSMeans subscription
+- Construction schedule → needs Melvin review + phase durations
+- Full Ganahl-format procurement list → needs lumber piece counts (above)
+
+### Blocking Melvin from using today
+1. His OpenAI key has no credits — can't run pipeline himself
+2. Report is directional (plywood accurate, hardware partial) — not production-ready for ordering
+
+### Most valuable next step
+Get Melvin's OpenAI billing enabled first. Then send him estimate (25) for review.
+His feedback on hardware model accuracy + unknown codes is worth more than more engineering.
+
 - [ ] **CAD PDFs LF extraction (future)**
   - Options: `sudo apt install tesseract-ocr`, DXF export from engineer, iBeam AI
-  - Defer until Docker OCR is fixed and scanned PDF LF validated in web app
+  - Defer until Melvin confirms which PDF types he'll submit
 
 - [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate (RSMeans), equipment costs, construction schedule
 - [ ] Cover sheet index parser for A-series architectural page routing

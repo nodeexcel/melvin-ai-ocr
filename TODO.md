@@ -438,28 +438,24 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 
 ### Remaining — Short Term (code changes, no external dependency)
 
-- [ ] **#1 INDEPENDENT — Page 5 waste**
-  - Connections table spills to near-empty last page in estimate (25)
-  - Fix: compact connection table rows or cap display count
+- [x] **#1 INDEPENDENT — Page 5 waste ✅ (2026-06-14)**
+  - connections table TOPPADDING/BOTTOMPADDING 4→2pt; 5-page PDF → 4-page PDF
 
-- [ ] **#2 INDEPENDENT — Lumber piece counts (wall studs + joists)**
-  - Priority 3 quantities.py works for plywood (87 sheets ✅) but shows 0 studs/joists
-  - Root cause: Gemini rarely extracts stud_spacing_in AND wall_lf together
-  - Fix A: improve wall_framing + floor_framing Gemini prompts to extract spacing + LF
-  - Fix B: use total_sqft + standard factors even without Gemini data (fallback)
-  - Expected output: "~580 pcs 2x6×10 Exterior Studs (est.)"
+- [x] **#2 INDEPENDENT — Wall stud default fallback ✅ (2026-06-14)**
+  - quantities.py: when Gemini doesn't return stud_size, default to 2x6@16" ext / 2x4@16" int
+  - 472 exterior studs + 708 interior studs now generated for 2,509 sqft
+  - Floor joist quantities still 0 (Gemini extracts joist sizes inconsistently)
 
-- [ ] **#3 INDEPENDENT — TJI/engineered lumber in quantities**
-  - Real Ganahl order has 300+ TJI-210 I-joists — not extracted at all
-  - Fix: update floor_framing Gemini prompt to ask for TJI model + spacing + span
+- [x] **#3 INDEPENDENT — TJI prompt ✅ (2026-06-14)**
+  - prompts.py floor_framing: added explicit TJI/I-joist instruction with model capture
+  - Effect: next fresh run should return size="11-7/8 TJI-210" instead of generic "TJI"
 
-- [ ] **#4 INDEPENDENT — Foundation section missing in most runs**
-  - Classification variance: footing plan pages not always classified as `foundation`
-  - Fix: if page sheet_no matches S1.1 or title contains "FOUNDATION PLAN" → override to `foundation`
+- [x] **#4 INDEPENDENT — Foundation classification override ✅ (2026-06-14)**
+  - classify.py: if text layer has FOUNDATION PLAN/FOOTING PLAN, override to foundation
+  - Doesn't fire if already schedules or skip (schedule override takes precedence)
 
-- [ ] **#5 INDEPENDENT — B1/W1/S1 filter**
-  - 1-2 char codes unlikely to be real Simpson models
-  - Fix: add min-length filter (3+ chars) to phase section generic filter
+- [x] **#5 INDEPENDENT — B1/W1/S1 filter ✅ (2026-06-14)**
+  - generator.py _is_real_model(): 2-char non-H codes filtered; H1/H2 still pass
 
 - [ ] **#6 NEEDS MELVIN — Hardware quantities still low**
   - LUS210×12 extracted vs real order LUS210×380+

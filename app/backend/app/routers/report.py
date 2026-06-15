@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import AnalysisResult, Project, User
+from app.models import AnalysisResult, Project, RateSheet, User
+from app.pipeline.cost_estimate import estimate_costs
 from app.report.generator import generate_report
 
 router = APIRouter(prefix="/api/projects", tags=["report"])
@@ -38,10 +39,17 @@ async def download_report(
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis results not found")
 
+    # Load user's rate sheet (if any) and compute cost estimate
+    rs_result = await db.execute(select(RateSheet).where(RateSheet.user_id == current_user.id))
+    rate_sheet = rs_result.scalar_one_or_none()
+    rates = rate_sheet.rates if rate_sheet else {}
+    cost_estimate = estimate_costs(analysis.raw_json, rates)
+
     if not analysis.report_pdf_path or not os.path.exists(analysis.report_pdf_path):
         pdf_path = f"{project.file_path}_report.pdf"
+        data = {**analysis.raw_json, "cost_estimate": cost_estimate}
         loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, generate_report, analysis.raw_json, pdf_path)
+        await loop.run_in_executor(None, generate_report, data, pdf_path)
         analysis.report_pdf_path = pdf_path
         await db.commit()
     else:

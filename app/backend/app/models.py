@@ -52,6 +52,17 @@ class JobEvent(Base):
     project: Mapped["Project"] = relationship("Project", back_populates="events")
 
 
+class RateSheet(Base):
+    __tablename__ = "rate_sheets"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
+    rates: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    user: Mapped["User"] = relationship("User")
+
+
 class AnalysisResult(Base):
     __tablename__ = "analysis_results"
 

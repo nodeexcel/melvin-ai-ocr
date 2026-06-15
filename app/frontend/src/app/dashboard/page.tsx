@@ -40,6 +40,9 @@ export default function DashboardPage() {
           <Link href="/upload" className="bg-brand-yellow text-brand-black font-bold px-4 py-2 rounded text-sm hover:opacity-90 transition">
             + New Estimate
           </Link>
+          <Link href="/settings/rates" className="text-gray-400 hover:text-white text-sm transition">
+            Rate Sheet
+          </Link>
           <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">
             Sign out
           </button>

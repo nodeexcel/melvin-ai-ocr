@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, projects, report, stream
+from app.routers import auth, projects, rates, report, stream
 
 
 @asynccontextmanager
@@ -29,3 +29,4 @@ app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(stream.router)
 app.include_router(report.router)
+app.include_router(rates.router)

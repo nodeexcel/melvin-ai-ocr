@@ -393,6 +393,30 @@ def generate_report(data: dict, output_path: str) -> None:
             elements.append(_std_table(ply_rows, [2.8*inch, 0.7*inch, 2.0*inch, 1.5*inch]))
             elements.append(Spacer(1, 0.1 * inch))
 
+    # ── Preliminary Labor Estimate ────────────────────────────────────────────
+    cost = data.get("cost_estimate", {})
+    if cost.get("line_items"):
+        elements.extend(_section_title("Preliminary Labor Estimate *", styles))
+        elements.append(Paragraph(
+            "* AI-estimated labor — based on your rate sheet × extracted quantities. "
+            "Verify all line items before quoting.",
+            styles["body"]
+        ))
+        elements.append(Spacer(1, 0.08 * inch))
+        cost_rows = [["Description", "Qty", "Unit", "Rate ($)", "Est. Cost ($)"]]
+        for item in cost["line_items"]:
+            cost_rows.append([
+                item["description"],
+                str(item["qty"]),
+                item["unit"],
+                f"{item['rate']:,.2f}",
+                f"{item['cost']:,.2f}",
+            ])
+        cost_rows.append(["", "", "", "TOTAL", f"${cost['total']:,.2f}"])
+        ct = _std_table(cost_rows, [2.6*inch, 0.7*inch, 0.6*inch, 1.1*inch, 1.5*inch])
+        elements.append(ct)
+        elements.append(Spacer(1, 0.1 * inch))
+
     foundation = data.get("foundation", {})
     _est = foundation.get("estimated", False)
     _has_foundation = bool(foundation.get("footing_types") or foundation.get("anchor_bolts"))

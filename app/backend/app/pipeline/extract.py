@@ -1,11 +1,13 @@
 import base64
 import json
+import re
+import time
 from io import BytesIO
 
 import google.generativeai as genai
 from openai import OpenAI
 
-from app.pipeline.prompts import DIMENSION_PROMPTS, EXTRACTION_PROMPTS, RETRY_PROMPTS, SYSTEM_PROMPT, is_refusal
+from app.pipeline.prompts import DIMENSION_PROMPTS, EXTRACTION_PROMPTS, RETRY_PROMPTS, SYSTEM_PROMPT, is_empty_result, is_refusal
 
 
 def _encode_image(image) -> str:
@@ -63,6 +65,12 @@ def extract_dimensions_gemini(google_api_key: str, image, category: str) -> dict
         return {}
 
 
+def _gemini_retry_delay(error: Exception) -> int:
+    """Extract the suggested retry delay (seconds) from a Gemini 429 error."""
+    match = re.search(r"retry.*?(\d+)\s*seconds?", str(error), re.IGNORECASE)
+    return int(match.group(1)) + 2 if match else 65
+
+
 def extract_vision_gemini(google_api_key: str, image, category: str) -> dict:
     """Extract structured data from a rendered page image using Gemini Pro."""
     genai.configure(api_key=google_api_key)
@@ -74,7 +82,23 @@ def extract_vision_gemini(google_api_key: str, image, category: str) -> dict:
 
     for attempt, prompt_dict in enumerate((EXTRACTION_PROMPTS, RETRY_PROMPTS)):
         prompt = prompt_dict.get(category, EXTRACTION_PROMPTS["schedules"])
-        response = model.generate_content([prompt, image], generation_config=config)
+        try:
+            response = model.generate_content([prompt, image], generation_config=config)
+        except Exception as e:
+            if "429" in str(e):
+                wait = _gemini_retry_delay(e)
+                time.sleep(wait)
+                try:
+                    response = model.generate_content([prompt, image], generation_config=config)
+                except Exception:
+                    if attempt == 0:
+                        continue
+                    return {"raw_response": None, "parse_error": True}
+            else:
+                if attempt == 0:
+                    continue
+                return {"raw_response": None, "parse_error": True}
+
         content = response.text if response.text else None
         if content is None:
             continue
@@ -83,6 +107,8 @@ def extract_vision_gemini(google_api_key: str, image, category: str) -> dict:
             continue
         result = _parse_response(content)
         if not result.get("parse_error"):
+            if is_empty_result(result, category) and attempt == 0:
+                continue
             return result
         if attempt == 0:
             continue
@@ -120,6 +146,8 @@ def extract_vision(client: OpenAI, image, category: str) -> dict:
             continue
         result = _parse_response(content)
         if not result.get("parse_error"):
+            if is_empty_result(result, category) and attempt == 0:
+                continue
             return result
         if attempt == 0:
             continue

@@ -17,6 +17,28 @@ def is_refusal(content: str) -> bool:
     return any(p in lower for p in _REFUSAL_PHRASES)
 
 
+# Primary list/string fields per category — all empty means the model extracted nothing.
+_EMPTY_FIELDS: dict[str, list[str]] = {
+    "floor_framing":   ["joists", "beams"],
+    "roof_framing":    ["rafters"],
+    "foundation":      ["footing_types", "hold_downs"],
+    "framing_details": ["connections", "hardware"],
+    "wall_framing":    ["hardware"],
+    "schedules":       ["sheet_list", "lumber_specs", "concrete_specs", "nailing_schedule"],
+}
+
+
+def is_empty_result(result: dict, category: str) -> bool:
+    """True when the model returned valid JSON but extracted no useful content.
+    Triggers a retry with the simplified RETRY_PROMPTS prompt."""
+    fields = _EMPTY_FIELDS.get(category)
+    if not fields:
+        return False  # unknown category — don't retry
+    if not result:
+        return True
+    return all(not result.get(f) for f in fields)
+
+
 RETRY_PROMPTS: dict[str, str] = {
     "foundation": """Structural drawing. List footing types with dimensions and rebar, hold-down models, anchor bolts visible. Return JSON:
 {"footing_types": [{"type": "", "width_in": 0, "depth_in": 0, "top_rf": "", "bottom_rf": "", "stirrups": "", "linear_feet": 0}], "hold_downs": [{"model": "", "qty": 0}], "anchor_bolts": {"size": "", "spacing_in": 0, "qty": 0}, "concrete_cubic_yards": 0, "notes": []}""",

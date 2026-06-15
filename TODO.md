@@ -484,7 +484,10 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 **Hardware accuracy vs real Ganahl order (LHERT SONG):**
   CMST12: 43 vs 37 ✅close | CMST14: 33 vs 28 ✅close | LUS210: 0 vs 410 ❌
   HDU4: 2 vs 27 ❌ | A35: 4 vs 500 ❌ | DTT2Z: 1 vs 10 ❌
-  p17/p19 floor_framing still return empty — those pages hold most LUS/A35 callouts
+  p17/p19 are ARCHITECTURAL sheets (A-4.1a Letter Four) — no structural data, empty is correct
+  S-2.1 = "Foundation and Basement Plans" — there is NO standalone 1F structural framing plan
+  LUS210 = "TYP" callout on every joist — requires joist-grid counting, not text extraction
+  A35 = similarly distributed as TYP throughout plans — same counting problem
 
 ### Newly surfaced gaps (2026-06-14 LHERT SONG run)
 

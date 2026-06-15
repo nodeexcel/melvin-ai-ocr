@@ -471,6 +471,18 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Options: DXF export from engineer, iBeam AI, tesseract OCR
   - Defer until Melvin confirms accuracy threshold
 
+### Newly surfaced gaps (2026-06-14 LHERT SONG run)
+
+- [ ] **total_sqft = 0 on all CAD PDFs** — schedules pages (LHERT SONG p3/4/55/56/57, Whaleon)
+  return empty results from text extraction. Building area not in a format the model reads.
+  Fix: add explicit sqft extraction hint to schedules prompt, or scan for "BUILDING AREA" / "SQ FT" phrases.
+
+- [ ] **Gemini silent empty on floor_framing plan pages** — p17/p19/p59 on LHERT SONG return
+  result keys=[] (empty dict, not refusal). No joists, beams, or hardware extracted at all.
+  Root cause unknown — may be rendering resolution, page complexity, or Gemini capacity.
+  Fix: investigate render scale for Gemini calls; try retry with simplified prompt (same pattern as
+  GPT-4o refusal retry already in place).
+
 ### Remaining — Phase 3 (needs external data or Melvin input)
 - Labor estimates → needs RSMeans subscription ($500-2k/yr)
 - Equipment costs → same RSMeans subscription

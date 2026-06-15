@@ -25,6 +25,7 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      REGISTER_SECRET: ${REGISTER_SECRET}
       UPLOAD_DIR: /uploads
     volumes:
       - uploads:/uploads

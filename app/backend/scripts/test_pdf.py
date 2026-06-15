@@ -49,7 +49,7 @@ def _run_lf_extraction(pdf_path: str, page_indices: list[int], fast: bool = Fals
         cmd = [str(_PY311), str(_OCR_SCRIPT), "--pdf", pdf_path, "--pages", pages_str]
         if fast:
             cmd.append("--fast")
-        timeout = 900  # hardware fast pass: 23 pages × ~13s ≈ 5 min
+        timeout = 1800  # LF full pass: up to 12 pages × ~90s; hardware fast: 23 × ~13s
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         if proc.returncode == 0:
             return json.loads(proc.stdout)

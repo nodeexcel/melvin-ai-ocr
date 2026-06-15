@@ -471,6 +471,21 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   - Options: DXF export from engineer, iBeam AI, tesseract OCR
   - Defer until Melvin confirms accuracy threshold
 
+### Session 2026-06-15 — empty-result retry + 429 backoff + full run validation
+
+- [x] **Empty-result retry ✅** — is_empty_result() in prompts.py; both Gemini + GPT-4o retry on {}
+- [x] **Gemini 429 backoff ✅** — reads retry-after from error, sleeps, retries once
+- [x] **TJI extraction confirmed ✅** — `11-7/8 TJI 210 @ 16" OC` extracted from LHERT SONG p59
+- [x] **OCR timeout fix ✅** — raised from 900s → 1800s (12 pages × ~90s LF pass)
+- [ ] **total_sqft classification variance** — p5 classified as schedules in one run but not another;
+  causes Fix #2 wall stud quantities to disappear run-to-run. Root cause: Vision sees same page
+  differently between batches.
+
+**Hardware accuracy vs real Ganahl order (LHERT SONG):**
+  CMST12: 43 vs 37 ✅close | CMST14: 33 vs 28 ✅close | LUS210: 0 vs 410 ❌
+  HDU4: 2 vs 27 ❌ | A35: 4 vs 500 ❌ | DTT2Z: 1 vs 10 ❌
+  p17/p19 floor_framing still return empty — those pages hold most LUS/A35 callouts
+
 ### Newly surfaced gaps (2026-06-14 LHERT SONG run)
 
 - [ ] **total_sqft = 0 on all CAD PDFs** — schedules pages (LHERT SONG p3/4/55/56/57, Whaleon)

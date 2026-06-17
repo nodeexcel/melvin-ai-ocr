@@ -501,23 +501,40 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   Fix: investigate render scale for Gemini calls; try retry with simplified prompt (same pattern as
   GPT-4o refusal retry already in place).
 
-### Remaining — Phase 3 (needs external data or Melvin input)
-- Labor estimates → needs RSMeans subscription ($500-2k/yr)
-- Equipment costs → same RSMeans subscription
-- Construction schedule → needs Melvin review + phase durations
-- Full Ganahl-format procurement list → needs lumber piece counts (above)
+## Session 2026-06-15 (afternoon) — Phase 3 Rate Sheet + Security Fix + Flow Testing
+
+- [x] **Phase 3 rate sheet ✅** — DB model (rate_sheets), migration 002, GET/PUT /api/rates,
+  cost_estimate.py (quantities × rates → line items), PDF cost section, /settings/rates UI,
+  dashboard nav link. Validated: $21,671 estimate on mock LHERT SONG data.
+- [x] **Security fix ✅** — REGISTER_SECRET not injected into Docker container; anyone could
+  register. Fixed in docker-compose.yml. Wrong invite code now returns 403.
+- [x] **Full flow test ✅** — All 8 routes verified, auth guard, rate isolation per user,
+  cost section appears in live PDF download, empty rates → no cost section.
+- [x] **Client update written** — 3-day breakdown sent to Melvin covering Phase 2 fixes,
+  pipeline reliability, TJI extraction, rate sheet, and blocking items.
+
+### Phase 3 — what's built vs remaining
+
+**Built:**
+- Rate sheet: storage, UI, API, PDF section ✅
+- Labor cost estimate: quantities × user rates → line items + total ✅
+
+**Remaining in Phase 3:**
+- [ ] Equipment cost rates (crane, pump, scaffold) — add fields to rate sheet, ~1 hr
+- [ ] Results page: show cost estimate inline (without downloading PDF) — ~1 hr
+- [ ] Waste factors — formula-based, ~1 hr
+- [ ] Construction schedule — blocked on production rates from Melvin
+- [ ] Full procurement list (Ganahl format) — blocked on lumber piece counts
+
+### Remaining — independent code work (no external dep)
+- [ ] Results page cost summary inline — web UI, ~1 hr
+- [ ] total_sqft variance — add sqft hint to schedules prompt, ~30 min
+- [ ] General hardware noise — "ALUMINUM ANGLE", "NEOPRENE BAD" to blocklist, ~15 min
 
 ### Blocking Melvin from using today
-1. His OpenAI key has no credits — can't run pipeline himself
-2. Report is directional (plywood accurate, hardware partial) — not production-ready for ordering
+1. OpenAI key has no credits — can't run pipeline himself
+2. Gemini key on free tier (20 req/day) — needs paid tier for production
 
 ### Most valuable next step
-Get Melvin's OpenAI billing enabled first. Then send him estimate (25) for review.
-His feedback on hardware model accuracy + unknown codes is worth more than more engineering.
-
-- [ ] **CAD PDFs LF extraction (future)**
-  - Options: `sudo apt install tesseract-ocr`, DXF export from engineer, iBeam AI
-  - Defer until Melvin confirms which PDF types he'll submit
-
-- [ ] **Derived outputs — Phase 3:** Waste factors, procurement list, labor estimate (RSMeans), equipment costs, construction schedule
-- [ ] Cover sheet index parser for A-series architectural page routing
+Get Melvin into the app (credentials sent), have him fill rate sheet and review estimate (25).
+His feedback on hardware model accuracy > more engineering right now.

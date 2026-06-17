@@ -278,12 +278,14 @@ def generate_report(data: dict, output_path: str) -> None:
         "ohagin roof vent", "ohagin", "roof vent", "sim. hanger",
         "post base", "anchor bolt", "holdown", "holdown strap",
         "hss", "weld", "strap", "joist hanger", "holdown",
-        # Structural steel shapes handled by _GENERIC_SUBSTRINGS (prefix variants)
         # Generic fasteners
         "pan head screw", "countersunk screw", "countersunk screws",
         # Sealants / membranes / tapes
         "epdm", "epdm seal", "neoprene", "neoprene pad", "neoprene bad",
         "vhb tape", "vhb", "sealant",
+        # Incomplete prefix-only codes (Gemini drops the numeric suffix)
+        # Full models like LUS26, HUCQ410, ABU66 are unaffected (not exact matches)
+        "lus", "hucq", "abu", "hus", "lts", "cmst", "mstc",
     }
 
     # Non-structural brand prefixes — Gemini extracts these from general notes.
@@ -292,7 +294,7 @@ def generate_report(data: dict, output_path: str) -> None:
         "schluter",   # tile edge trim system
         "pemko",      # door hardware
         "astm no",    # material standard designations
-        "grace ",     # waterproofing membranes (Grace Ultra, etc.)
+        "grace ",     # waterproofing membranes
         "allweather", # sealant brand
         "panda ",     # insulation brand
         "contega",    # building wrap
@@ -300,16 +302,24 @@ def generate_report(data: dict, output_path: str) -> None:
         "western ",   # generic brand
         "hook #",     # door/window hardware
         "bronze ",    # architectural hardware
-        "sim. ",      # drawing annotation "Similar to ..." — not a model
+        "sim. ",      # drawing annotation "Similar to X" — not a model
         "sim.",       # same without space
+        "jh",         # JH1/JH2 = Joist Hanger abbreviation, not a Simpson model
+        "redguard",   # waterproofing membrane brand
     )
 
     # Substrings that disqualify any model regardless of prefix/suffix.
     _GENERIC_SUBSTRINGS = (
         "aluminum angle", "aluminum channel", "steel angle", "steel channel",
+        "hss",      # HSS1/HSS 4x4 = Hollow Structural Section (steel tube)
+        "bolt",     # "1/2\" DIA. BOLTS", "ANCHOR BOLTS" — generic fasteners
+        "dia.",     # dimension descriptions: "1/2\" DIA."
+        "glazing",  # glazing clips, glass rail brackets — architectural
+        "stainless",# stainless steel fittings — not Simpson connectors
     )
 
     _NAIL_PATTERN = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.
+    _DIGIT_START  = re.compile(r"^\d")     # "1/2\" DIA. BOLTS" etc — no Simpson model starts with a digit
 
     def _is_real_model(m: str) -> bool:
         if not m:
@@ -321,7 +331,9 @@ def generate_report(data: dict, output_path: str) -> None:
         ml = m.lower()
         if ml in _PHASE_GENERIC:
             return False
-        if _NAIL_PATTERN.match(ml):  # nail size designations (10d, 16d, 8d)
+        if _NAIL_PATTERN.match(ml):    # nail sizes: 10d, 16d, 8d
+            return False
+        if _DIGIT_START.match(ml):     # dimension specs: 1/2" DIA. BOLTS, 3-#5, etc.
             return False
         if any(ml.startswith(b) for b in _NON_STRUCTURAL_BRANDS):
             return False

@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import date
 
 from reportlab.lib import colors
@@ -299,12 +300,16 @@ def generate_report(data: dict, output_path: str) -> None:
         "western ",   # generic brand
         "hook #",     # door/window hardware
         "bronze ",    # architectural hardware
+        "sim. ",      # drawing annotation "Similar to ..." — not a model
+        "sim.",       # same without space
     )
 
     # Substrings that disqualify any model regardless of prefix/suffix.
     _GENERIC_SUBSTRINGS = (
         "aluminum angle", "aluminum channel", "steel angle", "steel channel",
     )
+
+    _NAIL_PATTERN = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.
 
     def _is_real_model(m: str) -> bool:
         if not m:
@@ -315,6 +320,8 @@ def generate_report(data: dict, output_path: str) -> None:
             return False
         ml = m.lower()
         if ml in _PHASE_GENERIC:
+            return False
+        if _NAIL_PATTERN.match(ml):  # nail size designations (10d, 16d, 8d)
             return False
         if any(ml.startswith(b) for b in _NON_STRUCTURAL_BRANDS):
             return False

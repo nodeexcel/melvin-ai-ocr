@@ -42,8 +42,10 @@ def _qty_from_result(result: dict) -> dict:
 
     subfloor = next((i.get("estimated_qty", 0) for i in qty.get("plywood", [])
                      if "subfloor" in i.get("description", "").lower()), 0)
+    # Specifically match wall sheathing — "roof sheathing" also contains "sheathing"
+    # so we must search for "wall" to avoid applying wall labor rate to roof sheathing qty.
     sheathing = next((i.get("estimated_qty", 0) for i in qty.get("plywood", [])
-                      if "sheathing" in i.get("description", "").lower()), 0)
+                      if "wall sheathing" in i.get("description", "").lower()), 0)
 
     tji = sum(item.get("estimated_qty", 0) for item in qty.get("floor_framing", [])
               if "tji" in item.get("size", "").lower() or "i-joist" in item.get("size", "").lower())

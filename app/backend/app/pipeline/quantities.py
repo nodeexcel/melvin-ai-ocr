@@ -179,12 +179,16 @@ def estimate_quantities(result: dict) -> dict:
     wall_framing = result.get("wall_framing", {})
     roof_framing = result.get("roof_framing", {})
 
-    has_floor = bool(floor_framing.get("joists") or total_sqft)
-    has_roof = bool(roof_framing.get("rafters") or total_sqft)
-    has_walls = bool(wall_framing.get("exterior_walls") or total_sqft)
+    # Use fallback sqft for presence checks so sheathing always generates
+    # even when the plan set didn't state a building area.
+    effective_sqft = total_sqft or _TYPICAL_RESIDENTIAL_SQFT
+    has_floor = bool(floor_framing.get("joists") or effective_sqft)
+    has_roof  = bool(roof_framing.get("rafters")  or effective_sqft)
+    has_walls = bool(wall_framing.get("exterior_walls") or effective_sqft)
 
+    display_sqft = total_sqft or effective_sqft
     quantities = {
-        "total_sqft": total_sqft,
+        "total_sqft": display_sqft,
         "estimated": True,
         "note": "Preliminary estimates — verify quantities before ordering",
         "floor_framing": estimate_floor_framing(floor_framing, total_sqft),

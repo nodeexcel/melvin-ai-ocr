@@ -80,7 +80,17 @@ def aggregate_results(extractions: list[dict]) -> dict:
                 result["foundation"]["drawing_scale"] = data["drawing_scale"]
 
         elif cat == "floor_framing":
-            result["floor_framing"]["joists"].extend(data.get("joists") or [])
+            # Dedup joists by (size, spacing_in) — same spec appears on multiple plan pages.
+            # Keep the entry with the highest qty_pieces; fall back to first seen.
+            existing_joists = {
+                (j.get("size", ""), j.get("spacing_in", 0)): j
+                for j in result["floor_framing"]["joists"]
+            }
+            for joist in (data.get("joists") or []):
+                key = (joist.get("size", ""), joist.get("spacing_in", 0))
+                if key not in existing_joists or joist.get("qty_pieces", 0) > existing_joists[key].get("qty_pieces", 0):
+                    existing_joists[key] = joist
+            result["floor_framing"]["joists"] = list(existing_joists.values())
             result["floor_framing"]["beams"].extend(data.get("beams") or [])
             result["floor_framing"]["hardware"].extend(data.get("hardware") or [])
             if data.get("estimated"):

@@ -573,7 +573,15 @@ PDF reviewed: estimate (26), Hunt Residence, 671 Radcliffe Ave, Pacific Palisade
 | 10d/SIM. gone | floor joists 4→3 rows on next download
 
 ### Needs Melvin confirmation (unknown codes in General)
-AB123, AB6, JH2, JH456, LS456, SP789 — unknown; BP3, PSS1
+AB123, LS456 — still appearing; AB6, JH456, SP789, BP3, PSS1 — from earlier runs
+
+### estimate (30) — server run, Paseo Miramar (scanned PDF)
+- Inline cost estimate on results page ✅ ($28,250.60, Melvin's rates)
+- HUC210/HUC212/LSTA24/LSTA36 new models extracted and passing filter ✅
+- Nailing schedule: 4 entries (was 0 in local runs — scanned Vision doing better)
+- New noise found + fixed: Pipe Sleeve, Shock Box (sleeve+shock to _GENERIC_SUBSTRINGS)
+- Remaining known gaps (scanned PDF): Architect/SE blank, Address city-only,
+  Concrete PSI values missing, Total Area blank → all from Gap 1 (scanned schedules)
 
 ## Session 2026-06-17 (night) — estimate (29) server run + extended filter + full local test
 

@@ -21,9 +21,10 @@ def estimate_floor_framing(floor_framing: dict, total_sqft: int) -> list[dict]:
     """
     Estimate floor joist quantities from spacing + floor area.
     Returns list of {size, spacing_in, estimated_qty, length_ft, estimated, note}
+    Falls back to typical residential sqft when not extracted from plans.
     """
     if not total_sqft:
-        return []
+        total_sqft = _TYPICAL_RESIDENTIAL_SQFT
 
     results = []
     joists = floor_framing.get("joists", [])
@@ -59,13 +60,17 @@ def estimate_floor_framing(floor_framing: dict, total_sqft: int) -> list[dict]:
     return results
 
 
+_TYPICAL_RESIDENTIAL_SQFT = 2000  # fallback when sqft not extracted from plans
+
+
 def estimate_wall_framing(wall_framing: dict, total_sqft: int) -> list[dict]:
     """
     Estimate stud quantities from wall linear feet + spacing.
     Returns list of {size, spacing_in, wall_type, estimated_qty, length_ft, estimated}
+    Falls back to a typical residential floor area when total_sqft is unavailable.
     """
     if not total_sqft:
-        return []
+        total_sqft = _TYPICAL_RESIDENTIAL_SQFT
 
     results = []
 
@@ -122,9 +127,10 @@ def estimate_plywood(total_sqft: int, has_floor: bool = True,
     """
     Estimate plywood sheet counts from floor area.
     Standard 4×8 sheet = 32 sqft. Add 10% waste.
+    Falls back to typical residential sqft when not extracted from plans.
     """
     if not total_sqft:
-        return []
+        total_sqft = _TYPICAL_RESIDENTIAL_SQFT
 
     results = []
     if has_floor:

@@ -178,11 +178,19 @@ _SCHEDULE_PHRASES = [
     "GENERAL STRUCTURAL NOTES",
     "STRUCTURAL SPECIFICATIONS",
     "STRUCTURAL GENERAL NOTES",
-    "SHANK DIAMETER",        # nail spec tables always contain this
-    "COMMON WIRE NAILS",     # nailing schedule header text
-    "DOUGLAS FIR - LARCH",   # lumber spec text
+    "SHANK DIAMETER",             # nail spec tables
+    "COMMON WIRE NAILS",          # nailing schedule header
+    "DOUGLAS FIR - LARCH",        # lumber spec
     "DOUGLAS FIR-LARCH",
     "DOUGLAS FIR - COSTAL",
+    # Structural title sheet phrases — appear on S-1.x sheets Vision often
+    # labels as "skip" (cover sheet). Catching these recovers total_sqft.
+    "SEISMIC DESIGN CATEGORY",
+    "SPECIAL INSPECTION",
+    "SOIL BEARING CAPACITY",
+    "WIND EXPOSURE CATEGORY",
+    "DESIGN CRITERIA",
+    "ALLOWABLE SOIL PRESSURE",
 ]
 
 

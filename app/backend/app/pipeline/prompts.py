@@ -164,5 +164,7 @@ Extract ALL of the following as JSON:
   "concrete_specs": [],
   "nailing_schedule": [],
   "notes": []
-}""",
+}
+
+For total_sqft: extract ONLY if the document has an explicitly labeled building area field such as "GROSS FLOOR AREA", "HABITABLE AREA", "TOTAL AREA", "BUILDING AREA", or similar labeled entry with a square footage value. Do NOT extract job numbers, parcel numbers, permit numbers, or any unlabeled number as sqft. If no explicitly labeled area is found, return 0.""",
 }

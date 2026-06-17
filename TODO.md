@@ -598,3 +598,82 @@ AB123, AB6, JH2, JH456, LS456, SP789 — unknown; BP3, PSS1
 ### Status — waiting for server test results
 Melvin running all 5 structural PDFs on server. Will verify reports when shared.
 Supported PDFs: Whaleon, Paseo Miramar, LHERT SONG (Gemini quota), SVR (slow), BARAGHOUSH (negative)
+
+---
+
+## Research: Pipeline Gap Investigation (2026-06-17 night)
+
+### Gap 1 — Scanned schedule pages extract 0 nailing/lumber
+
+**Evidence:**
+- Paseo Miramar (fully scanned PDF): 10 schedule pages classified, all method=vision
+- All 10 pages returned empty for nailing_schedule and lumber_specs
+- Only sqft was extracted (from title block pages via Vision)
+- Aggregated: nailing=0, lumber=0
+
+**Root cause:**
+Vision extraction (GPT-4o) reads dense tabular schedule data from scanned images at 250 DPI
+and misses entries. At this resolution a 9pt font row in a 50-row nailing schedule table
+renders to ~31px tall. Vision models internally downsample images, making small structured
+tables unreliable.
+
+**Fix — OCR → text pipeline for scanned schedule pages:**
+- Detect: category=schedules AND text_len=0 (no PDF text layer)
+- Run PaddleOCR on the rendered page image → extract raw text string
+- Feed text string to extract_text() (GPT-4o text extraction) — same quality as CAD
+- Infrastructure already exists: PaddleOCR reads scanned text well (331 items on LHERT SONG
+  structural page, 915 items on Paseo Miramar foundation page)
+- Files to change: ocr.py (add extract_text_from_page()), runner.py (wire new path)
+- Effort: Medium. Low risk — new code path for edge case only.
+
+**Note:** CAD PDFs (LHERT SONG, Whaleon) have text layers on schedule pages so they use
+text extraction already (method=text). This gap only affects fully scanned PDFs.
+
+### Gap 2 — CAD LF = 0 (actually three sub-problems)
+
+**Evidence from research:**
+- OCR ran on p58 (S-2.1, Ashley & Vance structural foundation plan) alone → 76.8 ft, 331
+  text items, hardware callouts (A35×3, LTP4×3, HDU4/8/14) — OCR WORKS on structural page
+- Same run on p37 alone (A-9.0 architectural slab detail) → 100 items, 0 LF (correct)
+- Pipeline-reported total for LHERT SONG: 903.8 ft — INCORRECT (see root cause 1)
+- Pipeline ran OCR on 11-12 pages: foundation(3) + floor_framing(3) + roof_framing(5)
+
+**Root cause 1 — OCR scope too broad (primary fix):**
+Pipeline runs OCR on foundation + floor_framing + roof_framing pages combined.
+Floor_framing and roof_framing pages have many dimension callouts (joist spans, room widths,
+wall lengths) that match DIM_PATTERN and get summed as "footing LF".
+The reported 903.8 ft for LHERT SONG was wall/room dimensions from framing plans, NOT
+footing perimeter. The actual footing LF from p58 (S-2.1) alone is 76.8 ft.
+Fix: scope LF OCR to foundation pages ONLY in runner.py. One line change.
+  Change: category in ("foundation", "floor_framing", "roof_framing")
+  To:     category == "foundation"
+
+**Root cause 2 — Misclassified architectural detail sheets:**
+LHERT SONG:
+  p37 = A-9.0 (Letter Four, architectural) — "TYPICAL PATIO SLAB DETAIL", scale 3"=1'-0"
+  p38 = A-9.1 (Letter Four, architectural) — "BASEMENT FOUNDATION DETAIL 01", scale 3"=1'-0"
+  p58 = S-2.1 (Ashley & Vance, structural) — "FOUNDATION AND BASEMENT PLANS" ← correct
+Vision classifies A-9.0/A-9.1 as "foundation" because they contain foundation-related
+drawings. These are cross-section details, not plan views. The text override in classify.py
+does not distinguish them from structural plans.
+Fix: Add "DETAIL" exclusion to foundation text override — if sheet title contains "DETAIL"
+(A-9.0, A-9.1, typical connection details) do not override to foundation.
+  OR: require "PLAN" in the title for foundation text override.
+
+**Root cause 3 — DIM_PATTERN format mismatch (secondary, per-SE-firm):**
+p37/p38 return 100 OCR items but 0 dimension matches. These are detail sheets with small
+dimensions (6", 1'-0", 3'-0" slab thicknesses) which match DIM_PATTERN but are correctly
+filtered by _is_footing_run() as too small.
+p58 (S-2.1) returns 76.8 ft from dimensions like 17'6", 11'0", 17'0", 12'0" — these ARE
+footing dimensions and pass the filter.
+No fix needed for this — the existing filter works correctly.
+
+**Whaleon 193.3 ft note:**
+Whaleon's 193.3 ft came from p68 (foundation) only (1 foundation page). This may include
+wall/room dimensions too, but for a residential foundation plan 193 ft is plausible.
+After scoping OCR to foundation-only, this number would be re-validated on next run.
+
+**Fixes — priority order:**
+- [ ] **Fix 2a (quick): scope OCR LF to foundation pages only** — runner.py, 1 line
+- [ ] **Fix 2b (medium): exclude architectural detail sheets from foundation** — classify.py
+- [ ] **Fix 1 (medium): OCR→text for scanned schedule pages** — ocr.py + runner.py

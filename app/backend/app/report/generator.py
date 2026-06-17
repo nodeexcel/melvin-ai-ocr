@@ -316,6 +316,8 @@ def generate_report(data: dict, output_path: str) -> None:
         "dia.",     # dimension descriptions: "1/2\" DIA."
         "glazing",  # glazing clips, glass rail brackets — architectural
         "stainless",# stainless steel fittings — not Simpson connectors
+        "sleeve",   # pipe sleeve — structural penetration, not a connector
+        "shock",    # shock box / shock absorber — seismic isolation, not Simpson
     )
 
     _NAIL_PATTERN = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.

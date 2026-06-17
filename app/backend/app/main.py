@@ -19,10 +19,7 @@ app = FastAPI(title="AI Construction Estimator", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3036",
-        "http://116.202.210.102:20261"
-    ],
+    allow_origins=['*'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

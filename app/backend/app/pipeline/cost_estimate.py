@@ -24,8 +24,15 @@ _TYPICAL_SQFT = 2000  # fallback when not extracted from plans
 
 
 def _qty_from_result(result: dict) -> dict:
-    """Pull the quantities we can price from the pipeline result."""
-    qty        = result.get("quantities", {})
+    """Pull the quantities we can price from the pipeline result.
+    Computes quantities on-the-fly for results processed before quantities.py existed."""
+    qty = result.get("quantities") or {}
+    if not qty:
+        try:
+            from app.pipeline.quantities import estimate_quantities
+            qty = estimate_quantities(result)
+        except Exception:
+            qty = {}
     foundation = result.get("foundation", {})
     project    = result.get("project", {})
     hw         = result.get("simpson_hardware", [])

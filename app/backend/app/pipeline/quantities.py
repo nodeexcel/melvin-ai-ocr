@@ -27,7 +27,14 @@ def estimate_floor_framing(floor_framing: dict, total_sqft: int) -> list[dict]:
         total_sqft = _TYPICAL_RESIDENTIAL_SQFT
 
     results = []
-    joists = floor_framing.get("joists", [])
+    # Dedup by (size, spacing_in) — same spec can appear across multiple plan pages.
+    # Keep entry with highest qty_pieces; fall back to first seen.
+    seen: dict[tuple, dict] = {}
+    for j in floor_framing.get("joists", []):
+        key = (j.get("size", ""), j.get("spacing_in", 0))
+        if key not in seen or j.get("qty_pieces", 0) > seen[key].get("qty_pieces", 0):
+            seen[key] = j
+    joists = list(seen.values())
 
     for joist in joists:
         size = joist.get("size", "")

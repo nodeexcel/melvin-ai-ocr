@@ -34,11 +34,12 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8037}
     ports:
       - "3036:3036"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8037
     depends_on:
       - backend
 

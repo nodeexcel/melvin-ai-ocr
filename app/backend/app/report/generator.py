@@ -381,8 +381,8 @@ def generate_report(data: dict, output_path: str) -> None:
 
     # ── Preliminary Quantities ────────────────────────────────────────────────
     qty = data.get("quantities", {})
-    if not qty and data.get("project", {}).get("total_sqft"):
-        # Compute at render time for cached results
+    if not qty:
+        # Compute at render time — estimate_quantities has its own 2000 sqft fallback
         try:
             from app.pipeline.quantities import estimate_quantities
             qty = estimate_quantities(data)

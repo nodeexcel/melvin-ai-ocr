@@ -573,4 +573,28 @@ PDF reviewed: estimate (26), Hunt Residence, 671 Radcliffe Ave, Pacific Palisade
 | 10d/SIM. gone | floor joists 4→3 rows on next download
 
 ### Needs Melvin confirmation (unknown codes in General)
-AB123, AB6, JH2, JH456, LS456, SP789 — unknown; BP3, PSS1, HUCQ (incomplete), MSTC (incomplete)
+AB123, AB6, JH2, JH456, LS456, SP789 — unknown; BP3, PSS1
+
+## Session 2026-06-17 (night) — estimate (29) server run + extended filter + full local test
+
+**estimate (29) — server run, Hunt Residence, Paseo Miramar, fresh pipeline:**
+- Total Area: 2,500 sqft ✅ | SE: Kobe Engineers ✅ (blank in local runs)
+- LUS210 in Floor Framing ✅ | 3 unique joist rows ✅ | all 3 plywood types ✅
+- No labor estimate (rates not configured on server — expected)
+
+### New noise found in estimate (29) + full pipeline Whaleon run
+
+- [x] **1/2" DIA. BOLTS ✅** — _DIGIT_START pattern (no Simpson model starts with digit)
+- [x] **HSS1 ✅** — "hss" added to _GENERIC_SUBSTRINGS (HSS = steel section)
+- [x] **JH1/JH2 ✅** — "jh" added to _NON_STRUCTURAL_BRANDS
+- [x] **Redguard ✅** — waterproofing brand added to _NON_STRUCTURAL_BRANDS
+- [x] **Stainless steel glazing clip ✅** — "glazing"+"stainless" in _GENERIC_SUBSTRINGS
+- [x] **HUCQ/LUS/ABU/CMST/MSTC bare prefixes ✅** — added to _PHASE_GENERIC exact match
+  (full models HUCQ410, LUS26, CMST12 etc unaffected — not exact matches)
+
+**Filter validated: 47 test cases — 18 noise filtered, 29 real models pass**
+**Full Whaleon pipeline run (0 errors, 25.8 min): hardware clean, 193.3 ft LF, cost $41,834**
+
+### Status — waiting for server test results
+Melvin running all 5 structural PDFs on server. Will verify reports when shared.
+Supported PDFs: Whaleon, Paseo Miramar, LHERT SONG (Gemini quota), SVR (slow), BARAGHOUSH (negative)

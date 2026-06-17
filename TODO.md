@@ -548,9 +548,41 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 - No remaining independent code work without Melvin input
 
 ### Blocking Melvin from using today
-1. OpenAI key has no credits — can't run pipeline himself
-2. Gemini key on free tier (20 req/day) — needs paid tier for production
+1. Gemini key on free tier (20 req/day) — needs paid tier for production
 
 ### Most valuable next step
 Get Melvin into the app (credentials sent), have him fill rate sheet and review estimate (25).
 His feedback on hardware model accuracy > more engineering right now.
+
+## Session 2026-06-17 (evening) — PDF Verification findings (estimate 26, Paseo Miramar)
+
+PDF reviewed: estimate (26), Hunt Residence, 671 Radcliffe Ave, Pacific Palisades, CA 90272
+6 pages, 34 hardware, 139 framing connections, $31,142 total estimate with industry rates.
+
+### Bugs found
+
+- [ ] **"SIM. A35 ×10" in General hardware** — "SIM." = "Similar to" drawing annotation,
+  not a model number. _NON_STRUCTURAL_BRANDS doesn't catch it. Fix: add "sim." and "sim. "
+  to brand prefix filter.
+
+- [ ] **"10d ×2" in General hardware** — nail size (10-penny nail) passing the filter.
+  3 chars, not in _PHASE_GENERIC. Fix: add nail designation pattern filter (digits + "d").
+
+- [ ] **Wall sheathing not generated → cost picks up roof sheathing instead**
+  Root cause: has_walls check in estimate_quantities uses raw total_sqft (0) not the
+  2000 sqft fallback → has_walls=False → wall sheathing skipped from plywood list.
+  Cost estimate then finds "roof sheathing" when searching for "sheathing" and applies
+  the wall sheathing labor rate to it (90 sheets × $28 = $2,520 is actually roof sheathing).
+  Fix A: estimate_quantities has_walls/has_floor/has_roof should use fallback sqft.
+  Fix B: cost_estimate should search for "wall sheathing" specifically.
+
+- [ ] **Floor joist rows duplicated 4×** — same spec (2x10 @16") extracted from 4 different
+  plan pages, all added to joists list without deduplication. aggregate.py floor_framing
+  extends joists list from each page. Fix: dedup by (size, spacing_in) keeping highest qty.
+
+- [ ] **Quantities note says "0 sqft"** — misleading. When falling back to 2000 sqft,
+  the note should say "2,000 sqft (typical residential default)" not "0 sqft floor area".
+  Fix: in generator.py and quantities.py, surface the effective sqft used.
+
+### Needs Melvin confirmation (unknown codes in General)
+AB123, AB6, JH2, JH456, LS456, SP789 — unknown; BP3, PSS1, HUCQ (incomplete), MSTC (incomplete)

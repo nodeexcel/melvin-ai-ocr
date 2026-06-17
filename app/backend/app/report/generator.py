@@ -277,7 +277,34 @@ def generate_report(data: dict, output_path: str) -> None:
         "ohagin roof vent", "ohagin", "roof vent", "sim. hanger",
         "post base", "anchor bolt", "holdown", "holdown strap",
         "hss", "weld", "strap", "joist hanger", "holdown",
+        # Structural steel shapes handled by _GENERIC_SUBSTRINGS (prefix variants)
+        # Generic fasteners
+        "pan head screw", "countersunk screw", "countersunk screws",
+        # Sealants / membranes / tapes
+        "epdm", "epdm seal", "neoprene", "neoprene pad", "neoprene bad",
+        "vhb tape", "vhb", "sealant",
     }
+
+    # Non-structural brand prefixes — Gemini extracts these from general notes.
+    # Lowercased startswith check catches any variant the model produces.
+    _NON_STRUCTURAL_BRANDS = (
+        "schluter",   # tile edge trim system
+        "pemko",      # door hardware
+        "astm no",    # material standard designations
+        "grace ",     # waterproofing membranes (Grace Ultra, etc.)
+        "allweather", # sealant brand
+        "panda ",     # insulation brand
+        "contega",    # building wrap
+        "intello",    # air barrier membrane
+        "western ",   # generic brand
+        "hook #",     # door/window hardware
+        "bronze ",    # architectural hardware
+    )
+
+    # Substrings that disqualify any model regardless of prefix/suffix.
+    _GENERIC_SUBSTRINGS = (
+        "aluminum angle", "aluminum channel", "steel angle", "steel channel",
+    )
 
     def _is_real_model(m: str) -> bool:
         if not m:
@@ -286,7 +313,14 @@ def generate_report(data: dict, output_path: str) -> None:
         # Exception: H-series (H1, H2) are real Simpson hurricane ties.
         if len(m) < 3 and not m.upper().startswith("H"):
             return False
-        return m.lower() not in _PHASE_GENERIC
+        ml = m.lower()
+        if ml in _PHASE_GENERIC:
+            return False
+        if any(ml.startswith(b) for b in _NON_STRUCTURAL_BRANDS):
+            return False
+        if any(sub in ml for sub in _GENERIC_SUBSTRINGS):
+            return False
+        return True
 
     any_phase_hw = any(
         [h for h in hw_by_phase.get(k, [])

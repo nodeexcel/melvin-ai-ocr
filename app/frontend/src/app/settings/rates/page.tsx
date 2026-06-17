@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/auth";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8037";
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 interface Rates {
   wall_stud_labor: number;

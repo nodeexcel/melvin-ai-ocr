@@ -29,7 +29,7 @@ export default function ProgressFeed({ projectId }: ProgressFeedProps) {
       return
     }
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8037'
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
     const url = `${API_URL}/api/projects/${projectId}/stream?token=${token}`
     const es = new EventSource(url)
     esRef.current = es

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getToken } from '@/lib/auth'
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8037'
+const API = process.env.NEXT_PUBLIC_API_URL
 
 interface ResultsPanelProps {
   projectId: string

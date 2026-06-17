@@ -11,6 +11,7 @@ router = APIRouter(prefix="/api/rates", tags=["rates"])
 
 
 class RatesPayload(BaseModel):
+    # Labor
     wall_stud_labor: float = 0
     plywood_subfloor_labor: float = 0
     plywood_sheathing_labor: float = 0
@@ -18,6 +19,10 @@ class RatesPayload(BaseModel):
     concrete_labor: float = 0
     excavation_labor: float = 0
     hardware_install: float = 0
+    # Equipment
+    concrete_pump_per_cy: float = 0
+    crane_per_sqft: float = 0
+    scaffold_per_sqft: float = 0
 
 
 @router.get("")

@@ -13,6 +13,9 @@ interface Rates {
   concrete_labor: number;
   excavation_labor: number;
   hardware_install: number;
+  concrete_pump_per_cy: number;
+  crane_per_sqft: number;
+  scaffold_per_sqft: number;
 }
 
 const DEFAULTS: Rates = {
@@ -23,17 +26,54 @@ const DEFAULTS: Rates = {
   concrete_labor: 0,
   excavation_labor: 0,
   hardware_install: 0,
+  concrete_pump_per_cy: 0,
+  crane_per_sqft: 0,
+  scaffold_per_sqft: 0,
 };
 
-const FIELDS: { key: keyof Rates; label: string; unit: string; hint: string }[] = [
-  { key: "wall_stud_labor",        label: "Wall Studs",             unit: "$ / piece",  hint: "Labor to frame one stud" },
-  { key: "plywood_subfloor_labor", label: "Subfloor Plywood",       unit: "$ / sheet",  hint: "Labor to install one 4×8 sheet" },
-  { key: "plywood_sheathing_labor",label: "Wall Sheathing",         unit: "$ / sheet",  hint: "Labor to install one 4×8 sheet" },
-  { key: "tji_joist_labor",        label: "TJI / I-Joists",         unit: "$ / piece",  hint: "Labor per engineered joist" },
-  { key: "concrete_labor",         label: "Concrete (pour + finish)",unit: "$ / CY",    hint: "Total labor per cubic yard" },
-  { key: "excavation_labor",       label: "Excavation",             unit: "$ / LF",     hint: "Per linear foot of footing trench" },
-  { key: "hardware_install",       label: "Hardware Install",        unit: "$ / piece",  hint: "Per Simpson connector installed (optional)" },
+const LABOR_FIELDS: { key: keyof Rates; label: string; unit: string; hint: string }[] = [
+  { key: "wall_stud_labor",        label: "Wall Studs",              unit: "$ / piece", hint: "Labor to frame one stud" },
+  { key: "plywood_subfloor_labor", label: "Subfloor Plywood",        unit: "$ / sheet", hint: "Labor to install one 4×8 sheet" },
+  { key: "plywood_sheathing_labor",label: "Wall Sheathing",          unit: "$ / sheet", hint: "Labor to install one 4×8 sheet" },
+  { key: "tji_joist_labor",        label: "TJI / I-Joists",          unit: "$ / piece", hint: "Labor per engineered joist" },
+  { key: "concrete_labor",         label: "Concrete (pour + finish)", unit: "$ / CY",   hint: "Total labor per cubic yard" },
+  { key: "excavation_labor",       label: "Excavation",              unit: "$ / LF",    hint: "Per linear foot of footing trench" },
+  { key: "hardware_install",       label: "Hardware Install",         unit: "$ / piece", hint: "Per Simpson connector installed (optional)" },
 ];
+
+const EQUIPMENT_FIELDS: { key: keyof Rates; label: string; unit: string; hint: string }[] = [
+  { key: "concrete_pump_per_cy", label: "Concrete Pump",       unit: "$ / CY",    hint: "Pump rental cost per CY poured — multiplied by extracted concrete volume" },
+  { key: "crane_per_sqft",       label: "Crane / Lift",        unit: "$ / sqft",  hint: "Equipment cost per sqft of floor area — proxy for project size" },
+  { key: "scaffold_per_sqft",    label: "Scaffolding",         unit: "$ / sqft",  hint: "Per sqft of exterior wall area — estimated from sheathing quantities" },
+];
+
+function RateRow({ fieldKey, label, unit, hint, value, onChange }: {
+  fieldKey: string; label: string; unit: string; hint: string;
+  value: number; onChange: (v: number) => void;
+}) {
+  return (
+    <div className="bg-[#222] rounded-lg p-4 flex items-center gap-4">
+      <div className="flex-1">
+        <label htmlFor={fieldKey} className="text-white font-medium text-sm">{label}</label>
+        <p className="text-gray-500 text-xs mt-0.5">{hint}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-gray-400 text-sm">$</span>
+        <input
+          id={fieldKey}
+          type="number"
+          min="0"
+          step="0.01"
+          value={value || ""}
+          onChange={e => onChange(parseFloat(e.target.value) || 0)}
+          className="w-24 bg-[#333] text-white text-sm rounded px-3 py-2 border border-[#444] focus:border-[#F5C518] outline-none text-right"
+          placeholder="0.00"
+        />
+        <span className="text-gray-400 text-xs w-16">{unit.split("/ ")[1]}</span>
+      </div>
+    </div>
+  )
+}
 
 export default function RatesPage() {
   const router = useRouter();
@@ -93,27 +133,24 @@ export default function RatesPage() {
           to generate a preliminary cost estimate in every PDF report. Leave fields at 0 to exclude them.
         </p>
 
-        <div className="space-y-4">
-          {FIELDS.map(({ key, label, unit, hint }) => (
-            <div key={key} className="bg-[#222] rounded-lg p-4 flex items-center gap-4">
-              <div className="flex-1">
-                <label className="text-white font-medium text-sm">{label}</label>
-                <p className="text-gray-500 text-xs mt-0.5">{hint}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={rates[key] || ""}
-                  onChange={e => setRates(prev => ({ ...prev, [key]: parseFloat(e.target.value) || 0 }))}
-                  className="w-24 bg-[#333] text-white text-sm rounded px-3 py-2 border border-[#444] focus:border-[#F5C518] outline-none text-right"
-                  placeholder="0.00"
-                />
-                <span className="text-gray-400 text-xs w-16">{unit.split("/ ")[1]}</span>
-              </div>
-            </div>
+        {/* Labor rates */}
+        <h2 className="text-white font-semibold text-sm uppercase tracking-wider mt-2">Labor</h2>
+        <div className="space-y-3">
+          {LABOR_FIELDS.map(({ key, label, unit, hint }) => (
+            <RateRow key={key} fieldKey={key} label={label} unit={unit} hint={hint}
+              value={rates[key]} onChange={v => setRates(prev => ({ ...prev, [key]: v }))} />
+          ))}
+        </div>
+
+        {/* Equipment rates */}
+        <h2 className="text-white font-semibold text-sm uppercase tracking-wider mt-6">Equipment</h2>
+        <p className="text-gray-500 text-xs -mt-1 mb-1">
+          Quantities are derived automatically from extracted data — you only set the rate.
+        </p>
+        <div className="space-y-3">
+          {EQUIPMENT_FIELDS.map(({ key, label, unit, hint }) => (
+            <RateRow key={key} fieldKey={key} label={label} unit={unit} hint={hint}
+              value={rates[key]} onChange={v => setRates(prev => ({ ...prev, [key]: v }))} />
           ))}
         </div>
 

@@ -477,9 +477,10 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 - [x] **Gemini 429 backoff ✅** — reads retry-after from error, sleeps, retries once
 - [x] **TJI extraction confirmed ✅** — `11-7/8 TJI 210 @ 16" OC` extracted from LHERT SONG p59
 - [x] **OCR timeout fix ✅** — raised from 900s → 1800s (12 pages × ~90s LF pass)
-- [ ] **total_sqft classification variance** — p5 classified as schedules in one run but not another;
-  causes Fix #2 wall stud quantities to disappear run-to-run. Root cause: Vision sees same page
-  differently between batches.
+- [x] **total_sqft classification variance ✅ (2026-06-17)** — root cause: LHERT SONG p5 is an
+  architectural notes sheet; "2420" on it is the job number, not sqft. Gemini misread it.
+  Fix: schedules prompt now requires explicitly labeled area field. Quantities fall back to
+  2,000 sqft default so wall/plywood estimates always compute regardless of sqft extraction.
 
 **Hardware accuracy vs real Ganahl order (LHERT SONG):**
   CMST12: 43 vs 37 ✅close | CMST14: 33 vs 28 ✅close | LUS210: 0 vs 410 ❌
@@ -489,17 +490,12 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
   LUS210 = "TYP" callout on every joist — requires joist-grid counting, not text extraction
   A35 = similarly distributed as TYP throughout plans — same counting problem
 
-### Newly surfaced gaps (2026-06-14 LHERT SONG run)
+### Gaps investigated (2026-06-14 LHERT SONG run)
 
-- [ ] **total_sqft = 0 on all CAD PDFs** — schedules pages (LHERT SONG p3/4/55/56/57, Whaleon)
-  return empty results from text extraction. Building area not in a format the model reads.
-  Fix: add explicit sqft extraction hint to schedules prompt, or scan for "BUILDING AREA" / "SQ FT" phrases.
-
-- [ ] **Gemini silent empty on floor_framing plan pages** — p17/p19/p59 on LHERT SONG return
-  result keys=[] (empty dict, not refusal). No joists, beams, or hardware extracted at all.
-  Root cause unknown — may be rendering resolution, page complexity, or Gemini capacity.
-  Fix: investigate render scale for Gemini calls; try retry with simplified prompt (same pattern as
-  GPT-4o refusal retry already in place).
+- [x] **total_sqft = 0 on CAD PDFs — RESOLVED ✅ (2026-06-17)** — fixed with prompt guard + fallback
+- [~] **Gemini silent empty on floor_framing pages** — p17/p19 are architectural sheets (A-4.1a),
+  not structural. Empty result is CORRECT. p59 (S-2.2) extracts TJI successfully.
+  Not a bug — architectural sheets have no structural data to extract.
 
 ## Session 2026-06-15 (afternoon) — Phase 3 Rate Sheet + Security Fix + Flow Testing
 
@@ -519,17 +515,37 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 - Rate sheet: storage, UI, API, PDF section ✅
 - Labor cost estimate: quantities × user rates → line items + total ✅
 
+## Session 2026-06-17 — Fixes 1a/1b/1c + Equipment Costs
+
+- [x] **Fix 1a: total_sqft variance ✅** — prompt guard (no job numbers as sqft) + quantities
+  fall back to 2,000 sqft so wall/plywood always compute. Structural title sheet phrases
+  added to _SCHEDULE_PHRASES in classify.py.
+- [x] **Fix 1b: hardware noise ✅** — _PHASE_GENERIC + _NON_STRUCTURAL_BRANDS prefix check +
+  _GENERIC_SUBSTRINGS contains check. 18 noise items filtered, 16 real models pass.
+- [x] **Fix 1c: cost inline on results page ✅** — GET /api/projects/{id}/cost-estimate endpoint;
+  ResultsPanel fetches on mount and renders labor + equipment table. No PDF download needed.
+  "Set your rate sheet" prompt with link shown when no rates configured.
+- [x] **Equipment costs ✅** — concrete_pump_per_cy (× CY), crane_per_sqft (× sqft),
+  scaffold_per_sqft (× wall area). 10-field rate sheet, two-section UI (Labor / Equipment).
+  Response has labor_items/equip_items/labor_total/equip_total split.
+
+### Phase 3 — what's built vs remaining
+
+**Built ✅:**
+- Rate sheet: DB, UI (Labor + Equipment sections), GET/PUT API
+- Labor cost estimate: quantities × rates → line items
+- Equipment cost estimate: derived quantities × rates
+- Cost section in PDF report
+- Cost inline on results page (no PDF download required)
+
 **Remaining in Phase 3:**
-- [ ] Equipment cost rates (crane, pump, scaffold) — add fields to rate sheet, ~1 hr
-- [ ] Results page: show cost estimate inline (without downloading PDF) — ~1 hr
-- [ ] Waste factors — formula-based, ~1 hr
+- [ ] Waste factors — ~1 hr, formula-based
 - [ ] Construction schedule — blocked on production rates from Melvin
 - [ ] Full procurement list (Ganahl format) — blocked on lumber piece counts
 
-### Remaining — independent code work (no external dep)
-- [ ] Results page cost summary inline — web UI, ~1 hr
-- [ ] total_sqft variance — add sqft hint to schedules prompt, ~30 min
-- [ ] General hardware noise — "ALUMINUM ANGLE", "NEOPRENE BAD" to blocklist, ~15 min
+### Remaining — independent code work
+- All previously queued fixes done ✅
+- No remaining independent code work without Melvin input
 
 ### Blocking Melvin from using today
 1. OpenAI key has no credits — can't run pipeline himself

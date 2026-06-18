@@ -296,9 +296,12 @@ def extract_text_from_scanned_page(pdf_path: str, page_index: int) -> str:
     if ocr is None:
         return ""
 
-    page = doc[page_index]
-    tiles = _render_tiles(page, RENDER_SCALE, TILE_SIZE, TILE_OVERLAP)
-    items = _dedup(_ocr_tiles(ocr, tiles), DEDUP_DIST)
+    try:
+        page = doc[page_index]
+        tiles = _render_tiles(page, RENDER_SCALE, TILE_SIZE, TILE_OVERLAP)
+        items = _dedup(_ocr_tiles(ocr, tiles), DEDUP_DIST)
+    except Exception:
+        return ""
 
     if not items:
         return ""

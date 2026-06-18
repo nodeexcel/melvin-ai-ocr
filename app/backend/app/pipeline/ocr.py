@@ -279,3 +279,47 @@ def extract_lf_from_pages(pdf_path: str, page_indices: list[int]) -> dict:
         "grand_total_lf": round(sum(p["total_lf"] for p in pages_out), 1),
         "hardware_counts": total_hardware,
     }
+
+
+def extract_text_from_scanned_page(pdf_path: str, page_index: int) -> str:
+    """
+    Run PaddleOCR on a single scanned page and return all text in reading order.
+    Sorts items top-to-bottom by row (cy bucket of 20px), left-to-right within rows.
+    Returns empty string if PaddleOCR or fitz are unavailable.
+    Used for scanned schedule pages where Vision extraction misses dense tabular data.
+    """
+    if not _PADDLE_AVAILABLE or not _FITZ_AVAILABLE:
+        return ""
+    import fitz
+    doc = fitz.open(pdf_path)
+    ocr = _get_ocr()
+    if ocr is None:
+        return ""
+
+    page = doc[page_index]
+    tiles = _render_tiles(page, RENDER_SCALE, TILE_SIZE, TILE_OVERLAP)
+    items = _dedup(_ocr_tiles(ocr, tiles), DEDUP_DIST)
+
+    if not items:
+        return ""
+
+    # Sort reading order: rows bucketed by 20px height, then left→right within each row
+    items.sort(key=lambda i: (int(i["cy"] // 20), i["cx"]))
+
+    # Group into lines and join
+    lines: list[str] = []
+    current_bucket: int | None = None
+    current_line: list[str] = []
+    for item in items:
+        bucket = int(item["cy"] // 20)
+        if bucket != current_bucket:
+            if current_line:
+                lines.append(" ".join(current_line))
+            current_bucket = bucket
+            current_line = [item["text"]]
+        else:
+            current_line.append(item["text"])
+    if current_line:
+        lines.append(" ".join(current_line))
+
+    return "\n".join(lines)

@@ -172,10 +172,12 @@ def pipeline_worker(
         # PaddleOCR: two passes — LF (slow, few pages) + hardware counting (fast, all structural)
         try:
             from app.pipeline.ocr import extract_lf_from_pages, count_hardware_from_pages
-            # Pass 1: full-res tiled LF extraction on plan pages only
+            # Pass 1: full-res tiled LF extraction on foundation pages ONLY.
+            # floor_framing and roof_framing pages have span/room dimensions that
+            # also match DIM_PATTERN and would inflate the footing LF total.
             ocr_page_indices = [
                 p["page"] - 1 for p in result.get("_pages", [])
-                if p.get("category") in GEMINI_CATEGORIES
+                if p.get("category") == "foundation"
             ]
             if ocr_page_indices:
                 write_event("ocr", f"Extracting dimensions from {len(ocr_page_indices)} pages...", 91)

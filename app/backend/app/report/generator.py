@@ -289,6 +289,8 @@ def generate_report(data: dict, output_path: str) -> None:
         # MEP / non-structural items
         "hanger rod", "rod hanger",
         "e8005",      # obscure product/material code, not a Simpson connector
+        # Drawing annotation labels confirmed by Melvin as non-Simpson (2026-06-19)
+        "ab123", "eb456", "ea456", "ls456", "ab6", "sp789",
     }
 
     # Non-structural brand prefixes — Gemini extracts these from general notes.

@@ -631,10 +631,11 @@ A325, H10A, MST48 all passing correctly.
 **Filter state (2026-06-18): tested against 22+ real models, all pass**
 
 **Remaining work:**
-- [ ] Deploy latest generator.py to server (solar/# fixes)
+- [ ] Deploy latest generator.py + ocr.py + runner.py to server (solar/#/Gap1 fixes)
 - [ ] BARAGHOUSH negative test (optional)
-- [ ] Fix #4: OCR→text for scanned schedule pages (nailing/lumber from Paseo)
-- [ ] Wait for Melvin: unknown codes (AB123, LS456 etc.), LF validation, API billing
+- [x] Fix #4: OCR→text for scanned schedule pages ✅ (2026-06-19) — 15 nailing + 3 lumber from Paseo
+- [x] Unknown codes AB123, EB456, EA456, LS456, AB6, SP789 filtered ✅ — Melvin confirmed not real (2026-06-19)
+- [ ] Wait for Melvin: Woodlane LF validation, API billing, app testing feedback
 
 ---
 

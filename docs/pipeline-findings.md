@@ -536,3 +536,29 @@ Project info (name, address, architect, SE) IS correctly extracted and aggregate
 8. **Foundation `linear_feet`** — add targeted dimension-reading prompt to Vision extraction (V2)
 8. **Cover sheet index parser** — for architectural pages in Whaleon + other firms (V2)
 9. ~~**Project info extraction gap**~~ — ✅ confirmed NOT a gap; data correctly extracted (see Section 10)
+
+---
+
+## 13. Gap 1 — OCR→Text for Scanned Schedule Pages (RESOLVED 2026-06-19)
+
+**Problem:** Scanned PDFs (no text layer) had schedule pages with `category=schedules` routing to Vision (GPT-4o). Vision at 250 DPI could not reliably read dense 9pt tabular nailing/lumber schedule tables. Result: `nailing_schedule=0`, `lumber_specs=0` on all scanned schedule pages.
+
+**Fix:**
+- `ocr.py`: added `extract_text_from_scanned_page(pdf_path, page_index) -> str` — renders at 1.5x, runs PaddleOCR, sorts items into reading order (cy//20 bucket, left→right within row), returns joined text string.
+- `runner.py`: `extract_all_pages()` gains `pdf_path` param; inserts OCR→text branch before Vision for `category=="schedules"` pages with empty text layer. Falls back to Vision if OCR returns empty.
+- `method` field set to `"ocr_text"` for pages using the new path.
+
+**Validation — Paseo Miramar (Docker, Python 3.11):**
+| | Before | After |
+|---|---|---|
+| Nailing entries | 0 | **15** |
+| Lumber entries | 0 | **3** |
+| Concrete specs | 0 | **2** |
+| Errors (schedule pages) | 13 | **0** |
+| LF / Hardware / Framing | unchanged | unchanged |
+
+All 13 schedule pages: `method=ocr_text`. Pages 30-31 are the real nailing/lumber schedule pages; others are soils/admin (empty is correct).
+
+**Note:** OCR→text only fires for `category=schedules` with empty text layer (scanned PDFs). CAD PDFs with text layers are unaffected.
+
+**Python 3.13 local venv:** PaddleOCR import succeeds but `predict()` throws at runtime. `extract_text_from_scanned_page` catches this and returns `""`, falling back to Vision. Works correctly in Docker (Python 3.11) and on server.

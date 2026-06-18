@@ -312,6 +312,9 @@ def generate_report(data: dict, output_path: str) -> None:
         "nds ",       # NDS = drainage/irrigation brand (storm drains, cleanouts)
         "zoeller",    # Zoeller = sump pump brand
         "bilco",      # BILCO = access hatch / roof hatch manufacturer
+        "maxeon",     # Maxeon = solar panel brand
+        "sol-ark",    # Sol-Ark = solar inverter brand
+        "discover ",  # Discover Helios = battery storage brand
     )
 
     # Substrings that disqualify any model regardless of prefix/suffix.
@@ -327,11 +330,13 @@ def generate_report(data: dict, output_path: str) -> None:
         " series",   # "HUCQ series", "H series" etc — generic incomplete models
         "screw",     # "SD81/4x3 SCREWS" etc — screw size descriptions, not models
         "pipe",      # Pipe Clamp, Pipe Support — MEP items
-        "pvc",       # PVC pipe/fittings — plumbing, not structural
+        "pvc",        # PVC pipe/fittings — plumbing, not structural
+        "receptacle", # GFI Receptacle — electrical, not structural
     )
 
-    _NAIL_PATTERN = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.
-    _DIGIT_START  = re.compile(r"^\d")     # "1/2\" DIA. BOLTS" etc — no Simpson model starts with a digit
+    _NAIL_PATTERN  = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.
+    _DIGIT_START   = re.compile(r"^\d")     # "1/2\" DIA. BOLTS" etc — no Simpson model starts with a digit
+    _CATALOG_START = re.compile(r"^#")      # #1301-410, #896 etc — catalog/part numbers, not models
 
     def _is_real_model(m: str) -> bool:
         if not m:
@@ -346,6 +351,8 @@ def generate_report(data: dict, output_path: str) -> None:
         if _NAIL_PATTERN.match(ml):    # nail sizes: 10d, 16d, 8d
             return False
         if _DIGIT_START.match(ml):     # dimension specs: 1/2" DIA. BOLTS, 3-#5, etc.
+            return False
+        if _CATALOG_START.match(ml):   # catalog numbers: #1301-410, #896, #G13S-218
             return False
         if any(ml.startswith(b) for b in _NON_STRUCTURAL_BRANDS):
             return False

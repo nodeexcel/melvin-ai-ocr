@@ -34,8 +34,10 @@ def extract_all_pages(
     pages: list[dict],
     images: dict[int, object],
     google_api_key: str = "",
+    pdf_path: str = "",
 ) -> list[dict]:
-    """Run extraction on all relevant pages. Vision-only plan pages use Gemini; others use GPT-4o."""
+    """Run extraction on all relevant pages. Vision-only plan pages use Gemini; others use GPT-4o.
+    Scanned schedule pages (no PDF text layer) use OCR→text instead of Vision."""
     relevant = [p for p in pages if p["category"] not in ("skip", "unknown")]
     extractions = []
     for p in relevant:
@@ -45,6 +47,20 @@ def extract_all_pages(
             if p["use_text"]:
                 data = extract_text(client, p["text"], category)
                 method = "text"
+            elif category == "schedules" and not p.get("text") and pdf_path:
+                # Scanned schedule page: no PDF text layer, Vision misses dense tabular data.
+                # Run OCR to get raw text, then use text extraction path (same as CAD PDFs).
+                from app.pipeline.ocr import extract_text_from_scanned_page
+                ocr_text = extract_text_from_scanned_page(pdf_path, page_num - 1)
+                if ocr_text:
+                    data = extract_text(client, ocr_text, category)
+                    method = "ocr_text"
+                else:
+                    image = images.get(page_num)
+                    if image is None:
+                        continue
+                    data = extract_vision(client, image, category)
+                    method = "vision"
             else:
                 image = images.get(page_num)
                 if image is None:
@@ -95,7 +111,7 @@ def run_pipeline_sync(
     on_progress("rendering", f"Rendered {len(images)} pages", 48)
 
     on_progress("extracting", f"Extracting data from {relevant_count} pages...", 53)
-    extractions = extract_all_pages(client, pages, images, google_api_key=google_api_key)
+    extractions = extract_all_pages(client, pages, images, google_api_key=google_api_key, pdf_path=pdf_path)
     errors = sum(1 for e in extractions if e["data"].get("parse_error") or e["data"].get("error"))
     on_progress("extracting", f"Extracted {len(extractions)} pages ({errors} errors)", 80)
 

@@ -321,6 +321,7 @@ def generate_report(data: dict, output_path: str) -> None:
         "sleeve",    # pipe sleeve — structural penetration, not a connector
         "shock",     # shock box / shock absorber — seismic isolation, not Simpson
         " series",   # "HUCQ series", "H series" etc — generic incomplete models
+        "screw",     # "SD81/4x3 SCREWS" etc — screw size descriptions, not models
     )
 
     _NAIL_PATTERN = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.

@@ -286,6 +286,9 @@ def generate_report(data: dict, output_path: str) -> None:
         # Incomplete prefix-only codes (Gemini drops the numeric suffix)
         # Full models like LUS26, HUCQ410, ABU66 are unaffected (not exact matches)
         "lus", "hucq", "abu", "hus", "lts", "cmst", "mstc",
+        # MEP / non-structural items
+        "hanger rod", "rod hanger",
+        "e8005",      # obscure product/material code, not a Simpson connector
     }
 
     # Non-structural brand prefixes — Gemini extracts these from general notes.
@@ -308,6 +311,7 @@ def generate_report(data: dict, output_path: str) -> None:
         "redguard",   # waterproofing membrane brand
         "nds ",       # NDS = drainage/irrigation brand (storm drains, cleanouts)
         "zoeller",    # Zoeller = sump pump brand
+        "bilco",      # BILCO = access hatch / roof hatch manufacturer
     )
 
     # Substrings that disqualify any model regardless of prefix/suffix.
@@ -322,6 +326,8 @@ def generate_report(data: dict, output_path: str) -> None:
         "shock",     # shock box / shock absorber — seismic isolation, not Simpson
         " series",   # "HUCQ series", "H series" etc — generic incomplete models
         "screw",     # "SD81/4x3 SCREWS" etc — screw size descriptions, not models
+        "pipe",      # Pipe Clamp, Pipe Support — MEP items
+        "pvc",       # PVC pipe/fittings — plumbing, not structural
     )
 
     _NAIL_PATTERN = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.

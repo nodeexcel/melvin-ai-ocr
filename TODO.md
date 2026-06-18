@@ -603,9 +603,26 @@ AB123, LS456 — still appearing; AB6, JH456, SP789, BP3, PSS1 — from earlier 
 **Filter validated: 47 test cases — 18 noise filtered, 29 real models pass**
 **Full Whaleon pipeline run (0 errors, 25.8 min): hardware clean, 193.3 ft LF, cost $41,834**
 
-### Status — waiting for server test results
-Melvin running all 5 structural PDFs on server. Will verify reports when shared.
-Supported PDFs: Whaleon, Paseo Miramar, LHERT SONG (Gemini quota), SVR (slow), BARAGHOUSH (negative)
+### Server test results — estimates 30-35 (2026-06-18)
+
+**Estimates verified:**
+- Est 30: Paseo Miramar — LF 128.6ft ✅, hardware clean, cost $28,251
+- Est 31: Whaleon run 1 — before fixes deployed, NDS/Zoeller/HUCQ series present
+- Est 32: Woodlane Court run 1 — LF 738.4ft ✅, CY 140.6, SD81/4x screws noise
+- Est 33: Whaleon run 2 — after fixes, very clean, LF 0 (pre-runner.py fix)
+- Est 34: Whaleon run 3 — E8005 noise found, LF still 0
+- Est 35: Woodlane run 2 — LF 738.4ft ✅, CY 76 (different footing types extracted),
+  BILCO/Hanger Rod/Pipe Clamp/PVC noise fixed
+
+**Filter now blocks** (tested against 20+ real models with no regressions):
+NDS, Zoeller, BILCO, HUCQ series, SD8x SCREWS, E8005, Hanger Rod,
+Pipe/PVC items — all filtered. H2.5A, HDU series, HUCQ410, LUS26, ABU88,
+A325, H10A, MST48 all passing correctly.
+
+**Unknown codes — message sent to Melvin:** AB123, EB456, EA456, LS456, AB6, SP789
+**Woodlane LF question — sent to Melvin:** 738.4 ft, does that seem right?
+
+**Pending PDFs:** LHERT SONG (Gemini quota: ~11 calls, ~30 min) and SVR (167 pages, ~45 min)
 
 ---
 

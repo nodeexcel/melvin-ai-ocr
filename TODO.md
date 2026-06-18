@@ -622,7 +622,19 @@ A325, H10A, MST48 all passing correctly.
 **Unknown codes — message sent to Melvin:** AB123, EB456, EA456, LS456, AB6, SP789
 **Woodlane LF question — sent to Melvin:** 738.4 ft, does that seem right?
 
-**Pending PDFs:** LHERT SONG (Gemini quota: ~11 calls, ~30 min) and SVR (167 pages, ~45 min)
+**All 5 PDFs tested (2026-06-18):**
+- Est 36: LHERT SONG — LF=76.8ft ✅ (scope fix confirmed), CMST12×43, CMST14×33, TJI 210, full lumber specs
+- Est 37: SVR 80% CD Set — LF=77.7ft ✅, 40 hardware, 9-page report, solar panels/catalog codes filtered
+- New noise filtered: MAXEON/SOL-ARK/DISCOVER HELIOS solar brands, #xxx catalog codes, GFI Receptacle
+- BARAGHOUSH: not yet run (architectural only, expected: 0 structural data)
+
+**Filter state (2026-06-18): tested against 22+ real models, all pass**
+
+**Remaining work:**
+- [ ] Deploy latest generator.py to server (solar/# fixes)
+- [ ] BARAGHOUSH negative test (optional)
+- [ ] Fix #4: OCR→text for scanned schedule pages (nailing/lumber from Paseo)
+- [ ] Wait for Melvin: unknown codes (AB123, LS456 etc.), LF validation, API billing
 
 ---
 

@@ -283,6 +283,18 @@ def classify_pages(
                     if any(p in text_upper for p in _FOUNDATION_PLAN_PHRASES):
                         cat = "foundation"
 
+                # Architectural sheet exclusion: Vision sometimes classifies
+                # architect detail sheets (A-9.0 slab detail, A-9.1 basement
+                # detail) as "foundation" because they contain foundation-related
+                # drawings. These are cross-section details from the architectural
+                # set, not structural plan views. Sheet numbers starting with A-
+                # or A. identify them. Override to framing_details so they are
+                # extracted for connections but excluded from LF OCR.
+                if cat == "foundation":
+                    sn = (result.get("sheet_no") or "").upper().strip()
+                    if sn and (sn.startswith("A-") or sn.startswith("A.")):
+                        cat = "framing_details"
+
                 pages.append({
                     "page":     result["page_num"],
                     "category": cat,

@@ -306,6 +306,8 @@ def generate_report(data: dict, output_path: str) -> None:
         "sim.",       # same without space
         "jh",         # JH1/JH2 = Joist Hanger abbreviation, not a Simpson model
         "redguard",   # waterproofing membrane brand
+        "nds ",       # NDS = drainage/irrigation brand (storm drains, cleanouts)
+        "zoeller",    # Zoeller = sump pump brand
     )
 
     # Substrings that disqualify any model regardless of prefix/suffix.
@@ -314,10 +316,11 @@ def generate_report(data: dict, output_path: str) -> None:
         "hss",      # HSS1/HSS 4x4 = Hollow Structural Section (steel tube)
         "bolt",     # "1/2\" DIA. BOLTS", "ANCHOR BOLTS" — generic fasteners
         "dia.",     # dimension descriptions: "1/2\" DIA."
-        "glazing",  # glazing clips, glass rail brackets — architectural
-        "stainless",# stainless steel fittings — not Simpson connectors
-        "sleeve",   # pipe sleeve — structural penetration, not a connector
-        "shock",    # shock box / shock absorber — seismic isolation, not Simpson
+        "glazing",   # glazing clips, glass rail brackets — architectural
+        "stainless", # stainless steel fittings — not Simpson connectors
+        "sleeve",    # pipe sleeve — structural penetration, not a connector
+        "shock",     # shock box / shock absorber — seismic isolation, not Simpson
+        " series",   # "HUCQ series", "H series" etc — generic incomplete models
     )
 
     _NAIL_PATTERN = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.

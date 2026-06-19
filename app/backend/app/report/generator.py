@@ -431,40 +431,57 @@ def generate_report(data: dict, output_path: str) -> None:
         ))
         elements.append(Spacer(1, 0.08 * inch))
 
-        # Framing lumber
-        framing_rows = [["Description", "Size", "Spacing", "Length", "Est. Qty"]]
+        # Framing lumber — show Base Qty + Waste% + Order Qty
+        framing_rows = [["Description", "Size", "Base Qty", "+Waste", "Order Qty"]]
         for item in qty.get("floor_framing", []):
+            base = item.get("base_qty", item.get("estimated_qty", 0))
+            wpct = item.get("waste_pct")
             framing_rows.append([
-                f"Floor Joists ({item.get('wall_type','') or 'Floor'})",
+                "Floor Joists",
                 item.get("size", ""),
-                f"{item.get('spacing_in', '')}\"" if item.get("spacing_in") else "—",
-                f"{item.get('span_ft', '')}ft" if item.get("span_ft") else "—",
+                str(base),
+                f"+{wpct}%" if wpct else "—",
                 str(item.get("estimated_qty", 0)),
             ])
         for item in qty.get("wall_framing", []):
+            base = item.get("base_qty", item.get("estimated_qty", 0))
+            wpct = item.get("waste_pct")
             framing_rows.append([
-                f"{item.get('wall_type', '')} Wall Studs",
+                f"{item.get('wall_type', '')} Wall Studs ({item.get('stud_length_ft','')}ft)",
                 item.get("size", ""),
-                f"{item.get('spacing_in', '')}\"" if item.get("spacing_in") else "—",
-                f"{item.get('stud_length_ft', '')}ft" if item.get("stud_length_ft") else "—",
+                str(base),
+                f"+{wpct}%" if wpct else "—",
                 str(item.get("estimated_qty", 0)),
+            ])
+        # Concrete row (if available)
+        conc = qty.get("concrete")
+        if conc:
+            framing_rows.append([
+                "Concrete (foundation)",
+                "CY",
+                str(conc.get("base_qty", 0)),
+                f"+{conc.get('waste_pct', 8)}%",
+                str(conc.get("estimated_qty", 0)),
             ])
         if len(framing_rows) > 1:
             elements.append(_std_table(framing_rows,
-                [2.2*inch, 1.1*inch, 0.9*inch, 0.9*inch, 0.9*inch]))
+                [2.5*inch, 1.0*inch, 1.0*inch, 0.9*inch, 1.6*inch]))
             elements.append(Spacer(1, 0.08 * inch))
 
-        # Plywood
-        ply_rows = [["Plywood / Sheathing", "Size", "Grade", "Est. Sheets"]]
+        # Plywood — show Base + Waste% + Order Sheets
+        ply_rows = [["Plywood / Sheathing", "Grade", "Base", "+Waste", "Order Sheets"]]
         for item in qty.get("plywood", []):
+            base = item.get("base_qty", item.get("estimated_qty", 0))
+            wpct = item.get("waste_pct")
             ply_rows.append([
                 item.get("description", ""),
-                item.get("size", ""),
                 item.get("grade", ""),
+                str(base),
+                f"+{wpct}%" if wpct else "—",
                 str(item.get("estimated_qty", 0)),
             ])
         if len(ply_rows) > 1:
-            elements.append(_std_table(ply_rows, [2.8*inch, 0.7*inch, 2.0*inch, 1.5*inch]))
+            elements.append(_std_table(ply_rows, [2.5*inch, 1.8*inch, 0.9*inch, 0.9*inch, 1.9*inch]))
             elements.append(Spacer(1, 0.1 * inch))
 
     # ── Preliminary Labor Estimate ────────────────────────────────────────────

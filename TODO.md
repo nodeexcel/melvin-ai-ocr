@@ -539,13 +539,13 @@ V1 covers ~3 of 10 of Melvin's original requirements. Full requirements document
 - Cost inline on results page (no PDF download required)
 
 **Remaining in Phase 3:**
-- [ ] Waste factors — ~1 hr, formula-based
-- [ ] Construction schedule — blocked on production rates from Melvin
+- [x] Waste factors ✅ (2026-06-19) — Base → +Waste% → Order Qty visible in PDF. Lumber/plywood +10%, concrete +8%.
+- [ ] Construction schedule — blocked on Melvin's production rates (hrs/unit)
 - [ ] Full procurement list (Ganahl format) — blocked on lumber piece counts
 
 ### Remaining — independent code work
-- All previously queued fixes done ✅
-- No remaining independent code work without Melvin input
+- "Corner Bead" still showing in General Hardware — minor, waiting for Melvin feedback before filtering
+- Framing connections include architectural noise (Schluter, Pemko) — pre-existing, Melvin to flag
 
 ### Blocking Melvin from using today
 1. Gemini key on free tier (20 req/day) — needs paid tier for production

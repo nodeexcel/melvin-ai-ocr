@@ -289,3 +289,22 @@ PaddleOCR pin-hardening (constraints file) · sqft fallback honesty (B-SQFT) · 
 - Spec coverage: B-LF (Task 1 scope), dead hardware pass (Task 1 Step 1/2), B-A (Task 2) — all covered.
 - Placeholder scan: all steps contain real code/commands. ✓
 - Type consistency: `inject_hardware_counts`/`inject_lf_data`/`_ocr_page_indices`/`run_ocr_passes`/`_resolve_project_field` signatures consistent across runner.py call sites and tests. ✓
+
+---
+
+# Increment 2 — Native JSON mode (E1)
+
+**Goal:** Eliminate avoidable `parse_error`s/refusals-as-text by using each provider's native structured-output mode instead of relying on a free-text "return JSON" instruction + brittle fence-stripping.
+
+**Why:** `extract.py` calls GPT-4o (`:32`, `:126`) and Gemini (`:55`, `:86`) without `response_format`/`response_mime_type`; `_parse_response` then fails on any prose around the JSON → page lost (documented ~5–8% parse-error rate). Native JSON mode forces valid JSON. The OpenAI json_object requirement ("messages must contain 'json'") is satisfied — SYSTEM_PROMPT says "Return valid JSON only" and every prompt embeds a JSON schema. `_parse_response` stays as a defensive fallback. No schema change.
+
+**Files:** Modify `app/backend/app/pipeline/extract.py` (4 call sites).
+
+- [ ] **Step 1 — GPT-4o text** (`extract_text`): add `response_format={"type": "json_object"},` to the `client.chat.completions.create(...)` call.
+- [ ] **Step 2 — GPT-4o vision** (`extract_vision`): add `response_format={"type": "json_object"},` to the create call.
+- [ ] **Step 3 — Gemini vision** (`extract_vision_gemini`): add `response_mime_type="application/json"` to the `GenerationConfig(...)`.
+- [ ] **Step 4 — Gemini dimensions** (`extract_dimensions_gemini`): add `response_mime_type="application/json"` to its `GenerationConfig(...)`.
+- [ ] **Step 5 — Validate (Rule 4, cheap, OpenAI only — no Gemini quota):** run `extract_text` on a real LHERT schedule page's text and `extract_vision` on one rendered page; assert no `parse_error` and a populated dict. Gemini JSON mode is standard and will be exercised on the next full run (quota-bound today).
+- [ ] **Step 6 — Commit** (extract.py only; co-author trailer).
+
+**Risk:** minimal — both modes are GA for the models in use (gpt-4o, gemini-2.5-flash) and only constrain output to valid JSON, which the pipeline already expects.

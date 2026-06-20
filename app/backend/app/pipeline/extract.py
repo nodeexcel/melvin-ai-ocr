@@ -35,6 +35,7 @@ def extract_text(client: OpenAI, text: str, category: str) -> dict:
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"{prompt}\n\n<document_text>\n{text}\n</document_text>"},
         ],
+        response_format={"type": "json_object"},
         max_tokens=8000,
         temperature=0,
     )
@@ -54,7 +55,7 @@ def extract_dimensions_gemini(google_api_key: str, image, category: str) -> dict
         model = genai.GenerativeModel(model_name="gemini-2.5-flash", system_instruction=SYSTEM_PROMPT)
         response = model.generate_content(
             [prompt, image],
-            generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=2000),
+            generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=2000, response_mime_type="application/json"),
         )
         content = response.text.strip() if response.text else ""
         if not content or is_refusal(content):
@@ -78,7 +79,7 @@ def extract_vision_gemini(google_api_key: str, image, category: str) -> dict:
         model_name="gemini-2.5-flash",
         system_instruction=SYSTEM_PROMPT,
     )
-    config = genai.GenerationConfig(temperature=0, max_output_tokens=16000)
+    config = genai.GenerationConfig(temperature=0, max_output_tokens=16000, response_mime_type="application/json")
 
     for attempt, prompt_dict in enumerate((EXTRACTION_PROMPTS, RETRY_PROMPTS)):
         prompt = prompt_dict.get(category, EXTRACTION_PROMPTS["schedules"])
@@ -135,6 +136,7 @@ def extract_vision(client: OpenAI, image, category: str) -> dict:
                     ],
                 },
             ],
+            response_format={"type": "json_object"},
             max_tokens=8000,
             temperature=0,
         )

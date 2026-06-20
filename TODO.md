@@ -712,6 +712,24 @@ wall/room dimensions too, but for a residential foundation plan 193 ft is plausi
 After scoping OCR to foundation-only, this number would be re-validated on next run.
 
 **Fixes — priority order:**
-- [ ] **Fix 2a (quick): scope OCR LF to foundation pages only** — runner.py, 1 line
+- [x] **Fix 2a: scope OCR LF to foundation pages only** ✅ (2026-06-20) — done as part of the OCR-orchestration unification below (CLI was still on the broad scope).
 - [ ] **Fix 2b (medium): exclude architectural detail sheets from foundation** — classify.py
 - [ ] **Fix 1 (medium): OCR→text for scanned schedule pages** — ocr.py + runner.py
+
+---
+
+## Session 2026-06-20 — Analysis + extraction-accuracy fixes (branch `fix/extraction-accuracy-2026-06-20`)
+
+**Full independent engineering analysis** in `docs/analysis-2026-06-20/` (00 README, 01 requirements, 02 findings/risks, 03 decisions, 04 open-questions, 05 method-improvements, 06 captured LHERT baseline vs Ganahl EST618017). Ground-truthed all 6 PDFs + the real $125k Ganahl order. Web-researched SOTA (table-structure OCR, vision/counting benchmarks).
+
+**Captured baseline (LHERT, current code, CLI):** address WRONG (8004 Gonzaga), footing LF 903.8 (CLI scope bug), nailing 0, ~8 noise items in raw_json, sqft 0→2000 fallback. Concrete/lumber/Rule-5 flags GOOD (better than the stale committed JSONs — there is no reproducible baseline on disk; capture one in Docker before trusting results).
+
+**Fixed + committed (spec → implement → commit, tests green, validated on real LHERT data):**
+- [x] **OCR orchestration unified** → `runner.run_ocr_passes()` shared by CLI + web app. Footing-LF scoped to FOUNDATION pages only. LHERT **903.8 → 76.8 ft** ✅
+- [x] **Hardware pass revived** → `inject_hardware_counts()` split from `inject_lf_data()` (combined version early-returned on LF==0, leaving the all-structural pass dead). LHERT now scans 21 pages; counts flagged `qty_source=ocr_callout` (still callout≠order-qty — geometry ceiling).
+- [x] **Project address from title block** → `_resolve_project_field()` prefers pages carrying an SE. LHERT **8004 Gonzaga → 3333 Cabrillo** ✅
+- [x] Fixed 2 stale `test_runner.py` assertions (classify rewrite leftovers). Added `tests/test_extraction_fixes.py` (7).
+
+**Known stale (not this session's scope):** `tests/test_pipeline.py` imports `classify_page`/`extract_sheet_info` (deleted in vision-first rewrite) — needs a rewrite to the current API.
+
+**Documented follow-ups (docs/analysis-2026-06-20/05):** sqft-fallback honesty, noise→data-layer allowlist, native JSON mode, ≥200 DPI tiling, PP-Structure table recognition (needs network for model download), model upgrade (Gemini-2.5-Pro/Claude), counting via YOLO+SAHI detection or specialist service (the only routes past the count ceiling). Branch not yet merged.

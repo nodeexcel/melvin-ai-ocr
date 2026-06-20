@@ -14,7 +14,7 @@ def test_run_pipeline_sync_calls_progress(tmp_path):
         progress_events.append({"step": step, "message": message, "pct": pct})
 
     with patch("app.pipeline.runner.OpenAI") as mock_openai, \
-         patch("app.pipeline.runner.classify_all_pages") as mock_classify, \
+         patch("app.pipeline.runner.classify_pages") as mock_classify, \
          patch("app.pipeline.runner.render_vision_pages") as mock_render, \
          patch("app.pipeline.runner.extract_all_pages") as mock_extract, \
          patch("app.pipeline.runner.aggregate_results") as mock_aggregate:
@@ -31,7 +31,8 @@ def test_run_pipeline_sync_calls_progress(tmp_path):
             on_progress=fake_progress,
         )
 
-    assert result == {"project": {"name": "Test"}}
+    assert result["project"] == {"name": "Test"}
+    assert "quantities" in result  # run_pipeline_sync adds a preliminary quantities estimate
     steps = [e["step"] for e in progress_events]
     assert "classifying" in steps
     assert "extracting" in steps

@@ -8,7 +8,7 @@ from pdf2image import convert_from_path
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
-from app.pipeline.aggregate import aggregate_results, inject_lf_data
+from app.pipeline.aggregate import aggregate_results, inject_hardware_counts, inject_lf_data
 from app.pipeline.classify import classify_pages
 from app.pipeline.extract import extract_dimensions_gemini, extract_text, extract_vision, extract_vision_gemini
 
@@ -133,6 +133,62 @@ def run_pipeline_sync(
     return result
 
 
+_OCR_LF_CATEGORIES = ("foundation",)
+_OCR_HW_CATEGORIES = ("foundation", "floor_framing", "roof_framing", "wall_framing", "framing_details")
+
+
+def _ocr_page_indices(pages: list[dict]) -> tuple[list[int], list[int]]:
+    """Return (foundation_lf_indices, structural_hw_indices) as 0-based page indices.
+    LF extraction uses FOUNDATION pages only — floor/roof framing plans carry span
+    and room dimensions that match the footing-dimension pattern and inflate the
+    total (LHERT: 903.8 ft broad scope vs 76.8 ft foundation-only). Hardware callout
+    counting uses all structural pages."""
+    lf_idx = sorted({p["page"] - 1 for p in pages if p.get("category") in _OCR_LF_CATEGORIES})
+    hw_idx = sorted({p["page"] - 1 for p in pages if p.get("category") in _OCR_HW_CATEGORIES})
+    return lf_idx, hw_idx
+
+
+def run_ocr_passes(pdf_path: str, result: dict, on_progress: ProgressCallback | None = None) -> dict:
+    """PaddleOCR passes shared by the CLI and the web app — single source of truth,
+    so footing-LF scope cannot drift between the two run paths. Pass 1: footing LF
+    on foundation pages only. Pass 2: hardware callout counting on all structural
+    pages. Gracefully no-ops if PaddleOCR is unavailable. Mutates result in place."""
+    def emit(step: str, msg: str, pct: int) -> None:
+        if on_progress:
+            on_progress(step, msg, pct)
+
+    try:
+        from app.pipeline.ocr import count_hardware_from_pages, extract_lf_from_pages
+    except Exception as e:  # PaddleOCR/fitz not importable in this environment
+        emit("ocr", f"OCR unavailable, skipped: {e}", 95)
+        return result
+
+    lf_idx, hw_idx = _ocr_page_indices(result.get("_pages", []))
+
+    if lf_idx:
+        emit("ocr", f"Extracting footing dimensions from {len(lf_idx)} foundation page(s)...", 91)
+        try:
+            lf_data = extract_lf_from_pages(pdf_path, lf_idx)
+            if lf_data.get("grand_total_lf"):
+                inject_lf_data(result, lf_data)
+                emit("ocr", f"Footing LF: {lf_data['grand_total_lf']} ft", 93)
+            inject_hardware_counts(result, lf_data.get("hardware_counts", {}))
+        except Exception as e:
+            emit("ocr", f"LF pass skipped: {e}", 93)
+
+    if hw_idx:
+        emit("ocr", f"Counting hardware callouts on {len(hw_idx)} pages...", 94)
+        try:
+            hw_counts = count_hardware_from_pages(pdf_path, hw_idx)
+            inject_hardware_counts(result, hw_counts)
+            if hw_counts:
+                emit("ocr", f"Hardware: {len(hw_counts)} types from callouts", 95)
+        except Exception as e:
+            emit("ocr", f"Hardware pass skipped: {e}", 95)
+
+    return result
+
+
 def pipeline_worker(
     project_id: str,
     pdf_path: str,
@@ -185,38 +241,8 @@ def pipeline_worker(
             google_api_key=google_api_key,
         )
 
-        # PaddleOCR: two passes — LF (slow, few pages) + hardware counting (fast, all structural)
-        try:
-            from app.pipeline.ocr import extract_lf_from_pages, count_hardware_from_pages
-            # Pass 1: full-res tiled LF extraction on foundation pages ONLY.
-            # floor_framing and roof_framing pages have span/room dimensions that
-            # also match DIM_PATTERN and would inflate the footing LF total.
-            ocr_page_indices = [
-                p["page"] - 1 for p in result.get("_pages", [])
-                if p.get("category") == "foundation"
-            ]
-            if ocr_page_indices:
-                write_event("ocr", f"Extracting dimensions from {len(ocr_page_indices)} pages...", 91)
-                lf_data = extract_lf_from_pages(pdf_path, ocr_page_indices)
-                if lf_data.get("grand_total_lf"):
-                    inject_lf_data(result, lf_data)
-                    write_event("ocr", f"LF: {lf_data['grand_total_lf']} ft extracted", 93)
-
-            # Pass 2: fast low-res hardware callout counting on ALL structural pages
-            _structural = {"foundation", "floor_framing", "roof_framing",
-                           "wall_framing", "framing_details"}
-            hw_page_indices = [
-                p["page"] - 1 for p in result.get("_pages", [])
-                if p.get("category") in _structural
-            ]
-            if hw_page_indices:
-                write_event("ocr", f"Counting hardware callouts across {len(hw_page_indices)} pages...", 94)
-                hw_counts = count_hardware_from_pages(pdf_path, hw_page_indices)
-                if hw_counts:
-                    inject_lf_data(result, {"grand_total_lf": 0, "pages": [], "hardware_counts": hw_counts})
-                    write_event("ocr", f"Hardware: {len(hw_counts)} types from plan callouts", 95)
-        except Exception as _ocr_err:
-            write_event("ocr", f"OCR skipped: {_ocr_err}", 95)
+        # PaddleOCR passes (shared with the CLI — single source of truth, no scope drift)
+        run_ocr_passes(pdf_path, result, write_event)
 
         result_id = str(uuid.uuid4())
         with Session(engine) as session:

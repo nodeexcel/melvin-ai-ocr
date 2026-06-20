@@ -14,46 +14,9 @@ Usage (local):
 import argparse
 import json
 import os
-import subprocess
 import sys
 import time
 from pathlib import Path
-
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-_OCR_SCRIPT = _REPO_ROOT / "scripts" / "ocr" / "extract_lf.py"
-_PY311 = _REPO_ROOT / "venv" / "melvin311" / "bin" / "python"
-_OCR_CATEGORIES = {"foundation", "floor_framing", "roof_framing"}
-
-
-def _run_lf_extraction(pdf_path: str, page_indices: list[int], fast: bool = False) -> dict:
-    """Try module import first (Docker/Python 3.11 venv), fall back to subprocess."""
-    if not fast:
-        try:
-            from app.pipeline.ocr import extract_lf_from_pages
-            result = extract_lf_from_pages(pdf_path, page_indices)
-            if result:
-                return result
-        except Exception:
-            pass
-    else:
-        try:
-            from app.pipeline.ocr import count_hardware_from_pages
-            hw = count_hardware_from_pages(pdf_path, page_indices)
-            if hw is not None:
-                return {"grand_total_lf": 0, "pages": [], "hardware_counts": hw}
-        except Exception:
-            pass
-    # Fallback: subprocess via Python 3.11
-    if _PY311.exists() and _OCR_SCRIPT.exists():
-        pages_str = ",".join(str(i + 1) for i in page_indices)
-        cmd = [str(_PY311), str(_OCR_SCRIPT), "--pdf", pdf_path, "--pages", pages_str]
-        if fast:
-            cmd.append("--fast")
-        timeout = 1800  # LF full pass: up to 12 pages × ~90s; hardware fast: 23 × ~13s
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-        if proc.returncode == 0:
-            return json.loads(proc.stdout)
-    return {}
 
 # Ensure app package is importable whether running locally or inside Docker
 _backend_dir = Path(__file__).resolve().parent.parent
@@ -107,42 +70,9 @@ def main() -> None:
         google_api_key=google_api_key,
     )
 
-    # OCR Pass 1: full-res tiled LF extraction (plan pages only, slow)
-    lf_data = None
-    total_pages = len(result.get("_pages", []))
-    structural_start = max(0, total_pages // 3)
-    ocr_indices = sorted({
-        p["page"] - 1 for p in result.get("_pages", [])
-        if p.get("category") in _OCR_CATEGORIES and p["page"] - 1 >= structural_start
-    })
-    if ocr_indices:
-        on_progress("ocr", f"Running LF extraction on {len(ocr_indices)} pages...", 91)
-        try:
-            lf_data = _run_lf_extraction(pdf_path, ocr_indices)
-            if lf_data.get("grand_total_lf"):
-                from app.pipeline.aggregate import inject_lf_data
-                inject_lf_data(result, lf_data)
-                on_progress("ocr", f"LF: {lf_data['grand_total_lf']} ft", 93)
-        except Exception as e:
-            on_progress("ocr", f"LF skipped: {e}", 93)
-
-    # OCR Pass 2: fast low-res hardware callout counting on ALL structural pages
-    _ALL_STRUCTURAL = _OCR_CATEGORIES | {"framing_details", "wall_framing"}
-    hw_indices = sorted({
-        p["page"] - 1 for p in result.get("_pages", [])
-        if p.get("category") in _ALL_STRUCTURAL and p["page"] - 1 >= structural_start
-    })[:15]  # cap at 15 pages — enough for good hardware counts
-    if hw_indices:
-        on_progress("ocr", f"Counting hardware callouts on {len(hw_indices)} pages...", 94)
-        try:
-            hw_data = _run_lf_extraction(pdf_path, hw_indices, fast=True)
-            hw_counts = hw_data.get("hardware_counts", {})
-            if hw_counts:
-                from app.pipeline.aggregate import inject_lf_data
-                inject_lf_data(result, {"grand_total_lf": 0, "pages": [], "hardware_counts": hw_counts})
-                on_progress("ocr", f"Hardware callouts: {dict(list(sorted(hw_counts.items(), key=lambda x: -x[1]))[:5])}", 95)
-        except Exception as e:
-            on_progress("ocr", f"Hardware count skipped: {e}", 95)
+    # PaddleOCR passes — shared with the web app (single source of truth, no scope drift)
+    from app.pipeline.runner import run_ocr_passes
+    run_ocr_passes(pdf_path, result, on_progress)
     elapsed = time.time() - t0
 
     with open(out_file, "w") as f:
@@ -161,12 +91,10 @@ def main() -> None:
     print(f"  Lumber:    {len(result.get('lumber_specs', []))} entries")
     print(f"  Concrete:  {len(result.get('concrete_specs', []))} entries")
     foundation = result.get("foundation", {})
-    if foundation.get("concrete_cubic_yards"):
-        cy = foundation["concrete_cubic_yards"]
-        lf = lf_data.get("grand_total_lf", 0) if lf_data else 0
+    if foundation.get("total_lf") or foundation.get("concrete_cubic_yards"):
         est = " (est.)" if foundation.get("estimated") else ""
-        print(f"  Footing LF:{lf} ft{est}")
-        print(f"  Concrete:  {cy} CY{est}")
+        print(f"  Footing LF:{foundation.get('total_lf', 0)} ft{est}")
+        print(f"  Concrete:  {foundation.get('concrete_cubic_yards', 0)} CY{est}")
     print(f"  Output:    {out_file}")
 
 

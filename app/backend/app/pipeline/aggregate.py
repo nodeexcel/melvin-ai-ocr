@@ -7,6 +7,16 @@ def _most_common(values: list[str]) -> str:
     return counts.most_common(1)[0][0] if counts else ""
 
 
+def _resolve_project_field(records: list[dict], field: str) -> str:
+    """Most-common value for a project field, preferring records that also carry a
+    structural_engineer (true structural title-block pages). Early pages (vicinity
+    maps, adjacent-property notes, civil sheets) often list a different address but
+    no SE, and would otherwise win on raw frequency. Falls back to all records."""
+    title_block = [r for r in records if r.get("structural_engineer")]
+    pool = title_block if any(r.get(field) for r in title_block) else records
+    return _most_common([r.get(field, "") for r in pool])
+
+
 def aggregate_results(extractions: list[dict]) -> dict:
     result = {
         "project": {
@@ -35,10 +45,7 @@ def aggregate_results(extractions: list[dict]) -> dict:
     # Collect all candidate values for project string fields across pages.
     # Use most-common instead of first-non-empty to avoid early pages with
     # wrong addresses (adjacent properties, vicinity maps) winning.
-    proj_names:   list[str] = []
-    proj_addrs:   list[str] = []
-    proj_archs:   list[str] = []
-    proj_ses:     list[str] = []
+    proj_records: list[dict] = []
 
     for item in extractions:
         cat  = item["category"]
@@ -47,14 +54,12 @@ def aggregate_results(extractions: list[dict]) -> dict:
             continue
 
         if cat == "schedules":
-            if data.get("project_name"):
-                proj_names.append(data["project_name"])
-            if data.get("project_address"):
-                proj_addrs.append(data["project_address"])
-            if data.get("architect"):
-                proj_archs.append(data["architect"])
-            if data.get("structural_engineer"):
-                proj_ses.append(data["structural_engineer"])
+            rec = {"name": (data.get("project_name") or "").strip(),
+                   "address": (data.get("project_address") or "").strip(),
+                   "architect": (data.get("architect") or "").strip(),
+                   "structural_engineer": (data.get("structural_engineer") or "").strip()}
+            if any(rec.values()):
+                proj_records.append(rec)
             if data.get("total_sqft", 0) > result["project"]["total_sqft"]:
                 result["project"]["total_sqft"] = data["total_sqft"]
             new_sheets = data.get("sheet_list") or []
@@ -123,11 +128,13 @@ def aggregate_results(extractions: list[dict]) -> dict:
             result["framing_details"].extend(data.get("connections") or [])
             result["framing_details"].extend(data.get("hardware") or [])
 
-    # Resolve project string fields using most-common value
-    result["project"]["name"]               = _most_common(proj_names)
-    result["project"]["address"]            = _most_common(proj_addrs)
-    result["project"]["architect"]          = _most_common(proj_archs)
-    result["project"]["structural_engineer"] = _most_common(proj_ses)
+    # Resolve project string fields. Name/address prefer structural title-block
+    # pages (those with an SE) to avoid early-page wrong addresses winning on
+    # frequency; architect/SE use plain most-common.
+    result["project"]["name"]                = _resolve_project_field(proj_records, "name")
+    result["project"]["address"]             = _resolve_project_field(proj_records, "address")
+    result["project"]["architect"]           = _most_common([r["architect"] for r in proj_records])
+    result["project"]["structural_engineer"] = _most_common([r["structural_engineer"] for r in proj_records])
 
     # Flat list for backward compatibility
     result["simpson_hardware"] = (
@@ -207,7 +214,10 @@ def _merge_hardware(existing: list[dict], ocr_counts: dict[str, int]) -> list[di
 
 
 def inject_lf_data(result: dict, lf_data: dict) -> dict:
-    """Inject PaddleOCR LF results into foundation section. Mutates result in place."""
+    """Inject PaddleOCR footing LF + derived CY into the foundation section.
+    Hardware counts are handled separately by inject_hardware_counts() so they
+    survive even when footing LF is 0 (the previous combined version early-returned
+    on LF==0, silently dropping the dedicated hardware pass). Mutates result."""
     foundation = result.get("foundation", {})
     grand_lf = lf_data.get("grand_total_lf", 0)
     if not grand_lf:
@@ -220,24 +230,6 @@ def inject_lf_data(result: dict, lf_data: dict) -> dict:
     for page in lf_data.get("pages", []):
         if page.get("drawing_scale") and not foundation.get("drawing_scale"):
             foundation["drawing_scale"] = page["drawing_scale"]
-
-    # Merge OCR hardware callout counts into simpson_hardware + hardware_by_phase
-    ocr_hw = lf_data.get("hardware_counts", {})
-    if ocr_hw:
-        result["_ocr_hardware_counts"] = ocr_hw
-        result["simpson_hardware"] = _merge_hardware(result.get("simpson_hardware", []), ocr_hw)
-        # Assign OCR-counted hardware to phases by model prefix
-        for model, count in ocr_hw.items():
-            phase = _phase_for_model(model)
-            phase_list = result.get("hardware_by_phase", {}).get(phase, [])
-            # Merge into phase list (update qty if exists, else add)
-            existing = next((h for h in phase_list if _normalise_model(h.get("model","")) == model), None)
-            if existing:
-                if count > int(existing.get("qty", 0) or 0):
-                    existing["qty"] = count
-                    existing["qty_source"] = "ocr_callout"
-            else:
-                phase_list.append({"model": model, "qty": count, "qty_source": "ocr_callout"})
 
     # Calculate CY from total LF × weighted average footing cross-section
     if foundation.get("concrete_cubic_yards", 0) == 0:
@@ -252,4 +244,27 @@ def inject_lf_data(result: dict, lf_data: dict) -> dict:
             avg_d = sum(d[1] for d in dims) / len(dims)
             foundation["concrete_cubic_yards"] = round(grand_lf * (avg_w / 12) * (avg_d / 12) / 27, 1)
 
+    return result
+
+
+def inject_hardware_counts(result: dict, ocr_counts: dict) -> dict:
+    """Merge OCR hardware callout counts into simpson_hardware + hardware_by_phase.
+    Independent of footing LF — runs even when LF is 0 (foundation-only LF scope
+    means the dedicated all-structural hardware pass must inject on its own).
+    OCR count wins when higher than the extracted qty. Mutates result."""
+    if not ocr_counts:
+        return result
+    result["_ocr_hardware_counts"] = {**result.get("_ocr_hardware_counts", {}), **ocr_counts}
+    result["simpson_hardware"] = _merge_hardware(result.get("simpson_hardware", []), ocr_counts)
+    for raw_model, count in ocr_counts.items():
+        model = _normalise_model(raw_model)
+        phase = _phase_for_model(model)
+        phase_list = result.get("hardware_by_phase", {}).get(phase, [])
+        existing = next((h for h in phase_list if _normalise_model(h.get("model", "")) == model), None)
+        if existing:
+            if count > int(existing.get("qty", 0) or 0):
+                existing["qty"] = count
+                existing["qty_source"] = "ocr_callout"
+        else:
+            phase_list.append({"model": model, "qty": count, "qty_source": "ocr_callout"})
     return result

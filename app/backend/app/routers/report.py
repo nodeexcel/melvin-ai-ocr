@@ -67,15 +67,12 @@ async def download_report(
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis results not found")
 
-    # Load user's rate sheet (if any) and compute cost estimate
-    rs_result = await db.execute(select(RateSheet).where(RateSheet.user_id == current_user.id))
-    rate_sheet = rs_result.scalar_one_or_none()
-    rates = rate_sheet.rates if rate_sheet else {}
-    cost_estimate = estimate_costs(analysis.raw_json, rates)
-
     if not analysis.report_pdf_path or not os.path.exists(analysis.report_pdf_path):
         pdf_path = f"{project.file_path}_report.pdf"
-        data = {**analysis.raw_json, "cost_estimate": cost_estimate}
+        # Takeoff-only report (per Melvin 2026-06-23): pricing/labor intentionally
+        # excluded — moved to a future per-trade pricing app. estimate_costs() and
+        # the /cost-estimate endpoint remain available for that app.
+        data = {**analysis.raw_json}
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, generate_report, data, pdf_path)
         analysis.report_pdf_path = pdf_path

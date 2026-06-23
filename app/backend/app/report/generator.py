@@ -446,9 +446,13 @@ def generate_report(data: dict, output_path: str) -> None:
         for item in qty.get("wall_framing", []):
             base = item.get("base_qty", item.get("estimated_qty", 0))
             wpct = item.get("waste_pct")
+            length = item.get("stud_length_ft", "")
+            size = item.get("size", "")
+            # Size + length up front (per Melvin): e.g. "2x6 x10ft"
+            size_len = f"{size} x{length}ft" if (size and length) else size
             framing_rows.append([
-                f"{item.get('wall_type', '')} Wall Studs ({item.get('stud_length_ft','')}ft)",
-                item.get("size", ""),
+                f"{item.get('wall_type', '')} Wall Studs",
+                size_len,
                 str(base),
                 f"+{wpct}%" if wpct else "—",
                 str(item.get("estimated_qty", 0)),
@@ -484,29 +488,8 @@ def generate_report(data: dict, output_path: str) -> None:
             elements.append(_std_table(ply_rows, [2.5*inch, 1.8*inch, 0.9*inch, 0.9*inch, 1.9*inch]))
             elements.append(Spacer(1, 0.1 * inch))
 
-    # ── Preliminary Labor Estimate ────────────────────────────────────────────
-    cost = data.get("cost_estimate", {})
-    if cost.get("line_items"):
-        elements.extend(_section_title("Preliminary Labor Estimate *", styles))
-        elements.append(Paragraph(
-            "* AI-estimated labor — based on your rate sheet × extracted quantities. "
-            "Verify all line items before quoting.",
-            styles["body"]
-        ))
-        elements.append(Spacer(1, 0.08 * inch))
-        cost_rows = [["Description", "Qty", "Unit", "Rate ($)", "Est. Cost ($)"]]
-        for item in cost["line_items"]:
-            cost_rows.append([
-                item["description"],
-                str(item["qty"]),
-                item["unit"],
-                f"{item['rate']:,.2f}",
-                f"{item['cost']:,.2f}",
-            ])
-        cost_rows.append(["", "", "", "TOTAL", f"${cost['total']:,.2f}"])
-        ct = _std_table(cost_rows, [2.6*inch, 0.7*inch, 0.6*inch, 1.1*inch, 1.5*inch])
-        elements.append(ct)
-        elements.append(Spacer(1, 0.1 * inch))
+    # Pricing/labor intentionally excluded — this is a takeoff-only report
+    # (per Melvin 2026-06-23). Cost lives in a future per-trade pricing app.
 
     foundation = data.get("foundation", {})
     _est = foundation.get("estimated", False)

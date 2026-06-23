@@ -308,3 +308,22 @@ PaddleOCR pin-hardening (constraints file) · sqft fallback honesty (B-SQFT) · 
 - [ ] **Step 6 — Commit** (extract.py only; co-author trailer).
 
 **Risk:** minimal — both modes are GA for the models in use (gpt-4o, gemini-2.5-flash) and only constrain output to valid JSON, which the pipeline already expects.
+
+---
+
+# Increment 3 — Takeoff-only report (drop pricing/labor)
+
+**Goal:** Per Melvin's 2026-06-23 feedback (`docs/analysis-2026-06-20/07`), make this app a **takeoff tool only** — remove pricing/labor from the output. Hide, don't delete (the cost code seeds a future per-trade pricing app).
+
+**Scope:** report layer + frontend only. No pipeline/schema change. Deferred to later increments: beams/headers (M-3), rebar qty (M-4), concrete CY (M-5), per-length lumber, hallucination fix (M-1), deeper format polish.
+
+**Files:** `app/backend/app/routers/report.py`, `app/backend/app/report/generator.py`, `app/frontend/src/components/ResultsPanel.tsx`.
+
+- [ ] **Step 1 — `report.py`: stop feeding cost into the report.** In `download_report`, drop the rate-sheet load + `estimate_costs` call + the `cost_estimate` merge; build the report from `analysis.raw_json` alone. **Keep** the `/cost-estimate` endpoint and the `estimate_costs` import (dormant, for the future pricing app).
+- [ ] **Step 2 — `generator.py`: remove the "Preliminary Labor Estimate" section** (the `cost = data.get("cost_estimate", {})` block). Report is now takeoff-only regardless of input.
+- [ ] **Step 3 — Light, safe format touch** (defer deep reformat to Inc 4): in the wall-studs quantity rows, surface length with size up front (e.g. size cell `2x6 ×10ft`) per his "size+length in front" ask. Leave plywood + hardware tables (he likes those).
+- [ ] **Step 4 — `ResultsPanel.tsx`: hide the cost-estimate block** on the results page (keep the code path, gate it off).
+- [ ] **Step 5 — Validate (no API, no crash risk):** render a PDF from the captured `baseline_lhert_2026-06-20.json` via `generate_report`; confirm NO labor/cost section and the report still builds with all takeoff sections.
+- [ ] **Step 6 — Commit** (report.py + generator.py + ResultsPanel.tsx; co-author trailer).
+
+**Note:** frontend edit is not runtime-tested here (no running Next.js); it's a straightforward JSX gate, validated by inspection. PDF is the surface Melvin actually downloads and reviewed.

@@ -1,6 +1,17 @@
 # 04 — Open Questions / External Inputs Needed
 
-**Session:** 2026-06-20. What blocks *confidence* in a future implementation. **Important framing:** per `memory/client_responsiveness.md`, Melvin is unresponsive and has never tested the app. So the "for Melvin" questions below are unlikely to be answered — each is paired with a **recommended default** so work is not blocked waiting on him.
+**Session:** 2026-06-20. What blocks *confidence* in a future implementation.
+
+> **⚡ UPDATE 2026-06-23 — many of these are now ANSWERED by the client (see `07-melvin-meeting-2026-06-23.md`):**
+> - **Q-1 (quantity-takeoff scope) — RESOLVED:** full takeoff *with quantities*, **no pricing/labor** in this app. Quantities are the whole point.
+> - **Q-3 (hardware: models vs counts) — RESOLVED:** exact **counts required** (he hand-counts today); approach = detail-callout detection + counting.
+> - **Q-4 (report format) — RESOLVED:** clean `Qty | Size | Length | Description`, size+length in front, no pricing columns.
+> - **Q-7 (steel scope) — RESOLVED:** steel **is** in scope when present.
+> - **Labor/equipment/schedule — DE-SCOPED** from this app → separate future per-trade apps.
+> - **API keys (F-5) — being unblocked:** Melvin enabling Gemini billing + OpenAI credit.
+> - Still open: exact detail-callout marker formats across firms; per-project metadata capture (sqft, new/remodel/addition); his rate sheet (now only relevant to the future pricing app).
+>
+> The original framing below (client unresponsive, proceed on defaults) applied up to 2026-06-20 and is retained for history.
 
 ---
 

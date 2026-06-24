@@ -110,3 +110,47 @@ def test_address_fallback_when_no_se():
         {"name": "X", "address": "200 B ST", "structural_engineer": ""},
     ]
     assert _resolve_project_field(records, "address") == "100 A ST"  # most-common fallback
+
+
+# --- Increment 4: hardware cleanup ------------------------------------------
+from app.pipeline.hardware import is_real_model, normalise_model, clean_hardware_list
+
+
+def test_is_real_model_filters_noise():
+    assert is_real_model("HDU4")
+    assert is_real_model("A35")
+    assert is_real_model("H1")          # H-series short code allowed
+    assert not is_real_model("LUTRON")  # electrical
+    assert not is_real_model("UL U309") # fire-rating listing
+    assert not is_real_model("")
+    assert not is_real_model("B1")      # 2-char non-H drawing label
+    assert not is_real_model("10d")     # nail size
+    assert not is_real_model("lus")     # bare prefix-only code
+
+
+def test_normalise_model_strips_simpson():
+    assert normalise_model("Simpson HDU4") == "HDU4"
+    assert normalise_model("HDU4") == "HDU4"
+    assert normalise_model("Simpson Strong-Tie A35") == "A35"
+
+
+def test_clean_hardware_dedup_keeps_highest_qty():
+    items = [
+        {"model": "HDU8", "qty": 0},
+        {"model": "HDU8", "qty": 4, "qty_source": "ocr_callout"},
+        {"model": "A35", "qty": 0},  # only-zero -> dropped
+    ]
+    by = {h["model"]: h for h in clean_hardware_list(items)}
+    assert by["HDU8"]["qty"] == 4
+    assert by["HDU8"].get("qty_source") == "ocr_callout"
+    assert "A35" not in by  # pure-zero dropped
+
+
+def test_clean_hardware_drops_noise_and_empty():
+    items = [{"model": "LUTRON", "qty": 3}, {"model": "HDU4", "qty": 5}, {"model": "", "qty": 2}]
+    assert {h["model"] for h in clean_hardware_list(items)} == {"HDU4"}
+
+
+def test_clean_hardware_keep_zero_flag():
+    out = clean_hardware_list([{"model": "HDU4", "qty": 0}], keep_zero=True)
+    assert out and out[0]["qty"] == 0

@@ -1,5 +1,7 @@
 from collections import Counter
 
+from app.pipeline.hardware import clean_result_hardware
+
 
 def _most_common(values: list[str]) -> str:
     """Return the most frequently occurring non-empty string in values."""
@@ -162,6 +164,9 @@ def aggregate_results(extractions: list[dict]) -> dict:
         _phase_hw[phase].append(item)
     result["hardware_by_phase"] = _phase_hw
 
+    # Clean stored hardware (dedup, drop noise + pure-zero-qty) so raw_json
+    # matches what the report renders. Re-applied after OCR injection too.
+    clean_result_hardware(result)
     return result
 
 

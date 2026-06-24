@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 from app.pipeline.aggregate import aggregate_results, inject_hardware_counts, inject_lf_data
+from app.pipeline.hardware import clean_result_hardware
 from app.pipeline.classify import classify_pages
 from app.pipeline.extract import extract_dimensions_gemini, extract_text, extract_vision, extract_vision_gemini
 
@@ -186,6 +187,9 @@ def run_ocr_passes(pdf_path: str, result: dict, on_progress: ProgressCallback | 
         except Exception as e:
             emit("ocr", f"Hardware pass skipped: {e}", 95)
 
+    # Re-clean after OCR injection so the final stored hardware is deduped,
+    # noise-free, and counted (single source of truth shared with aggregate).
+    clean_result_hardware(result)
     return result
 
 

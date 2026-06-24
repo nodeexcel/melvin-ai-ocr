@@ -311,6 +311,28 @@ PaddleOCR pin-hardening (constraints file) · sqft fallback honesty (B-SQFT) · 
 
 ---
 
+# Increment 4 — Hardware cleanup at the data layer (M-1 / F-2 / F-8)
+
+**Goal:** Make stored `raw_json` hardware match what the PDF already renders — real models, deduped, counted — so the results page + any consumer are clean. Addresses Melvin's "you list things I don't have" (qty-0 schedule-defined variants), duplicate rows, and non-hardware noise (LUTRON, UL listings, empty) that today is filtered only at PDF-render time.
+
+**Evidence (committed outputs):** Whaleon hold-downs `HDU5*/8*/11*/14*` all qty 0 (whole-schedule transcription); LHERT `HDU8(0)+HDU8(2)`, `A35(0)+A35(4)+A35(1)`, `CS14 ×3` (unmerged dupes); `LUTRON ×5`, `UL U309/U305/L501`, empty models in `raw_json`.
+
+**Honesty caveat:** the exact "HFX 15/18/21/24" Melvin saw was on the `4380U` plan (not available here) and reads as a header/beam → likely **M-3**, not Simpson hardware. This increment fixes the *evidenced hardware* pattern; re-verify the exact case on his plan + handle headers in M-3.
+
+**Architecture:** one shared `app/pipeline/hardware.py` (`normalise_model`, `is_real_model`, `clean_hardware_list`, `clean_result_hardware`) — consolidates the 3 duplicated normalise functions (aggregate `_normalise_model`, generator `_normalise_hw` + inner `_normalise`) and the generator's `_is_real_model` into one source of truth, used by aggregate (clean stored data) + generator (defense/DRY). Cleaning rule = dedup by normalised model (keep highest qty) + drop noise + drop pure-zero-qty (matches what the PDF already shows; no info hidden that the PDF didn't already hide).
+
+**Files:** Create `app/backend/app/pipeline/hardware.py`; modify `aggregate.py`, `runner.py` (clean after OCR), `report/generator.py` (import shared, delete local dups); Test `tests/test_extraction_fixes.py`.
+
+- [ ] **Step 1** — create `hardware.py` (move `is_real_model` + constants verbatim from generator; add `normalise_model`, `clean_hardware_list`, `clean_result_hardware`).
+- [ ] **Step 2** — `aggregate.py`: call `clean_result_hardware(result)` before return; reuse shared `normalise_model`.
+- [ ] **Step 3** — `runner.py`: call `clean_result_hardware(result)` at end of `run_ocr_passes` (after OCR injection, both callers).
+- [ ] **Step 4** — `generator.py`: import `is_real_model`/`normalise_model` from `hardware.py`; delete local `_is_real_model`, constant blocks, `_normalise_hw`, inner `_normalise`; update call sites.
+- [ ] **Step 5** — unit tests: `is_real_model` (LUTRON/UL/empty→False, HDU4→True), `clean_hardware_list` (dedup highest-qty, drop zero, drop noise).
+- [ ] **Step 6** — validate by re-aggregating committed outputs: LUTRON/UL/empty gone, no dupes, no pure-zero in `simpson_hardware`; re-render a PDF (unchanged); suite green.
+- [ ] **Step 7** — commit.
+
+---
+
 # Increment 3 — Takeoff-only report (drop pricing/labor)
 
 **Goal:** Per Melvin's 2026-06-23 feedback (`docs/analysis-2026-06-20/07`), make this app a **takeoff tool only** — remove pricing/labor from the output. Hide, don't delete (the cost code seeds a future per-trade pricing app).

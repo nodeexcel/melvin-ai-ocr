@@ -15,6 +15,8 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from app.pipeline.hardware import is_real_model, normalise_model
+
 BRAND_YELLOW = colors.HexColor("#F5C518")
 BRAND_BLACK = colors.HexColor("#1A1A1A")
 BRAND_GRAY = colors.HexColor("#333333")
@@ -105,7 +107,7 @@ def _redistribute_phases(hw_by_phase: dict) -> dict:
     out: dict[str, list] = {k: [] for k in hw_by_phase}
     for phase, items in hw_by_phase.items():
         for item in items:
-            model = _normalise_hw(item.get("model", ""))
+            model = normalise_model(item.get("model", ""))
             if not model:
                 continue
             correct = _hw_phase(model)
@@ -113,13 +115,6 @@ def _redistribute_phases(hw_by_phase: dict) -> dict:
                 out[correct] = []
             out[correct].append(item)
     return out
-
-
-def _normalise_hw(m: str) -> str:
-    for prefix in ("Simpson Strong-Tie ", "Simpson Strong Tie ", "Simpson ", "SIMPSON "):
-        if m.upper().startswith(prefix.upper()):
-            return m[len(prefix):].strip()
-    return m.strip()
 
 
 def _footer(canvas, doc):
@@ -270,101 +265,9 @@ def generate_report(data: dict, output_path: str) -> None:
     _phase_headers = ParagraphStyle("ph", fontName="Helvetica-Bold", fontSize=8,
                                     textColor=BRAND_YELLOW, leading=10)
     _phase_cell = ParagraphStyle("pc", fontName="Helvetica", fontSize=8, leading=10)
-    _PHASE_GENERIC = {
-        "nails", "nail", "bolts", "bolt", "screws", "screw", "welds", "weld",
-        "strap", "straps", "holdown", "holdowns", "strong-tie", "hardware",
-        "anchor bolts", "anchor bolt", "joist hangers", "joist hanger",
-        "shear plates", "shear plate", "base plate", "post cap",
-        "ohagin roof vent", "ohagin", "roof vent", "sim. hanger",
-        "post base", "anchor bolt", "holdown", "holdown strap",
-        "hss", "weld", "strap", "joist hanger", "holdown",
-        # Generic fasteners
-        "pan head screw", "countersunk screw", "countersunk screws",
-        # Sealants / membranes / tapes
-        "epdm", "epdm seal", "neoprene", "neoprene pad", "neoprene bad",
-        "vhb tape", "vhb", "sealant",
-        # Incomplete prefix-only codes (Gemini drops the numeric suffix)
-        # Full models like LUS26, HUCQ410, ABU66 are unaffected (not exact matches)
-        "lus", "hucq", "abu", "hus", "lts", "cmst", "mstc",
-        # MEP / non-structural items
-        "hanger rod", "rod hanger",
-        "e8005",      # obscure product/material code, not a Simpson connector
-        # Drawing annotation labels confirmed by Melvin as non-Simpson (2026-06-19)
-        "ab123", "eb456", "ea456", "ls456", "ab6", "sp789",
-    }
-
-    # Non-structural brand prefixes — Gemini extracts these from general notes.
-    # Lowercased startswith check catches any variant the model produces.
-    _NON_STRUCTURAL_BRANDS = (
-        "schluter",   # tile edge trim system
-        "pemko",      # door hardware
-        "astm no",    # material standard designations
-        "grace ",     # waterproofing membranes
-        "allweather", # sealant brand
-        "panda ",     # insulation brand
-        "contega",    # building wrap
-        "intello",    # air barrier membrane
-        "western ",   # generic brand
-        "hook #",     # door/window hardware
-        "bronze ",    # architectural hardware
-        "sim. ",      # drawing annotation "Similar to X" — not a model
-        "sim.",       # same without space
-        "jh",         # JH1/JH2 = Joist Hanger abbreviation, not a Simpson model
-        "redguard",   # waterproofing membrane brand
-        "nds ",       # NDS = drainage/irrigation brand (storm drains, cleanouts)
-        "zoeller",    # Zoeller = sump pump brand
-        "bilco",      # BILCO = access hatch / roof hatch manufacturer
-        "maxeon",     # Maxeon = solar panel brand
-        "sol-ark",    # Sol-Ark = solar inverter brand
-        "discover ",  # Discover Helios = battery storage brand
-    )
-
-    # Substrings that disqualify any model regardless of prefix/suffix.
-    _GENERIC_SUBSTRINGS = (
-        "aluminum angle", "aluminum channel", "steel angle", "steel channel",
-        "hss",      # HSS1/HSS 4x4 = Hollow Structural Section (steel tube)
-        "bolt",     # "1/2\" DIA. BOLTS", "ANCHOR BOLTS" — generic fasteners
-        "dia.",     # dimension descriptions: "1/2\" DIA."
-        "glazing",   # glazing clips, glass rail brackets — architectural
-        "stainless", # stainless steel fittings — not Simpson connectors
-        "sleeve",    # pipe sleeve — structural penetration, not a connector
-        "shock",     # shock box / shock absorber — seismic isolation, not Simpson
-        " series",   # "HUCQ series", "H series" etc — generic incomplete models
-        "screw",     # "SD81/4x3 SCREWS" etc — screw size descriptions, not models
-        "pipe",      # Pipe Clamp, Pipe Support — MEP items
-        "pvc",        # PVC pipe/fittings — plumbing, not structural
-        "receptacle", # GFI Receptacle — electrical, not structural
-    )
-
-    _NAIL_PATTERN  = re.compile(r"^\d+d$")  # 8d, 10d, 16d, 20d, etc.
-    _DIGIT_START   = re.compile(r"^\d")     # "1/2\" DIA. BOLTS" etc — no Simpson model starts with a digit
-    _CATALOG_START = re.compile(r"^#")      # #1301-410, #896 etc — catalog/part numbers, not models
-
-    def _is_real_model(m: str) -> bool:
-        if not m:
-            return False
-        # 1-2 char codes like B1/W1/S1 are drawing labels, not hardware.
-        # Exception: H-series (H1, H2) are real Simpson hurricane ties.
-        if len(m) < 3 and not m.upper().startswith("H"):
-            return False
-        ml = m.lower()
-        if ml in _PHASE_GENERIC:
-            return False
-        if _NAIL_PATTERN.match(ml):    # nail sizes: 10d, 16d, 8d
-            return False
-        if _DIGIT_START.match(ml):     # dimension specs: 1/2" DIA. BOLTS, 3-#5, etc.
-            return False
-        if _CATALOG_START.match(ml):   # catalog numbers: #1301-410, #896, #G13S-218
-            return False
-        if any(ml.startswith(b) for b in _NON_STRUCTURAL_BRANDS):
-            return False
-        if any(sub in ml for sub in _GENERIC_SUBSTRINGS):
-            return False
-        return True
-
     any_phase_hw = any(
         [h for h in hw_by_phase.get(k, [])
-         if _is_real_model(_normalise_hw(h.get("model", ""))) and
+         if is_real_model(normalise_model(h.get("model", ""))) and
          (h.get("qty") or h.get("qty_mentioned", 0))]
         for k, _ in _phase_labels
     )
@@ -378,7 +281,7 @@ def generate_report(data: dict, output_path: str) -> None:
         for phase_key, phase_label in _phase_labels:
             items = [
                 h for h in hw_by_phase.get(phase_key, [])
-                if _is_real_model(_normalise_hw(h.get("model", ""))) and
+                if is_real_model(normalise_model(h.get("model", ""))) and
                 (h.get("qty") or h.get("qty_mentioned", 0))
             ]
             if not items:
@@ -386,7 +289,7 @@ def generate_report(data: dict, output_path: str) -> None:
             # Deduplicate
             seen: dict[str, int] = {}
             for h in items:
-                m = _normalise_hw(h.get("model", ""))
+                m = normalise_model(h.get("model", ""))
                 if not m:
                     continue
                 qty = int(h.get("qty") or h.get("qty_mentioned", 0) or 0)

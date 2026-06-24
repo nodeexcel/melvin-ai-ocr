@@ -154,3 +154,24 @@ def test_clean_hardware_drops_noise_and_empty():
 def test_clean_hardware_keep_zero_flag():
     out = clean_hardware_list([{"model": "HDU4", "qty": 0}], keep_zero=True)
     assert out and out[0]["qty"] == 0
+
+
+def test_normalise_strips_footnote_asterisk():
+    assert normalise_model("HDU11*") == "HDU11"
+    assert normalise_model("Simpson HDU8 *") == "HDU8"
+    assert normalise_model("WSWH-TP") == "WSWH-TP"  # internal/normal chars untouched
+
+
+def test_clean_hardware_merges_asterisk_variant():
+    # The deployed bug: "HDU11" and "HDU11*" (schedule footnote) showed as two rows.
+    items = [
+        {"model": "HDU11", "qty": 3, "qty_source": "ocr_callout"},
+        {"model": "HDU11*", "qty": 30},
+        {"model": "HDU14*", "qty": 36},
+        {"model": "HDU14", "qty": 1},
+    ]
+    out = clean_hardware_list(items)
+    by = {h["model"]: h for h in out}
+    assert set(by) == {"HDU11", "HDU14"}  # no "*" duplicates
+    assert by["HDU11"]["qty"] == 30        # keeps higher of the merged pair
+    assert by["HDU14"]["qty"] == 36

@@ -7,13 +7,19 @@ import re
 
 
 def normalise_model(m: str) -> str:
-    """Strip 'Simpson'/'Simpson Strong-Tie' prefixes so 'Simpson H1' == 'H1'."""
+    """Normalise a hardware model for dedup: strip 'Simpson'/'Simpson Strong-Tie'
+    prefixes ('Simpson H1' == 'H1') and trailing schedule footnote markers
+    ('HDU11*' == 'HDU11' — the asterisk is a schedule note, not a product code)."""
     if not m:
         return ""
+    m = m.strip()
     for prefix in ("Simpson Strong-Tie ", "Simpson Strong Tie ", "Simpson ", "SIMPSON "):
         if m.upper().startswith(prefix.upper()):
-            return m[len(prefix):].strip()
-    return m.strip()
+            m = m[len(prefix):].strip()
+            break
+    # Trailing footnote asterisk(s): "HDU11*", "HDU8 *" -> "HDU11", "HDU8"
+    m = re.sub(r"\s*\*+\s*$", "", m).strip()
+    return m
 
 
 # Exact-match junk: generic words + drawing labels + incomplete prefix-only codes.

@@ -54,6 +54,9 @@ _NON_STRUCTURAL_BRANDS = (
     "jh", "redguard", "nds ", "zoeller", "bilco", "maxeon", "sol-ark",
     "discover ", "lutron", "leviton", "hubbel",  # electrical brands
     "ul u", "ul l",  # UL fire-rating listings (UL U309, UL L501) — not hardware
+    "detail",  # "Detail 19/32/..." = plan detail-callout references, not a model
+    "see detail", "see ",
+    "icc", "ner-", "esr-",  # ICC-ES evaluation report numbers (NER-216, ESR-xxxx)
 )
 
 # Substrings that disqualify any model regardless of prefix/suffix.

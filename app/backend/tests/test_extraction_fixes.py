@@ -126,6 +126,13 @@ def test_is_real_model_filters_noise():
     assert not is_real_model("B1")      # 2-char non-H drawing label
     assert not is_real_model("10d")     # nail size
     assert not is_real_model("lus")     # bare prefix-only code
+    # detail-callout references + ICC-ES report numbers are not hardware
+    assert not is_real_model("Detail 19")
+    assert not is_real_model("Detail 32")
+    assert not is_real_model("ICC-ESC NER-216")
+    assert not is_real_model("NER-216")
+    # real models still pass
+    assert is_real_model("HDU5") and is_real_model("LUS26") and is_real_model("PCZ")
 
 
 def test_normalise_model_strips_simpson():

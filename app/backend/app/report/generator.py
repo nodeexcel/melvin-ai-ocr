@@ -1,5 +1,4 @@
 import os
-import re
 from datetime import date
 
 from reportlab.lib import colors
@@ -233,8 +232,8 @@ def generate_report(data: dict, output_path: str) -> None:
 
     elements.extend(_header_block(styles, data.get("project", {})))
 
-    hw_count = len([h for h in data.get("simpson_hardware", []) if h.get("model") and (h.get("qty") or h.get("qty_mentioned", 0)) > 0])
-    conn_count = len([c for c in data.get("framing_details", []) if c.get("description")])
+    hw_count = len([h for h in data.get("simpson_hardware", []) if isinstance(h, dict) and h.get("model") and (h.get("qty") or h.get("qty_mentioned", 0)) > 0])
+    conn_count = len([c for c in data.get("framing_details", []) if isinstance(c, dict) and c.get("description")])
     pages_analyzed = len([p for p in data.get("_pages", []) if p.get("category") not in ("skip", "unknown")])
     summary_parts = []
     if hw_count:      summary_parts.append(f"{hw_count} hardware items")
@@ -417,7 +416,7 @@ def generate_report(data: dict, output_path: str) -> None:
             elements.append(Spacer(1, 0.1 * inch))
 
         # Footing schedule — type, cross-section, reinforcement
-        footing_types = foundation.get("footing_types", [])
+        footing_types = [ft for ft in foundation.get("footing_types", []) if isinstance(ft, dict)]
         if footing_types:
             has_rf = any(ft.get("top_rf") or ft.get("bottom_rf") for ft in footing_types)
             if has_rf:
@@ -488,8 +487,14 @@ def generate_report(data: dict, output_path: str) -> None:
                 elements.append(Paragraph(concrete_type, styles["label"]))
             # Nested specs list: [{f'c: ..., bar_sizes: [...]}]
             nested = cs.get("specs", [])
-            if nested:
+            if isinstance(nested, list) and nested:
                 for spec in nested:
+                    # LLM shape varies by firm: nested specs may be plain strings
+                    if isinstance(spec, str):
+                        elements.append(Paragraph(f"  • {spec}", styles["body"]))
+                        continue
+                    if not isinstance(spec, dict):
+                        continue
                     fc = spec.get("f'c", spec.get("fc", spec.get("strength", "")))
                     if fc:
                         elements.append(Paragraph(f"  f'c = {fc}", styles["body"]))
@@ -506,8 +511,8 @@ def generate_report(data: dict, output_path: str) -> None:
     floor_framing = data.get("floor_framing", {})
     _ff_est = " *" if floor_framing.get("estimated") else ""
     # Only show rows where at least one numeric value is non-zero
-    joists = [r for r in floor_framing.get("joists", []) if r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces")]
-    beams  = [r for r in floor_framing.get("beams",  []) if r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces")]
+    joists = [r for r in floor_framing.get("joists", []) if isinstance(r, dict) and (r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces"))]
+    beams  = [r for r in floor_framing.get("beams",  []) if isinstance(r, dict) and (r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces"))]
     elements.extend(_framing_section(
         "Floor Framing — Joists", joists,
         ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_ff_est}", f"Qty Pieces{_ff_est}"],
@@ -543,7 +548,7 @@ def generate_report(data: dict, output_path: str) -> None:
 
     roof_framing = data.get("roof_framing", {})
     _rf_est = " *" if roof_framing.get("estimated") else ""
-    rafters = [r for r in roof_framing.get("rafters", []) if r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces")]
+    rafters = [r for r in roof_framing.get("rafters", []) if isinstance(r, dict) and (r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces"))]
     elements.extend(_framing_section(
         "Roof Framing — Rafters", rafters,
         ["Size", "Spacing (in)", "Span (ft)", f"Linear Ft{_rf_est}", f"Qty Pieces{_rf_est}"],
@@ -595,7 +600,7 @@ def generate_report(data: dict, output_path: str) -> None:
 
     connections = [
         c for c in data.get("framing_details", [])
-        if c.get("description") and (c.get("hardware") or c.get("lumber_sizes"))
+        if isinstance(c, dict) and c.get("description") and (c.get("hardware") or c.get("lumber_sizes"))
     ]
     if connections:
         elements.extend(_section_title("Framing Connection Details", styles))

@@ -162,6 +162,27 @@ def test_normalise_strips_footnote_asterisk():
     assert normalise_model("WSWH-TP") == "WSWH-TP"  # internal/normal chars untouched
 
 
+def test_report_survives_malformed_llm_shapes(tmp_path):
+    """New firms/plans return strings where dicts are expected — the report must
+    render without crashing (regression: 'str' object has no attribute 'get')."""
+    from app.report.generator import generate_report
+    data = {
+        "project": {"name": "T", "address": "A"},
+        # nested specs as plain strings (the deployed crash)
+        "concrete_specs": [{"type": "Footings", "specs": ["3000 psi at 28 days", "slump 4in"]}],
+        "foundation": {"footing_types": ["P1 18x18", {"type": "P2", "width_in": 24, "depth_in": 24}]},
+        "floor_framing": {"joists": ["2x10 typ", {"size": "TJI", "span_ft": 16}], "beams": ["GLB"]},
+        "roof_framing": {"rafters": ["2x12"]},
+        "framing_details": ["see plan", {"description": "x", "hardware": "A35"}],
+        "lumber_specs": ["DF#2"],
+        "nailing_schedule": ["8d @6"],
+        "simpson_hardware": [{"model": "HDU4", "qty": 5}],
+    }
+    out = tmp_path / "r.pdf"
+    generate_report(data, str(out))  # must not raise
+    assert out.exists() and out.stat().st_size > 0
+
+
 def test_clean_hardware_merges_asterisk_variant():
     # The deployed bug: "HDU11" and "HDU11*" (schedule footnote) showed as two rows.
     items = [

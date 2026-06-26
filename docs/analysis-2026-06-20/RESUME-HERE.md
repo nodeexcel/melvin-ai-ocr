@@ -33,7 +33,7 @@ Feasibility **PROVEN end-to-end** on two real plans (`08` doc). Multi-modal: **t
 - Design rules: key on full `detail#+sheet#` pair (numbers restart per sheet); classify marker shape (circle=detail / diamond=length / plain=gridline); validate model strings vs a Simpson allowlist (don't trust hand-lettered OCR blind — Rule 5).
 
 ## CONSTRAINTS (read before doing anything)
-- **🔴 Org API spend limit HIT (2026-06-25)** — raise it before any vision/OCR/full-pipeline runs. The text-layer detector + report polish need **no API**.
+- **Claude Code usage limit reached (2026-06-25)** — caused by **Opus-1M high context** in this long session, **NOT** the project's OpenAI/Gemini API budget. Mitigation: **use Sonnet + fresh sessions**. The project's LLM keys are funded (Gemini) — **vision/OCR/pipeline runs are fine and NOT blocked.** (The text-layer detector + report polish happen to need no LLM calls anyway.)
 - **Installs: venv ONLY** (`venv/melvin311/bin/pip ...`), never global, never sudo. OCR works in `venv/melvin311` (Py 3.11) + Docker; **crashes** on `app/backend/venv` (Py 3.13) and on heavy full-sheet **PP-Structure** (OOMs the 14 GB box — crop/downscale + cap threads if used).
 - **Workflow:** spec → implement → commit. Stage only your own files — working tree has pre-existing WIP (`app/docker-compose.yml`, `app/frontend/package.json`) — never `git add -A`.
 - **🔴 Exposed GitHub PAT** in the `origin` URL — **rotate it**. Live app has open security holes (CORS `*`+creds, JWT-in-URL, no upload cap) — ~1-day hardening before the URL spreads (see `02` F-1).
@@ -42,5 +42,5 @@ Feasibility **PROVEN end-to-end** on two real plans (`08` doc). Multi-modal: **t
 ## Immediate options (pick one)
 1. **Build the text-layer callout detector** (no API) — concrete core-feature progress now.
 2. **Track A polish** (beams M-3, estimated-flags, connection-noise) → batch with `947c69a` → one redeploy.
-3. **Raise spend limit** → run more of Melvin's plans / build the engine's vision path / score vs EST lists.
+3. **Run more of Melvin's plans / build the engine's vision path / score vs EST lists** — project LLM keys are funded (not blocked); just mind Claude Code session length (use Sonnet + fresh sessions).
 4. **Reply to Melvin** — honest staged timeline + the two data asks above.

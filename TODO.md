@@ -752,6 +752,6 @@ After scoping OCR to foundation-only, this number would be re-validated on next 
 
 **Detail-callout engine (Melvin's #1 ask) — feasibility PROVEN end-to-end** (`docs/analysis-2026-06-20/08-detail-callout-engine-design.md`). Multi-modal (CAD text-layer + raster vision/OCR). **Next build step (no API): text-layer callout detector**, validate on 8603 Rugby.
 
-**Constraints:** 🔴 org API spend limit HIT 2026-06-25 (raise before vision/OCR/runs); installs venv-only; rotate exposed GitHub PAT + 1-day security hardening (app is public); validate fresh runs (no reproducible baseline).
+**Constraints:** Claude Code usage limit reached 2026-06-25 (Opus-1M high context — use Sonnet + fresh sessions; project OpenAI/Gemini budget is fine, runs NOT blocked); installs venv-only; rotate exposed GitHub PAT + 1-day security hardening (app is public); validate fresh runs (no reproducible baseline).
 
 **Asks of Melvin:** full plan sets **incl. detail sheets**; **which EST pairs with which plan** (for scoring).

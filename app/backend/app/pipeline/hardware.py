@@ -37,8 +37,8 @@ _PHASE_GENERIC = {
     "epdm", "epdm seal", "neoprene", "neoprene pad", "neoprene bad",
     "vhb tape", "vhb", "sealant",
     # Incomplete prefix-only codes (Gemini drops the numeric suffix).
-    # Full models (LUS26, HUCQ410, ABU66) are unaffected — not exact matches.
-    "lus", "hucq", "abu", "hus", "lts", "cmst", "mstc",
+    # Full models (LUS26, HUCQ410, ABU66, HDU5) are unaffected — not exact matches.
+    "lus", "hucq", "abu", "hus", "lts", "cmst", "mstc", "hdu",
     # WSWH alone is a product family (WSWH-18, WSWH-24, WSWH-TP18) — bare prefix is unorderable.
     "wswh",
     # Generic connection words — not orderable Simpson models.

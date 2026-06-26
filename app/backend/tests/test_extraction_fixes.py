@@ -126,6 +126,7 @@ def test_is_real_model_filters_noise():
     assert not is_real_model("B1")      # 2-char non-H drawing label
     assert not is_real_model("10d")     # nail size
     assert not is_real_model("lus")     # bare prefix-only code
+    assert not is_real_model("HDU")     # bare HDU prefix — full models HDU2/HDU5 still pass
     # detail-callout references + ICC-ES report numbers are not hardware
     assert not is_real_model("Detail 19")
     assert not is_real_model("Detail 32")

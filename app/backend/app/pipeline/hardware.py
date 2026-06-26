@@ -41,6 +41,8 @@ _PHASE_GENERIC = {
     "lus", "hucq", "abu", "hus", "lts", "cmst", "mstc", "hdu",
     # WSWH alone is a product family (WSWH-18, WSWH-24, WSWH-TP18) — bare prefix is unorderable.
     "wswh",
+    # Lumber grades / material specs — not hardware
+    "psl", "lvl", "lsl", "glb", "glulam",
     # Generic connection words — not orderable Simpson models.
     "tie",   # "KING POST to BEAM SIMPSON TIE" framing note
     # Drawing annotation labels confirmed by Melvin as non-Simpson (2026-06-19)

@@ -29,8 +29,17 @@ AI construction estimator for **Melvin (Mel's Builders)**. **Takeoff-only** web 
 
 ## ★ CORE NEXT WORK — detail-callout engine (the project's value)
 Feasibility **PROVEN end-to-end** on two real plans (`08` doc). Multi-modal: **text-layer path** (CAD plans, e.g. 8603 Rugby — callouts in selectable text) + **vision/OCR path** (raster/hand-lettered, e.g. 3611 Locke — chain `1/S4`→ST22/PC/PBS/LUS, `2/S4`→A307 bolts/SDS/A35 verified).
-- **EXACT next step (NO API needed):** build **stage-2 text-layer callout detector** — regex `detail#/sheet#` pairs from a CAD plan's text layer, count per pair; validate on **8603 Rugby** text layer. Then the raster/vision path. See `08` §3 + §7.
-- Design rules: key on full `detail#+sheet#` pair (numbers restart per sheet); classify marker shape (circle=detail / diamond=length / plain=gridline); validate model strings vs a Simpson allowlist (don't trust hand-lettered OCR blind — Rule 5).
+
+**✅ DONE 2026-06-26 (commit `c8a6f2e`):** `app/pipeline/callout.py` — text-layer detector (stage 2).
+- `detect_callouts_text_layer(pdf_path, page_indices)` → `CalloutCounts`
+- Rugby baseline (plan pages 3+4): SD1×8, SD2×19, SD3×28 = 55 markers; TYP. flags working.
+- 27 tests all pass (23 unit + 4 integration). Real format: `SDx\nnum` adjacent tokens (not `num/SDx`).
+- **Caller must pass plan-page indices only** — detail-sheet pages inflate counts.
+
+**EXACT NEXT STEP — stage 3: resolve callout → detail location.**
+For each `(detail_num, sheet_id)` pair, find the matching detail box on the detail sheet.
+In text layer: locate the page with `sheet_id` label (already in text), then find the detail-header token `SDx num` on that page → crop that region. See `08` §3.
+No API needed (text search). Then stage 4: extract hardware from the crop (uses `hardware.py` + GPT/Gemini vision on the crop image).
 
 ## CONSTRAINTS (read before doing anything)
 - **Claude Code usage limit reached (2026-06-25)** — caused by **Opus-1M high context** in this long session, **NOT** the project's OpenAI/Gemini API budget. Mitigation: **use Sonnet + fresh sessions**. The project's LLM keys are funded (Gemini) — **vision/OCR/pipeline runs are fine and NOT blocked.** (The text-layer detector + report polish happen to need no LLM calls anyway.)
@@ -40,7 +49,7 @@ Feasibility **PROVEN end-to-end** on two real plans (`08` doc). Multi-modal: **t
 - **No reproducible baseline** — committed JSONs are stale; validate against fresh runs, not on-disk artifacts.
 
 ## Immediate options (pick one)
-1. **Build the text-layer callout detector** (no API) — concrete core-feature progress now.
+1. **Build stage 3: resolve callout → detail location** (no API) — text search for detail box on detail-sheet page.
 2. **Track A polish** (beams M-3, estimated-flags, connection-noise) → batch with `947c69a` → one redeploy.
 3. **Run more of Melvin's plans / build the engine's vision path / score vs EST lists** — project LLM keys are funded (not blocked); just mind Claude Code session length (use Sonnet + fresh sessions).
 4. **Reply to Melvin** — honest staged timeline + the two data asks above.

@@ -136,6 +136,8 @@ def run_pipeline_sync(
 
 _OCR_LF_CATEGORIES = ("foundation",)
 _OCR_HW_CATEGORIES = ("foundation", "floor_framing", "roof_framing", "wall_framing", "framing_details")
+_CALLOUT_PLAN_CATEGORIES = ("foundation", "floor_framing", "roof_framing", "wall_framing")
+_CALLOUT_DETAIL_CATEGORIES = ("framing_details",)
 
 
 def _ocr_page_indices(pages: list[dict]) -> tuple[list[int], list[int]]:
@@ -193,6 +195,98 @@ def run_ocr_passes(pdf_path: str, result: dict, on_progress: ProgressCallback | 
     return result
 
 
+def run_callout_engine(
+    pdf_path: str,
+    result: dict,
+    google_api_key: str = "",
+    on_progress: ProgressCallback | None = None,
+) -> dict:
+    """Callout engine pass (stages 2-4): detect detail callouts on plan pages,
+    resolve them to detail-sheet bboxes, extract hardware from crops via Gemini.
+
+    No-ops gracefully when:
+      - google_api_key is empty (stage 4 requires Gemini)
+      - no framing_details pages exist (nothing to resolve against)
+      - plan pages have no text layer (raster plans — vision detect path not yet built)
+      - callout detection finds no callouts
+
+    Mutates result in place. Stores raw callout records in result["_callout_engine"]
+    for provenance. Merges hardware into simpson_hardware/hardware_by_phase."""
+    def emit(msg: str, pct: int) -> None:
+        if on_progress:
+            on_progress("callout_engine", msg, pct)
+
+    if not google_api_key:
+        emit("Callout engine skipped: no Gemini key", 96)
+        return result
+
+    pages = result.get("_pages", [])
+    plan_indices  = sorted({p["page"] - 1 for p in pages if p.get("category") in _CALLOUT_PLAN_CATEGORIES})
+    detail_indices = sorted({p["page"] - 1 for p in pages if p.get("category") in _CALLOUT_DETAIL_CATEGORIES})
+
+    if not detail_indices:
+        emit("Callout engine skipped: no detail-sheet pages", 96)
+        return result
+
+    if not plan_indices:
+        emit("Callout engine skipped: no plan pages", 96)
+        return result
+
+    try:
+        from app.pipeline.callout import detect_callouts_text_layer
+        from app.pipeline.callout_resolve import resolve_callouts
+        from app.pipeline.callout_extract import extract_detail_hardware, rollup_hardware
+    except ImportError as e:
+        emit(f"Callout engine unavailable: {e}", 96)
+        return result
+
+    emit(f"Detecting callouts on {len(plan_indices)} plan page(s)...", 96)
+    try:
+        callout_counts = detect_callouts_text_layer(pdf_path, plan_indices)
+    except Exception as e:
+        emit(f"Callout detection failed: {e}", 96)
+        return result
+
+    if not callout_counts:
+        emit("No text-layer callouts found (raster plan — vision path not yet built)", 97)
+        return result
+
+    emit(f"Found {len(callout_counts)} callout types — resolving to {len(detail_indices)} detail page(s)...", 97)
+    try:
+        resolved = resolve_callouts(pdf_path, callout_counts, detail_indices)
+    except Exception as e:
+        emit(f"Callout resolve failed: {e}", 97)
+        return result
+
+    resolved_count = sum(1 for r in resolved if r["resolved"])
+    if not resolved_count:
+        emit("No callouts resolved to detail pages", 98)
+        result["_callout_engine"] = resolved
+        return result
+
+    emit(f"Extracting hardware from {resolved_count} resolved detail(s)...", 98)
+    try:
+        detail_results = extract_detail_hardware(google_api_key, pdf_path, resolved)
+    except Exception as e:
+        emit(f"Callout hardware extraction failed: {e}", 98)
+        return result
+
+    rolled = rollup_hardware(detail_results)
+    result["_callout_engine"] = detail_results
+
+    if not rolled:
+        emit("Callout engine: no hardware found in detail crops", 99)
+        return result
+
+    # Merge into existing hardware — inject_hardware_counts takes {model: qty}
+    callout_hw = {item["model"]: item["total_qty"] for item in rolled}
+    inject_hardware_counts(result, callout_hw)
+    clean_result_hardware(result)
+
+    emit(f"Callout engine: {len(rolled)} hardware type(s) from {resolved_count} detail(s)", 99)
+    return result
+
+
 def pipeline_worker(
     project_id: str,
     pdf_path: str,
@@ -247,6 +341,9 @@ def pipeline_worker(
 
         # PaddleOCR passes (shared with the CLI — single source of truth, no scope drift)
         run_ocr_passes(pdf_path, result, write_event)
+
+        # Callout engine: detail callout → hardware extraction via Gemini
+        run_callout_engine(pdf_path, result, google_api_key=google_api_key, on_progress=write_event)
 
         result_id = str(uuid.uuid4())
         with Session(engine) as session:

@@ -510,8 +510,14 @@ def generate_report(data: dict, output_path: str) -> None:
 
     floor_framing = data.get("floor_framing", {})
     _ff_est = " *" if floor_framing.get("estimated") else ""
-    # Only show rows where at least one numeric value is non-zero
-    joists = [r for r in floor_framing.get("joists", []) if isinstance(r, dict) and (r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces"))]
+    # Only show rows where at least one numeric value is non-zero.
+    # Exclude RR (Roof Rafter) entries — the LLM occasionally puts rafter specs
+    # in floor_framing.joists; they belong in the Roof Framing section instead.
+    import re as _re
+    _RR = _re.compile(r'\bRR\b', _re.IGNORECASE)
+    joists = [r for r in floor_framing.get("joists", []) if isinstance(r, dict)
+              and not _RR.search(str(r.get("size", "")))
+              and (r.get("spacing_in") or r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces"))]
     beams  = [r for r in floor_framing.get("beams",  []) if isinstance(r, dict) and (r.get("span_ft") or r.get("linear_feet") or r.get("qty_pieces"))]
     elements.extend(_framing_section(
         "Floor Framing — Joists", joists,

@@ -26,7 +26,9 @@ Design rules (from spike on 8603 Rugby / Terra Nova format):
 
 from __future__ import annotations
 
+import json
 import re
+import time
 from collections import defaultdict
 from pathlib import Path
 from typing import TypedDict
@@ -163,6 +165,166 @@ def has_text_layer(pdf_path: str | Path, page_index: int, min_chars: int = 200) 
         return len(text.strip()) >= min_chars
     finally:
         doc.close()
+
+
+# ── Vision path (raster / hand-lettered plans) ────────────────────────────────
+
+_VISION_PROMPT = (
+    "This is a structural engineering plan page (foundation plan, framing plan, etc.).\n"
+    "Find every DETAIL CALLOUT MARKER on this page.\n\n"
+    "A detail callout is a small circle (or balloon) that references a specific detail drawing. "
+    "It contains:\n"
+    "  - A detail number (top half, e.g. '1', '3', '12', '7A')\n"
+    "  - A sheet ID (bottom half, e.g. 'SD1', 'S4', 'D-1', 'S-4')\n"
+    "  - Often drawn as: number / sheet_id  or  a circle split by a horizontal line\n"
+    "  - May have 'TYP.' or 'TYP' nearby (meaning this detail is typical throughout)\n\n"
+    "Count every occurrence of each unique (detail_number, sheet_id) pair.\n\n"
+    "Return JSON only — no prose:\n"
+    '{"callouts": [{"detail_num": "1", "sheet_id": "SD1", "count": 3, "typical": false}]}\n\n'
+    "Rules:\n"
+    "- detail_num: number/letter combination above the line (e.g. '1', '3A', '12')\n"
+    "- sheet_id: sheet reference below the line — normalize: remove spaces, uppercase "
+    "(e.g. 'SD 1' → 'SD1', 's4' → 'S4')\n"
+    "- count: number of times this exact callout appears on this page\n"
+    "- typical: true only if 'TYP' or 'TYP.' appears near this specific callout\n"
+    "- EXCLUDE: grid-line bubbles (letters only, no sheet ID), section cut arrows, "
+    "elevation tags, north arrow, revision clouds\n"
+    "- If no detail callout markers are found: {\"callouts\": []}"
+)
+
+# Sheet ID validation — same pattern as text path
+_VISION_SHEET_RE = re.compile(r"^(SD\d+[A-Z]?|S-?\d+[A-Z]?|D-?\d+[A-Z]?)$", re.IGNORECASE)
+_VISION_DETAIL_RE = re.compile(r"^\d+[A-Z]?$", re.IGNORECASE)
+
+
+def _render_page_for_vision(pdf_path: str | Path, page_index: int, scale: float = 2.0):
+    """Render a PDF page to a PIL Image for vision inference.
+
+    scale=2.0 gives ~144 DPI. The image is resized to ≤2000px on the long side
+    before being returned so Gemini token costs stay bounded.
+    """
+    doc = pdfium.PdfDocument(str(pdf_path))
+    try:
+        page = doc[page_index]
+        bitmap = page.render(scale=scale)
+        img = bitmap.to_pil().convert("RGB")
+    finally:
+        doc.close()
+
+    # Resize to max 2000px on the long side (preserves aspect ratio)
+    w, h = img.size
+    max_px = 2000
+    if max(w, h) > max_px:
+        ratio = max_px / max(w, h)
+        img = img.resize((int(w * ratio), int(h * ratio)))
+    return img
+
+
+def _parse_vision_response(text: str) -> list[dict]:
+    """Parse JSON callout list from Gemini response. Returns [] on failure."""
+    if not text:
+        return []
+    if "```" in text:
+        parts = text.split("```")
+        text = parts[1].lstrip("json").strip() if len(parts) > 1 else text
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        m = re.search(r"\{.*\}", text, re.DOTALL)
+        if not m:
+            return []
+        try:
+            data = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            return []
+    callouts = data.get("callouts", [])
+    return callouts if isinstance(callouts, list) else []
+
+
+def _gemini_retry_delay_callout(error: Exception) -> int:
+    match = re.search(r"retry.*?(\d+)\s*seconds?", str(error), re.IGNORECASE)
+    return int(match.group(1)) + 2 if match else 65
+
+
+def _call_gemini_callout_vision(google_api_key: str, pil_image) -> list[dict]:
+    """Send a rendered plan page to Gemini and return raw callout list."""
+    import google.generativeai as genai
+    genai.configure(api_key=google_api_key)
+    model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+    config = genai.GenerationConfig(
+        temperature=0,
+        max_output_tokens=4000,
+        response_mime_type="application/json",
+    )
+    try:
+        response = model.generate_content([_VISION_PROMPT, pil_image], generation_config=config)
+        return _parse_vision_response(response.text or "")
+    except Exception as e:
+        if "429" in str(e):
+            time.sleep(_gemini_retry_delay_callout(e))
+            try:
+                response = model.generate_content([_VISION_PROMPT, pil_image], generation_config=config)
+                return _parse_vision_response(response.text or "")
+            except Exception:
+                return []
+        return []
+
+
+def detect_callouts_vision(
+    google_api_key: str,
+    pdf_path: str | Path,
+    page_indices: list[int],
+    scale: float = 2.0,
+) -> CalloutCounts:
+    """Vision path: render plan pages and ask Gemini to find callout markers.
+
+    For raster/handwritten plans where has_text_layer() returns False.
+    Each page is rendered and sent to Gemini independently.
+    Returns CalloutCounts in the same format as detect_callouts_text_layer().
+
+    Validates Gemini output: rejects entries whose sheet_id or detail_num
+    don't match structural callout patterns (blocks hallucinated grid lines etc.).
+    """
+    pdf_path = Path(pdf_path)
+    if not pdf_path.exists():
+        raise FileNotFoundError(pdf_path)
+
+    counts: dict = defaultdict(lambda: {"count": 0, "typical": False, "pages": []})
+
+    doc = pdfium.PdfDocument(str(pdf_path))
+    n_pages = len(doc)
+    doc.close()
+
+    for idx in page_indices:
+        if idx < 0 or idx >= n_pages:
+            continue
+        try:
+            pil_img = _render_page_for_vision(pdf_path, idx, scale=scale)
+            raw = _call_gemini_callout_vision(google_api_key, pil_img)
+        except Exception:
+            continue
+
+        page_num = idx + 1  # 1-based for storage
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            detail_num = str(item.get("detail_num", "")).strip().upper()
+            sheet_id   = str(item.get("sheet_id",   "")).strip().upper().replace(" ", "")
+            # Validate both fields match expected structural patterns
+            if not _VISION_DETAIL_RE.match(detail_num):
+                continue
+            if not _VISION_SHEET_RE.match(sheet_id):
+                continue
+            try:
+                count = max(1, int(item.get("count") or 1))
+            except (ValueError, TypeError):
+                count = 1
+            typical = bool(item.get("typical", False))
+            # Record `count` occurrences (Gemini already aggregated per page)
+            for _ in range(count):
+                _record(counts, detail_num, sheet_id, typical, page_num)
+
+    return dict(counts)
 
 
 def summarise_callouts(counts: CalloutCounts) -> dict:

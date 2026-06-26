@@ -233,7 +233,7 @@ def run_callout_engine(
         return result
 
     try:
-        from app.pipeline.callout import detect_callouts_text_layer
+        from app.pipeline.callout import detect_callouts_text_layer, detect_callouts_vision
         from app.pipeline.callout_resolve import resolve_callouts
         from app.pipeline.callout_extract import extract_detail_hardware, rollup_hardware
     except ImportError as e:
@@ -248,7 +248,16 @@ def run_callout_engine(
         return result
 
     if not callout_counts:
-        emit("No text-layer callouts found (raster plan — vision path not yet built)", 97)
+        # Text layer empty — raster/handwritten plan, try vision path
+        emit("No text-layer callouts — trying vision detection...", 96)
+        try:
+            callout_counts = detect_callouts_vision(google_api_key, pdf_path, plan_indices)
+        except Exception as e:
+            emit(f"Vision callout detection failed: {e}", 97)
+            return result
+
+    if not callout_counts:
+        emit("No callouts found on plan pages", 97)
         return result
 
     emit(f"Found {len(callout_counts)} callout types — resolving to {len(detail_indices)} detail page(s)...", 97)

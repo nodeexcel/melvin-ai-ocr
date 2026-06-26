@@ -10,7 +10,9 @@ from collections import defaultdict
 from app.pipeline.callout import (
     _extract_tokens,
     _scan_tokens,
+    _parse_vision_response,
     detect_callouts_text_layer,
+    detect_callouts_vision,
     has_text_layer,
     summarise_callouts,
 )
@@ -251,3 +253,118 @@ def test_rugby_has_text_layer():
 def test_detect_callouts_raises_on_missing_file():
     with pytest.raises(FileNotFoundError):
         detect_callouts_text_layer("/nonexistent/path.pdf", page_indices=[0])
+
+
+# ── Vision path — _parse_vision_response ──────────────────────────────────────
+
+def test_parse_vision_response_valid():
+    raw = '{"callouts": [{"detail_num": "1", "sheet_id": "SD1", "count": 3, "typical": false}]}'
+    out = _parse_vision_response(raw)
+    assert len(out) == 1
+    assert out[0]["detail_num"] == "1"
+    assert out[0]["sheet_id"] == "SD1"
+    assert out[0]["count"] == 3
+
+
+def test_parse_vision_response_with_markdown_fence():
+    raw = '```json\n{"callouts": [{"detail_num": "3A", "sheet_id": "S4", "count": 2, "typical": true}]}\n```'
+    out = _parse_vision_response(raw)
+    assert len(out) == 1
+    assert out[0]["typical"] is True
+
+
+def test_parse_vision_response_empty_callouts():
+    assert _parse_vision_response('{"callouts": []}') == []
+
+
+def test_parse_vision_response_invalid_json():
+    assert _parse_vision_response("not json at all") == []
+
+
+def test_parse_vision_response_empty_string():
+    assert _parse_vision_response("") == []
+
+
+# ── Vision path — detect_callouts_vision (mocked Gemini) ─────────────────────
+
+def test_detect_callouts_vision_validates_sheet_id(tmp_path):
+    """Entries with invalid sheet IDs (e.g. grid letters) are dropped."""
+    from unittest.mock import patch, MagicMock
+
+    fake_pdf = tmp_path / "plan.pdf"
+    fake_pdf.write_bytes(b"%PDF-1.4")
+
+    raw_callouts = [
+        {"detail_num": "1",  "sheet_id": "SD1", "count": 3, "typical": False},  # valid
+        {"detail_num": "A",  "sheet_id": "SD1", "count": 1, "typical": False},  # detail_num not numeric
+        {"detail_num": "2",  "sheet_id": "GRID", "count": 1, "typical": False}, # sheet_id invalid
+        {"detail_num": "3A", "sheet_id": "S4",  "count": 2, "typical": True},   # valid
+    ]
+
+    mock_img = MagicMock()
+    with patch("app.pipeline.callout._render_page_for_vision", return_value=mock_img), \
+         patch("app.pipeline.callout._call_gemini_callout_vision", return_value=raw_callouts), \
+         patch("app.pipeline.callout.pdfium.PdfDocument") as mock_doc:
+        mock_doc.return_value.__len__ = MagicMock(return_value=5)
+        mock_doc.return_value.close = MagicMock()
+        result = detect_callouts_vision("KEY", str(fake_pdf), page_indices=[0])
+
+    assert ("1", "SD1") in result
+    assert result[("1", "SD1")]["count"] == 3
+    assert ("3A", "S4") in result
+    assert result[("3A", "S4")]["typical"] is True
+    assert ("A", "SD1") not in result     # invalid detail_num
+    assert ("2", "GRID") not in result    # invalid sheet_id
+
+
+def test_detect_callouts_vision_normalises_sheet_id(tmp_path):
+    """Sheet IDs with spaces and lowercase are normalised before validation."""
+    from unittest.mock import patch, MagicMock
+
+    fake_pdf = tmp_path / "plan.pdf"
+    fake_pdf.write_bytes(b"%PDF-1.4")
+
+    raw_callouts = [
+        {"detail_num": "5", "sheet_id": "sd 1", "count": 1, "typical": False},  # lowercase + space
+    ]
+
+    mock_img = MagicMock()
+    with patch("app.pipeline.callout._render_page_for_vision", return_value=mock_img), \
+         patch("app.pipeline.callout._call_gemini_callout_vision", return_value=raw_callouts), \
+         patch("app.pipeline.callout.pdfium.PdfDocument") as mock_doc:
+        mock_doc.return_value.__len__ = MagicMock(return_value=5)
+        mock_doc.return_value.close = MagicMock()
+        result = detect_callouts_vision("KEY", str(fake_pdf), page_indices=[0])
+
+    assert ("5", "SD1") in result
+
+
+def test_detect_callouts_vision_accumulates_across_pages(tmp_path):
+    """Callouts on multiple pages are merged into counts."""
+    from unittest.mock import patch, MagicMock, call
+
+    fake_pdf = tmp_path / "plan.pdf"
+    fake_pdf.write_bytes(b"%PDF-1.4")
+
+    page0_callouts = [{"detail_num": "1", "sheet_id": "SD1", "count": 2, "typical": False}]
+    page1_callouts = [{"detail_num": "1", "sheet_id": "SD1", "count": 3, "typical": False},
+                      {"detail_num": "2", "sheet_id": "SD1", "count": 1, "typical": True}]
+
+    mock_img = MagicMock()
+    call_results = [page0_callouts, page1_callouts]
+    with patch("app.pipeline.callout._render_page_for_vision", return_value=mock_img), \
+         patch("app.pipeline.callout._call_gemini_callout_vision", side_effect=call_results), \
+         patch("app.pipeline.callout.pdfium.PdfDocument") as mock_doc:
+        mock_doc.return_value.__len__ = MagicMock(return_value=5)
+        mock_doc.return_value.close = MagicMock()
+        result = detect_callouts_vision("KEY", str(fake_pdf), page_indices=[0, 1])
+
+    assert result[("1", "SD1")]["count"] == 5   # 2 + 3
+    assert result[("2", "SD1")]["count"] == 1
+    assert result[("2", "SD1")]["typical"] is True
+    assert set(result[("1", "SD1")]["pages"]) == {1, 2}   # both pages
+
+
+def test_detect_callouts_vision_raises_on_missing_file():
+    with pytest.raises(FileNotFoundError):
+        detect_callouts_vision("KEY", "/nonexistent/path.pdf", page_indices=[0])

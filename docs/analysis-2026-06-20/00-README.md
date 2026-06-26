@@ -14,6 +14,8 @@ This folder is an **independent analysis workspace** for a structured requiremen
 
 ## Documents
 
+> **▶ Resuming work? Start with `RESUME-HERE.md`** — current state, deploy status, constraints, and the exact next step.
+
 | File | Contents |
 |---|---|
 | `01-requirement-analysis.md` | Per-PDF review, the 10 requirements, business + technical observations, requirement→capability mapping |

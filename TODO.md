@@ -732,4 +732,26 @@ After scoping OCR to foundation-only, this number would be re-validated on next 
 
 **Known stale (not this session's scope):** `tests/test_pipeline.py` imports `classify_page`/`extract_sheet_info` (deleted in vision-first rewrite) — needs a rewrite to the current API.
 
-**Documented follow-ups (docs/analysis-2026-06-20/05):** sqft-fallback honesty, noise→data-layer allowlist, native JSON mode, ≥200 DPI tiling, PP-Structure table recognition (needs network for model download), model upgrade (Gemini-2.5-Pro/Claude), counting via YOLO+SAHI detection or specialist service (the only routes past the count ceiling). Branch not yet merged.
+**Documented follow-ups (docs/analysis-2026-06-20/05):** sqft-fallback honesty, noise→data-layer allowlist, native JSON mode, ≥200 DPI tiling, PP-Structure table recognition (needs network for model download), model upgrade (Gemini-2.5-Pro/Claude), counting via YOLO+SAHI detection or specialist service (the only routes past the count ceiling).
+
+---
+
+## Session 2026-06-25 — client feedback shipped + detail-callout engine validated
+
+**👉 NEXT SESSION START: read `docs/analysis-2026-06-20/RESUME-HERE.md` first.** (Switch to Sonnet; reserve Opus for hard design.)
+
+**Melvin engaged 2026-06-23–25** (first feedback; funded Gemini key; asked "when ready?"). Scope locked: **takeoff-only, per-trade apps, no pricing/labor**; output Qty|Size|Length|Description; quantities are the point. Sent ~10 plans + ~8 supplier EST lists (`~/Downloads/`). Full notes: `docs/analysis-2026-06-20/07-melvin-meeting-2026-06-23.md`.
+
+**Shipped/committed this session (master `badfe8a..de2ed24`, 11 commits):**
+- [x] Takeoff-only report (pricing/labor removed; cost code dormant)
+- [x] Foundation-only LF OCR + unified `run_ocr_passes`; native JSON mode; title-block address fix
+- [x] Hardware cleaned at data layer (new `app/pipeline/hardware.py`; dedup/noise/zero-qty; `HDU11*`==`HDU11`)
+- [x] Report crash hardening (LLM shape variance) — was 500-ing on new plans
+- [x] Detail/ICC noise filter (`947c69a` — **NOT yet deployed**)
+- **Deployed = `591cc7a`; master ahead by 2** (`947c69a` code needs redeploy + `de2ed24` docs). Deploy: push → server `git pull` + `docker compose build --no-cache backend frontend && up -d`.
+
+**Detail-callout engine (Melvin's #1 ask) — feasibility PROVEN end-to-end** (`docs/analysis-2026-06-20/08-detail-callout-engine-design.md`). Multi-modal (CAD text-layer + raster vision/OCR). **Next build step (no API): text-layer callout detector**, validate on 8603 Rugby.
+
+**Constraints:** 🔴 org API spend limit HIT 2026-06-25 (raise before vision/OCR/runs); installs venv-only; rotate exposed GitHub PAT + 1-day security hardening (app is public); validate fresh runs (no reproducible baseline).
+
+**Asks of Melvin:** full plan sets **incl. detail sheets**; **which EST pairs with which plan** (for scoring).

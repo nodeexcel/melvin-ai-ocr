@@ -39,10 +39,14 @@ _PHASE_GENERIC = {
     # Incomplete prefix-only codes (Gemini drops the numeric suffix).
     # Full models (LUS26, HUCQ410, ABU66) are unaffected — not exact matches.
     "lus", "hucq", "abu", "hus", "lts", "cmst", "mstc",
-    # MEP / non-structural
-    "hanger rod", "rod hanger", "e8005",
+    # WSWH alone is a product family (WSWH-18, WSWH-24, WSWH-TP18) — bare prefix is unorderable.
+    "wswh",
+    # Generic connection words — not orderable Simpson models.
+    "tie",   # "KING POST to BEAM SIMPSON TIE" framing note
     # Drawing annotation labels confirmed by Melvin as non-Simpson (2026-06-19)
     "ab123", "eb456", "ea456", "ls456", "ab6", "sp789",
+    # MEP / non-structural
+    "hanger rod", "rod hanger", "e8005",
     # Electrical / fire-listing noise found in raw_json (2026-06-23)
     "lutron",
 }
@@ -57,6 +61,7 @@ _NON_STRUCTURAL_BRANDS = (
     "detail",  # "Detail 19/32/..." = plan detail-callout references, not a model
     "see detail", "see ",
     "icc", "ner-", "esr-",  # ICC-ES evaluation report numbers (NER-216, ESR-xxxx)
+    "hutf",  # drawing annotation label ("H.T.F. 4x12" etc.), not a Simpson product
 )
 
 # Substrings that disqualify any model regardless of prefix/suffix.

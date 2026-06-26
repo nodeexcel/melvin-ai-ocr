@@ -23,6 +23,7 @@ This folder is an **independent analysis workspace** for a structured requiremen
 | `05-extraction-method-improvements.md` | Code-level improvement levers (file:line) + web-researched method choices (JSON mode, tiling, table-structure OCR, model upgrade, counting) + experiment log |
 | `06-baseline-lhert-vs-ganahl.md` | First captured reproducible LHERT pipeline run vs the Ganahl EST618017 target; 6 root-caused current-code defects |
 | `07-melvin-meeting-2026-06-23.md` | **FIRST client feedback.** Scope pivot (takeoff-only, per-trade apps), detail-callout extraction request, confirmed defects, re-prioritized roadmap |
+| `08-detail-callout-engine-design.md` | Spike-validated design for the core feature (detect→resolve→read-detail→count). Multi-modal (CAD text-layer + raster/vision); proven end-to-end on 2 real plans |
 
 ## ⚡ Update 2026-06-23 — first client feedback received (see `07`)
 Melvin reviewed a live report on a screen-share. **Scope is now resolved:** this app is **takeoff-only** (material list: concrete, rebar, hardware, steel, lumber) — **pricing and labor are dropped** from this app and become separate per-trade apps. He confirmed the **hallucination** problem (F-2) and that **quantities** are the whole point (F-9), and asked for a **detail-callout extraction** engine (detect callouts → resolve to detail sheets → extract + count hardware). He'll fund his own API keys (unblocks F-5). This update reframes the roadmap below — read `07` first.

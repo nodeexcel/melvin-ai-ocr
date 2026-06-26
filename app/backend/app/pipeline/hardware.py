@@ -60,8 +60,8 @@ _NON_STRUCTURAL_BRANDS = (
     "ul u", "ul l",  # UL fire-rating listings (UL U309, UL L501) — not hardware
     "detail",  # "Detail 19/32/..." = plan detail-callout references, not a model
     "see detail", "see ",
-    "icc", "ner-", "esr-",  # ICC-ES evaluation report numbers (NER-216, ESR-xxxx)
     "hutf",  # drawing annotation label ("H.T.F. 4x12" etc.), not a Simpson product
+    "velux",  # skylight brand; appears wrapped around ICC-ES report numbers
 )
 
 # Substrings that disqualify any model regardless of prefix/suffix.
@@ -69,6 +69,9 @@ _GENERIC_SUBSTRINGS = (
     "aluminum angle", "aluminum channel", "steel angle", "steel channel",
     "hss", "bolt", "dia.", "glazing", "stainless", "sleeve", "shock",
     " series", "screw", "pipe", "pvc", "receptacle",
+    # ICC-ES evaluation report numbers can appear anywhere in the string
+    # e.g. "VELUX (ICC-ESC NER-216)" or "ICC-ESR NER-210" — moved from _NON_STRUCTURAL_BRANDS.
+    "icc-", "ner-", "esr-",
 )
 
 _NAIL_PATTERN = re.compile(r"^\d+d$")   # 8d, 10d, 16d

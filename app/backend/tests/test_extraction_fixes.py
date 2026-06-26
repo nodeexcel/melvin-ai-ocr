@@ -131,11 +131,16 @@ def test_is_real_model_filters_noise():
     assert not is_real_model("Detail 32")
     assert not is_real_model("ICC-ESC NER-216")
     assert not is_real_model("NER-216")
-    # Lindblade noise (2026-06-26): generic connection words + annotation labels
-    assert not is_real_model("TIE")       # "KING POST to BEAM SIMPSON TIE" framing note
-    assert not is_real_model("HUTF 412")  # drawing annotation, not a Simpson product
+    # Lindblade run-1 noise (2026-06-26)
+    assert not is_real_model("TIE")       # generic connection word
+    assert not is_real_model("HUTF 412")  # drawing annotation label
     assert not is_real_model("HUTF")      # same family
     assert not is_real_model("WSWH")      # bare prefix — full model is WSWH-18 / WSWH-24
+    # Lindblade run-2 noise: ICC-ES report numbers wrapped in brand names
+    assert not is_real_model("VELUX (ICC-ESC NER-216)")   # skylight + report number
+    assert not is_real_model("VELUX (ICC-ESR NER-210)")
+    assert not is_real_model("NER-216")   # bare report number (still blocked)
+    assert not is_real_model("ESR-1405")  # ESR variant
     # real models still pass
     assert is_real_model("HDU5") and is_real_model("LUS26") and is_real_model("PCZ")
     assert is_real_model("WSWH-18") and is_real_model("WSWH-24")  # full models unaffected

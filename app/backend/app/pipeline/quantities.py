@@ -7,6 +7,12 @@ Accuracy: 50-70%. Based on standard CA residential framing practices.
 Reference: docs/PLAN.md Priority 3, memory/procurement_format.md (Ganahl EST618017).
 """
 import math
+import re
+
+# "RR" (Roof Rafter) abbreviation appears in CA plans. The LLM occasionally
+# places rafter specs in floor_framing.joists when the framing plan page
+# also shows the lower-roof members at plate level.
+_RAFTER_SIZE_RE = re.compile(r'\bRR\b', re.IGNORECASE)
 
 # Standard CA residential waste allowances.
 # Applied on top of calculated base quantities — these are what to ORDER, not what installs.
@@ -64,6 +70,8 @@ def estimate_floor_framing(floor_framing: dict, total_sqft: int) -> list[dict]:
 
         if not size:
             continue
+        if _RAFTER_SIZE_RE.search(size):
+            continue  # rafter spec misclassified as joist — roof_framing handles it
 
         if qty_pieces:
             # Gemini gave us a count — use it (show waste on top of extracted count)
